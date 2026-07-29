@@ -25,3 +25,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Android release signing — must never be committed
+android/keystore.properties
+*.jks
+*.keystore

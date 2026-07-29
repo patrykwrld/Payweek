@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
+import { Browser } from '@capacitor/browser'
 import { useAuth } from '../auth/AuthProvider'
 import {
   ErrorText,
@@ -100,6 +102,15 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
     URL.revokeObjectURL(url)
   }
 
+  function openPrivacyPolicy() {
+    const url = 'https://payweek.app/privacy.html'
+    if (Capacitor.isNativePlatform()) {
+      void Browser.open({ url })
+    } else {
+      window.open(url, '_blank', 'noopener')
+    }
+  }
+
   return (
     <>
       <ScreenTitle>Settings</ScreenTitle>
@@ -164,6 +175,7 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
           Agencies &amp; rates
         </Link>
         <GhostButton onClick={exportCsv}>Export shifts as CSV</GhostButton>
+        <GhostButton onClick={openPrivacyPolicy}>Privacy policy</GhostButton>
       </div>
 
       <div className="mt-10 space-y-1 text-center">

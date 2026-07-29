@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d1117" />
+    <title>Payweek — Privacy Policy</title>
+    <style>
+      :root {
+        --void: #0d1117;
+        --surface: #151b23;
+        --edge: #232c37;
+        --accent: #5e9bff;
+        --ink: #e9eef4;
+        --muted: #94a0ae;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--void);
+        color: var(--ink);
+        font:
+          16px/1.65 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      main {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 3rem 1.25rem 6rem;
+      }
+      h1 {
+        font-size: 1.9rem;
+        letter-spacing: -0.02em;
+        margin: 0 0 0.25rem;
+      }
+      h2 {
+        font-size: 1.15rem;
+        margin: 2.5rem 0 0.6rem;
+        letter-spacing: -0.01em;
+      }
+      p,
+      li {
+        color: #cbd4e0;
+      }
+      .lede,
+      .updated {
+        color: var(--muted);
+      }
+      .updated {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+      }
+      a {
+        color: var(--accent);
+        text-underline-offset: 3px;
+      }
+      table {
+        width: 100%;
+        /* Scroll inside .wrap on a phone rather than squeezing the
+           columns into unreadable slivers. */
+        min-width: 34rem;
+        border-collapse: collapse;
+        margin-top: 0.75rem;
+        font-size: 0.94rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--edge);
+        vertical-align: top;
+      }
+      th {
+        background: var(--surface);
+        font-weight: 600;
+      }
+      .wrap {
+        overflow-x: auto;
+      }
+      footer {
+        margin-top: 3.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--edge);
+        color: var(--muted);
+        font-size: 0.875rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Payweek — Privacy Policy</h1>
+      <p class="updated">Last updated 29 July 2026</p>
+      <p class="lede">
+        Payweek is an hours and pay tracker for agency workers. This policy
+        explains what the app stores, where it is stored, and how to get it
+        deleted. Payweek contains no advertising, no analytics or tracking
+        SDKs, and does not sell or share your data with anyone.
+      </p>
+
+      <h2>Who is responsible</h2>
+      <p>
+        Payweek (&ldquo;we&rdquo;) is the data controller for the information
+        described below. Contact:
+        <a href="mailto:privacy@payweek.app">privacy@payweek.app</a>.
+      </p>
+
+      <h2>What Payweek stores</h2>
+      <div class="wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Why</th>
+              <th>Legal basis (UK GDPR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Your email address</td>
+              <td>
+                To create your account and sign you in by emailed link or
+                Google sign-in.
+              </td>
+              <td>Performance of a contract</td>
+            </tr>
+            <tr>
+              <td>
+                Agencies and pay rules you enter — agency name, base rate, pay
+                cycle, rate rules, notes
+              </td>
+              <td>To calculate your expected pay.</td>
+              <td>Performance of a contract</td>
+            </tr>
+            <tr>
+              <td>
+                Shifts you log — date, start and end time, break, any manual
+                rate, notes
+              </td>
+              <td>To show hours worked and expected earnings.</td>
+              <td>Performance of a contract</td>
+            </tr>
+            <tr>
+              <td>Payslip figures you enter — period and gross/net amounts</td>
+              <td>To compare what you were paid against what was expected.</td>
+              <td>Performance of a contract</td>
+            </tr>
+            <tr>
+              <td>Your settings — display name, week start, holiday accrual %</td>
+              <td>To match the app to how you are paid.</td>
+              <td>Performance of a contract</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Everything above is entered by you. Payweek does not collect your
+        location, contacts, photos, device identifiers, or advertising IDs, and
+        does not track you across other apps or websites.
+      </p>
+
+      <h2>Where it is stored</h2>
+      <p>
+        Your data is held in a Postgres database hosted by Supabase in the
+        United Kingdom (London region), and is kept private to your account by
+        database row-level security — no other user can read your rows. Traffic
+        between the app and the server is encrypted with HTTPS, and Supabase
+        encrypts stored data at rest. Supabase acts as our data processor; we
+        use no other third-party processors.
+      </p>
+      <p>
+        The app also keeps a copy of your data on your device so it works
+        without a signal. Shifts you log offline are stored on the device until
+        your connection returns, then sent to the server. Signing out or
+        uninstalling the app removes this local copy.
+      </p>
+
+      <h2>How long we keep it</h2>
+      <p>
+        Your data is kept until you delete it or ask us to close your account.
+        Deleting an agency in the app also deletes its shifts and rate rules.
+        When an account is deleted, all rows belonging to it are removed.
+      </p>
+
+      <h2>Your rights</h2>
+      <p>
+        Under UK GDPR you can request a copy of your data, correct it, delete
+        it, or object to how it is used. Two of these you can do yourself in
+        the app at any time: <strong>Settings &rarr; Export shifts as CSV</strong>
+        gives you your records as a spreadsheet, and any agency, shift or
+        payslip can be deleted directly. For account deletion or any other
+        request, email
+        <a href="mailto:privacy@payweek.app">privacy@payweek.app</a> and we
+        will respond within 30 days. You can also complain to the UK
+        Information Commissioner&rsquo;s Office at
+        <a href="https://ico.org.uk/">ico.org.uk</a>.
+      </p>
+
+      <h2>Children</h2>
+      <p>
+        Payweek is intended for people in work and is not directed at children
+        under 13.
+      </p>
+
+      <h2>Changes</h2>
+      <p>
+        If this policy changes, the date at the top will be updated and the
+        current version will always be available at this address.
+      </p>
+
+      <footer>
+        Payweek &middot; Know what&rsquo;s in your packet. &middot;
+        <a href="mailto:privacy@payweek.app">privacy@payweek.app</a>
+      </footer>
+    </main>
+  </body>
+</html>

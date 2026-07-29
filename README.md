@@ -56,6 +56,13 @@ npx cap run android    # or open android/ in Android Studio
 
 Magic links and Google OAuth on Android return to the app via the `payweek://auth-callback` deep link (registered in `AndroidManifest.xml`, handled in `src/auth/redirects.ts`). Open the magic-link email on the same device that requested it — the PKCE flow requires it.
 
+## Release
+
+See [docs/RELEASE.md](docs/RELEASE.md) for the signed-AAB build and Play
+Console closed-testing runbook, [docs/DATA_SAFETY.md](docs/DATA_SAFETY.md) for
+the Data safety form answers, and [docs/STORE_LISTING.md](docs/STORE_LISTING.md)
+for listing copy. The privacy policy is served from `public/privacy.html`.
+
 ## Checks
 
 ```sh

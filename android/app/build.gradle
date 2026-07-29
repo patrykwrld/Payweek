@@ -1,5 +1,16 @@
 apply plugin: 'com.android.application'
 
+// Release signing. Credentials live in android/keystore.properties (never
+// committed) or, for CI, the PAYWEEK_KEYSTORE_* environment variables.
+// Unsigned debug builds work without either.
+def keystorePropsFile = rootProject.file('keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
+}
+def keystorePathValue = keystoreProps['storeFile'] ?: System.getenv('PAYWEEK_KEYSTORE_FILE')
+def hasReleaseSigning = keystorePathValue != null && !keystorePathValue.isEmpty()
+
 android {
     namespace "app.payweek"
     compileSdk rootProject.ext.compileSdkVersion
@@ -8,7 +19,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +27,24 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile rootProject.file(keystorePathValue)
+                storePassword keystoreProps['storePassword'] ?: System.getenv('PAYWEEK_KEYSTORE_PASSWORD')
+                keyAlias keystoreProps['keyAlias'] ?: System.getenv('PAYWEEK_KEY_ALIAS')
+                keyPassword keystoreProps['keyPassword'] ?: System.getenv('PAYWEEK_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
