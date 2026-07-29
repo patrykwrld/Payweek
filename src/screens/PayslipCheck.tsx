@@ -9,6 +9,8 @@ import {
   inputCls,
   selectCls,
 } from '../components/ui'
+import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { useIsOnline } from '../lib/offline'
 import { formatMinutes, formatPence, parsePoundsToPence } from '../lib/money'
 import { buildAgencyWeeks, comparePayslip } from '../lib/payday'
 import {
@@ -28,6 +30,8 @@ export function PayslipCheck() {
   const payslips = usePayslips()
   const insert = useInsertPayslip()
   const remove = useDeletePayslip()
+  const online = useIsOnline()
+
 
   const [agencyId, setAgencyId] = useState('')
   const [weekStart, setWeekStart] = useState('')
@@ -47,8 +51,15 @@ export function PayslipCheck() {
     [ready, failed, shifts.data, agencies.data, rules.data],
   )
 
-  if (!ready) return <p className="text-muted">Loading…</p>
-  if (failed) return <p className="text-red-400">Couldn&rsquo;t load.</p>
+  if (!ready) return <ScreenSkeleton rows={3} />
+  if (failed) return (
+      <LoadFailed
+        offline={!online}
+        onRetry={() => {
+          void agencies.refetch(); void shifts.refetch(); void rules.refetch(); void payslips.refetch()
+        }}
+      />
+    )
 
   const agencyIds = [...new Set(weeks.map((w) => w.agency.id))]
   const effectiveAgencyId = agencyId || agencyIds[0] || ''

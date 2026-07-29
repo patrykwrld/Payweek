@@ -1,25 +1,28 @@
 import { Card, EmptyState, ScreenTitle } from '../components/ui'
+import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { useIsOnline } from '../lib/offline'
+import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence } from '../lib/money'
 import { buildAgencyWeeks, holidayAccrualPence } from '../lib/payday'
-import { useAgencies, useProfile, useRateRules, useShifts } from '../lib/queries'
+import { useProfile } from '../lib/queries'
 import { formatDay } from '../lib/weeks'
 
 export function Payday() {
-  const agencies = useAgencies()
-  const shifts = useShifts()
-  const rules = useRateRules()
+  const data = useAppData()
   const profile = useProfile()
+  const online = useIsOnline()
 
-  if (agencies.isPending || shifts.isPending || rules.isPending || profile.isPending) {
-    return <p className="text-muted">Loading…</p>
+  if (data.status === 'pending' || profile.isPending) {
+    return <ScreenSkeleton rows={3} />
   }
-  if (agencies.isError || shifts.isError || rules.isError || profile.isError) {
-    return <p className="text-red-400">Couldn&rsquo;t load.</p>
+  if (data.status === 'error' || profile.isError) {
+    return <LoadFailed offline={!online} onRetry={data.retry} />
   }
 
+  const { agencies, shifts, rules } = data
   const showAccrual = profile.data?.show_holiday_accrual ?? true
   const accrualPct = profile.data?.holiday_accrual_pct ?? 12.07
-  const weeks = buildAgencyWeeks(shifts.data, agencies.data, rules.data)
+  const weeks = buildAgencyWeeks(shifts, agencies, rules)
 
   // Group the week cards under each agency heading.
   const byAgency = new Map<string, typeof weeks>()

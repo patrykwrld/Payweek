@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AgencyFormFields } from '../components/AgencyFormFields'
 import { DAY_NAMES } from '../lib/days'
 import { EmptyState, GhostButton, ScreenTitle } from '../components/ui'
+import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { useIsOnline } from '../lib/offline'
 import { formatRate } from '../lib/money'
 import {
   useAgencies,
@@ -42,15 +44,24 @@ export function AgencyDetail() {
   const agencies = useAgencies()
   const rules = useRateRules()
   const update = useUpdateAgency()
+  const online = useIsOnline()
+
   const remove = useDeleteAgency()
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   if (agencies.isPending || rules.isPending) {
-    return <p className="text-muted">Loading…</p>
+    return <ScreenSkeleton rows={2} />
   }
   if (agencies.isError || rules.isError) {
-    return <p className="text-red-400">Couldn&rsquo;t load.</p>
+    return (
+      <LoadFailed
+        offline={!online}
+        onRetry={() => {
+          void agencies.refetch(); void rules.refetch()
+        }}
+      />
+    )
   }
 
   const agency = agencies.data.find((a) => a.id === id)

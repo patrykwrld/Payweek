@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import type { Tables, TablesInsert, TablesUpdate } from './database.types'
+import { mutationKeys } from './offline'
 
 // Row volumes are tiny (one user's data), so each table is fetched whole
 // and filtered client-side; RLS scopes rows to the signed-in user.
@@ -120,26 +121,20 @@ export function useDeleteRule() {
 }
 
 export function useInsertShift() {
-  return useInvalidating('shifts', async (values: TablesInsert<'shifts'>) => {
-    const { error } = await supabase.from('shifts').insert(values)
-    if (error) throw error
+  return useMutation<void, Error, TablesInsert<'shifts'>>({
+    mutationKey: mutationKeys.insertShift,
   })
 }
 
 export function useUpdateShift() {
-  return useInvalidating(
-    'shifts',
-    async ({ id, ...values }: TablesUpdate<'shifts'> & { id: string }) => {
-      const { error } = await supabase.from('shifts').update(values).eq('id', id)
-      if (error) throw error
-    },
-  )
+  return useMutation<void, Error, TablesUpdate<'shifts'> & { id: string }>({
+    mutationKey: mutationKeys.updateShift,
+  })
 }
 
 export function useDeleteShift() {
-  return useInvalidating('shifts', async (id: string) => {
-    const { error } = await supabase.from('shifts').delete().eq('id', id)
-    if (error) throw error
+  return useMutation<void, Error, string>({
+    mutationKey: mutationKeys.deleteShift,
   })
 }
 

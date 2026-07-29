@@ -1,29 +1,31 @@
 import { Link } from 'react-router-dom'
 import { EmptyState, ScreenTitle } from '../components/ui'
+import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { useIsOnline } from '../lib/offline'
+import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence } from '../lib/money'
 import { priceShifts, type PricedShift } from '../lib/pricing'
-import { useAgencies, useRateRules, useShifts } from '../lib/queries'
 import { formatDay, formatWeekRange } from '../lib/weeks'
 
 export function Shifts() {
-  const agencies = useAgencies()
-  const shifts = useShifts()
-  const rules = useRateRules()
+  const data = useAppData()
+  const online = useIsOnline()
 
-  if (agencies.isPending || shifts.isPending || rules.isPending) {
-    return <p className="text-muted">Loading…</p>
+  if (data.status === 'pending') {
+    return <ScreenSkeleton rows={3} />
   }
-  if (agencies.isError || shifts.isError || rules.isError) {
-    return <p className="text-red-400">Couldn&rsquo;t load shifts.</p>
+  if (data.status === 'error') {
+    return <LoadFailed offline={!online} onRetry={data.retry} />
   }
 
-  const priced = priceShifts(shifts.data, agencies.data, rules.data)
-  const agencyName = new Map(agencies.data.map((a) => [a.id, a.name]))
+  const { agencies, shifts, rules } = data
+  const priced = priceShifts(shifts, agencies, rules)
+  const agencyName = new Map(agencies.map((a) => [a.id, a.name]))
 
   // Group by pay-week start, newest week first; shifts within a week
   // keep the query's date-descending order.
   const weeks = new Map<string, PricedShift[]>()
-  for (const shift of shifts.data) {
+  for (const shift of shifts) {
     const entry = priced.get(shift.id)
     if (!entry) continue
     const list = weeks.get(entry.weekStart) ?? []

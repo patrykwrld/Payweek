@@ -7,33 +7,31 @@ import {
   GhostButton,
   ScreenTitle,
 } from '../components/ui'
+import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { useIsOnline } from '../lib/offline'
+import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence } from '../lib/money'
 import { priceShifts } from '../lib/pricing'
-import {
-  useAgencies,
-  useInsertShift,
-  useRateRules,
-  useShifts,
-} from '../lib/queries'
+import { useInsertShift } from '../lib/queries'
 import { shiftDurationMinutes } from '../lib/rateEngine'
 import { formatDay, payWeekEnd, todayISO } from '../lib/weeks'
 
 export function QuickAdd() {
   const navigate = useNavigate()
-  const agencies = useAgencies()
-  const shifts = useShifts()
-  const rules = useRateRules()
+  const data = useAppData()
+  const online = useIsOnline()
   const insert = useInsertShift()
   const [repeated, setRepeated] = useState(false)
 
-  if (agencies.isPending || shifts.isPending || rules.isPending) {
-    return <p className="text-muted">Loading…</p>
+  if (data.status === 'pending') {
+    return <ScreenSkeleton rows={3} />
   }
-  if (agencies.isError || shifts.isError || rules.isError) {
-    return <p className="text-red-400">Couldn&rsquo;t load. Pull to retry.</p>
+  if (data.status === 'error') {
+    return <LoadFailed offline={!online} onRetry={data.retry} />
   }
 
-  const active = agencies.data.filter((a) => !a.archived)
+  const { agencies, shifts, rules } = data
+  const active = agencies.filter((a) => !a.archived)
   if (active.length === 0) {
     return (
       <>
@@ -56,14 +54,14 @@ export function QuickAdd() {
     )
   }
 
-  const last = shifts.data[0]
+  const last = shifts[0]
   const lastAgency = last
-    ? agencies.data.find((a) => a.id === last.agency_id)
+    ? agencies.find((a) => a.id === last.agency_id)
     : undefined
 
   // Header number: totals across every shift whose agency pay week
   // contains today.
-  const priced = priceShifts(shifts.data, agencies.data, rules.data)
+  const priced = priceShifts(shifts, agencies, rules)
   const today = todayISO()
   let weekMinutes = 0
   let weekGross = 0
@@ -86,8 +84,8 @@ export function QuickAdd() {
         manual_rate_pence: last.manual_rate_pence,
         notes: null,
       },
-      { onSuccess: () => setRepeated(true) },
     )
+    setRepeated(true)
   }
 
   return (
@@ -127,7 +125,7 @@ export function QuickAdd() {
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">Add a shift</h2>
       <ShiftForm
-        agencies={agencies.data}
+        agencies={agencies}
         initial={
           last
             ? {
@@ -141,9 +139,10 @@ export function QuickAdd() {
         submitLabel="Log shift"
         pending={insert.isPending}
         error={insert.error}
-        onSubmit={(values) =>
-          insert.mutate(values, { onSuccess: () => navigate('/shifts') })
-        }
+        onSubmit={(values) => {
+          insert.mutate(values)
+          navigate('/shifts')
+        }}
       />
     </>
   )

@@ -10,6 +10,8 @@ import {
   inputCls,
   selectCls,
 } from '../components/ui'
+import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { useIsOnline } from '../lib/offline'
 import { buildShiftsCsv } from '../lib/csv'
 import { DAY_NAMES } from '../lib/days'
 import type { Tables } from '../lib/database.types'
@@ -25,9 +27,17 @@ import { todayISO } from '../lib/weeks'
 
 export function Settings() {
   const profile = useProfile()
+  const online = useIsOnline()
 
-  if (profile.isPending) return <p className="text-muted">Loading…</p>
-  if (profile.isError) return <p className="text-red-400">Couldn&rsquo;t load.</p>
+  if (profile.isPending) return <ScreenSkeleton rows={3} />
+  if (profile.isError) return (
+      <LoadFailed
+        offline={!online}
+        onRetry={() => {
+          void profile.refetch()
+        }}
+      />
+    )
 
   return <SettingsInner profile={profile.data} />
 }

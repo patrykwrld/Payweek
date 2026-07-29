@@ -6,36 +6,33 @@ import {
   GhostButton,
   ScreenTitle,
 } from '../components/ui'
+import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { useIsOnline } from '../lib/offline'
+import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence, formatRate } from '../lib/money'
 import { priceShifts } from '../lib/pricing'
-import {
-  useAgencies,
-  useDeleteShift,
-  useRateRules,
-  useShifts,
-  useUpdateShift,
-} from '../lib/queries'
+import { useDeleteShift, useUpdateShift } from '../lib/queries'
 import { formatDay } from '../lib/weeks'
 
 export function ShiftDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const agencies = useAgencies()
-  const shifts = useShifts()
-  const rules = useRateRules()
+  const data = useAppData()
+  const online = useIsOnline()
   const update = useUpdateShift()
   const remove = useDeleteShift()
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  if (agencies.isPending || shifts.isPending || rules.isPending) {
-    return <p className="text-muted">Loading…</p>
+  if (data.status === 'pending') {
+    return <ScreenSkeleton rows={2} />
   }
-  if (agencies.isError || shifts.isError || rules.isError) {
-    return <p className="text-red-400">Couldn&rsquo;t load.</p>
+  if (data.status === 'error') {
+    return <LoadFailed offline={!online} onRetry={data.retry} />
   }
 
-  const shift = shifts.data.find((s) => s.id === id)
+  const { agencies, shifts, rules } = data
+  const shift = shifts.find((s) => s.id === id)
   if (!shift) {
     return (
       <>
@@ -50,8 +47,8 @@ export function ShiftDetail() {
     )
   }
 
-  const agency = agencies.data.find((a) => a.id === shift.agency_id)
-  const pricing = priceShifts(shifts.data, agencies.data, rules.data).get(
+  const agency = agencies.find((a) => a.id === shift.agency_id)
+  const pricing = priceShifts(shifts, agencies, rules).get(
     shift.id,
   )?.pricing
 
@@ -74,17 +71,15 @@ export function ShiftDetail() {
       {editing ? (
         <>
           <ShiftForm
-            agencies={agencies.data}
+            agencies={agencies}
             initial={shift}
             submitLabel="Save changes"
             pending={update.isPending}
             error={update.error}
-            onSubmit={(values) =>
-              update.mutate(
-                { id: shift.id, ...values },
-                { onSuccess: () => setEditing(false) },
-              )
-            }
+            onSubmit={(values) => {
+              update.mutate({ id: shift.id, ...values })
+              setEditing(false)
+            }}
           />
           <div className="mt-4">
             <GhostButton
@@ -94,9 +89,8 @@ export function ShiftDetail() {
                   setConfirmDelete(true)
                   return
                 }
-                remove.mutate(shift.id, {
-                  onSuccess: () => navigate('/shifts'),
-                })
+                remove.mutate(shift.id)
+                navigate('/shifts')
               }}
             >
               {confirmDelete ? 'Tap again to delete' : 'Delete shift'}

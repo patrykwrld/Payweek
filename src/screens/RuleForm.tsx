@@ -11,6 +11,8 @@ import {
   inputCls,
   selectCls,
 } from '../components/ui'
+import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { useIsOnline } from '../lib/offline'
 import type { Tables, TablesInsert } from '../lib/database.types'
 import {
   formatMinutes,
@@ -103,12 +105,20 @@ export function RuleForm() {
   const { id: agencyId, ruleId } = useParams()
   const agencies = useAgencies()
   const rules = useRateRules()
+  const online = useIsOnline()
 
   if (agencies.isPending || rules.isPending) {
-    return <p className="text-muted">Loading…</p>
+    return <ScreenSkeleton rows={2} />
   }
   if (agencies.isError || rules.isError || !agencyId) {
-    return <p className="text-red-400">Couldn&rsquo;t load.</p>
+    return (
+      <LoadFailed
+        offline={!online}
+        onRetry={() => {
+          void agencies.refetch(); void rules.refetch()
+        }}
+      />
+    )
   }
 
   const agency = agencies.data.find((a) => a.id === agencyId)

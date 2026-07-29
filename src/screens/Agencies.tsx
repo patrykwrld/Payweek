@@ -1,13 +1,23 @@
 import { Link } from 'react-router-dom'
 import { EmptyState, ScreenTitle } from '../components/ui'
+import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { useIsOnline } from '../lib/offline'
 import { formatRate } from '../lib/money'
 import { useAgencies } from '../lib/queries'
 
 export function Agencies() {
   const agencies = useAgencies()
+  const online = useIsOnline()
 
-  if (agencies.isPending) return <p className="text-muted">Loading…</p>
-  if (agencies.isError) return <p className="text-red-400">Couldn&rsquo;t load.</p>
+  if (agencies.isPending) return <ScreenSkeleton rows={3} />
+  if (agencies.isError) return (
+      <LoadFailed
+        offline={!online}
+        onRetry={() => {
+          void agencies.refetch()
+        }}
+      />
+    )
 
   const active = agencies.data.filter((a) => !a.archived)
   const archived = agencies.data.filter((a) => a.archived)
