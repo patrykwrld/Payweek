@@ -25,7 +25,10 @@ export function Home() {
         <p className="font-mono text-5xl font-bold">
           £0<span className="text-muted">.00</span>
         </p>
-        <p className="text-sm text-muted">0h logged · shifts arrive in Phase 3</p>
+        <p className="text-sm text-muted">
+          <span className="font-mono">0h</span> logged · shifts arrive in
+          Phase 3
+        </p>
       </section>
 
       <p className="text-xs text-muted">
