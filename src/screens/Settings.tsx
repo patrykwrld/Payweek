@@ -103,11 +103,16 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
   }
 
   function openPrivacyPolicy() {
-    const url = 'https://payweek.app/privacy.html'
     if (Capacitor.isNativePlatform()) {
-      void Browser.open({ url })
+      // The APK serves from the local filesystem, so the policy has to be
+      // fetched from the web. VITE_PRIVACY_URL lets a build point at
+      // wherever it is actually hosted.
+      void Browser.open({
+        url: import.meta.env.VITE_PRIVACY_URL || 'https://payweek.app/privacy.html',
+      })
     } else {
-      window.open(url, '_blank', 'noopener')
+      // On the web it ships alongside the app, whatever the domain.
+      window.open('/privacy.html', '_blank', 'noopener')
     }
   }
 
