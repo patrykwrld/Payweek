@@ -1,0 +1,28 @@
+@import '@fontsource-variable/syne';
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
+
+@theme {
+  --color-void: #08090c;
+  --color-surface: #12141b;
+  --color-edge: #232735;
+  --color-accent: #a3e635;
+  --color-ink: #f2f4f8;
+  --color-muted: #8b93a7;
+
+  --font-display: 'Syne Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+}
