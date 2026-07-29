@@ -50,15 +50,15 @@ export function Shifts() {
           return (
             <section key={weekStart}>
               <header className="mb-2 flex items-baseline justify-between">
-                <h2 className="text-sm font-bold text-muted">
+                <h2 className="text-sm font-semibold text-muted">
                   {formatWeekRange(weekStart)}
                 </h2>
                 <p className="font-mono text-sm">
                   {formatMinutes(minutes)} ·{' '}
-                  <span className="font-bold text-ink">{formatPence(gross)}</span>
+                  <span className="font-semibold text-ink">{formatPence(gross)}</span>
                 </p>
               </header>
-              <div className="overflow-hidden rounded-2xl border border-edge bg-surface">
+              <div className="overflow-hidden rounded-xl border border-edge bg-surface">
                 {entries.map((entry, i) => (
                   <Link
                     key={entry.shift.id}
@@ -68,7 +68,7 @@ export function Shifts() {
                     }`}
                   >
                     <div>
-                      <p className="font-bold">{formatDay(entry.shift.date)}</p>
+                      <p className="font-semibold">{formatDay(entry.shift.date)}</p>
                       <p className="text-sm text-muted">
                         {agencyName.get(entry.shift.agency_id) ?? '—'} ·{' '}
                         <span className="font-mono">
@@ -78,7 +78,7 @@ export function Shifts() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-mono font-bold">
+                      <p className="font-mono font-semibold">
                         {formatPence(entry.pricing.grossPence)}
                       </p>
                       <p className="font-mono text-sm text-muted">

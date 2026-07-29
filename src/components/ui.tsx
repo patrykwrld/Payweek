@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 
 export const inputCls =
-  'w-full rounded-xl border border-edge bg-surface px-4 py-3 font-mono text-base outline-none placeholder:text-muted/50 focus:border-accent'
+  'w-full rounded-lg border border-edge bg-surface px-4 py-3 font-mono text-base outline-none placeholder:text-muted/50 focus:border-accent'
 
 export const selectCls =
-  'w-full appearance-none rounded-xl border border-edge bg-surface px-4 py-3 text-base outline-none focus:border-accent'
+  'w-full appearance-none rounded-lg border border-edge bg-surface px-4 py-3 text-base outline-none focus:border-accent'
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -31,7 +31,7 @@ export function PrimaryButton({
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className="w-full rounded-xl bg-accent px-4 py-3 text-base font-bold text-void transition-opacity disabled:opacity-50"
+      className="w-full rounded-lg bg-accent px-4 py-3 text-base font-semibold text-void transition-opacity disabled:opacity-50"
     >
       {children}
     </button>
@@ -53,7 +53,7 @@ export function GhostButton({
     <button
       type={type}
       onClick={onClick}
-      className={`w-full rounded-xl border border-edge bg-surface px-4 py-3 text-base font-bold transition-colors ${
+      className={`w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold transition-colors ${
         danger ? 'text-red-400 hover:border-red-400' : 'hover:border-accent'
       }`}
     >
@@ -64,7 +64,7 @@ export function GhostButton({
 
 export function Card({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-edge bg-surface p-5">{children}</div>
+    <div className="rounded-xl border border-edge bg-surface p-5">{children}</div>
   )
 }
 
@@ -76,8 +76,8 @@ export function ErrorText({ error }: { error: unknown }) {
 
 export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-edge p-8 text-center">
-      <p className="font-bold">{title}</p>
+    <div className="rounded-xl border border-dashed border-edge p-8 text-center">
+      <p className="font-semibold">{title}</p>
       {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
     </div>
   )
@@ -92,7 +92,7 @@ export function ScreenTitle({
 }) {
   return (
     <header className="mb-6 flex items-baseline justify-between">
-      <h1 className="text-2xl font-extrabold tracking-tight">{children}</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{children}</h1>
       {action}
     </header>
   )

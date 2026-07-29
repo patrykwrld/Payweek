@@ -4,7 +4,7 @@ const config: CapacitorConfig = {
   appId: 'app.payweek',
   appName: 'Payweek',
   webDir: 'dist',
-  backgroundColor: '#08090c',
+  backgroundColor: '#0d1117',
 }
 
 export default config

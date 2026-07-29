@@ -16,7 +16,7 @@ export default function App() {
   if (loading) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
-        <p className="text-2xl font-extrabold tracking-tight text-muted">
+        <p className="text-2xl font-semibold tracking-tight text-muted">
           Payweek<span className="text-accent">.</span>
         </p>
       </main>

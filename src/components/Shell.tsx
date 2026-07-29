@@ -20,7 +20,7 @@ export function Shell() {
               to={tab.to}
               end={tab.to === '/'}
               className={({ isActive }) =>
-                `flex-1 py-4 text-center text-sm font-bold ${
+                `flex-1 py-4 text-center text-sm font-semibold ${
                   isActive ? 'text-accent' : 'text-muted'
                 }`
               }

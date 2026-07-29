@@ -261,7 +261,7 @@ function RuleFormInner({
   }
 
   const segCls = (selected: boolean) =>
-    `flex-1 rounded-lg px-3 py-2 text-sm font-bold ${
+    `flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${
       selected ? 'bg-accent text-void' : 'bg-surface text-muted'
     }`
 
@@ -271,7 +271,7 @@ function RuleFormInner({
       <p className="mb-4 text-sm text-muted">{agency.name}</p>
 
       <form onSubmit={submit} className="space-y-4">
-        <div className="flex gap-2 rounded-xl border border-edge p-1">
+        <div className="flex gap-2 rounded-lg border border-edge p-1">
           <button type="button" className={segCls(kind === 'time_band')} onClick={() => setKind('time_band')}>
             Time band
           </button>
@@ -310,7 +310,7 @@ function RuleFormInner({
                     key={name}
                     type="button"
                     onClick={() => toggleDay(d)}
-                    className={`flex-1 rounded-lg py-2 text-xs font-bold ${
+                    className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
                       days.includes(d)
                         ? 'bg-accent text-void'
                         : 'border border-edge bg-surface text-muted'
@@ -397,8 +397,8 @@ function RuleFormInner({
         </details>
 
         <Card>
-          <h2 className="mb-2 text-sm font-bold text-muted">
-            Preview — 12h shift, Fri 18:00 → Sat 06:00
+          <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted">
+            Preview · 12h shift · Fri 18:00 → Sat 06:00
           </h2>
           {'error' in draft ? (
             <p className="text-sm text-muted">{draft.error}</p>
@@ -421,7 +421,7 @@ function RuleFormInner({
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 border-t border-edge pt-2 text-right font-mono text-lg font-bold">
+              <p className="mt-2 border-t border-edge pt-2 text-right font-mono text-lg font-semibold">
                 {formatPence(preview.grossPence)}
               </p>
             </>

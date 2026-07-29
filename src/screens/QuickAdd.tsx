@@ -47,7 +47,7 @@ export function QuickAdd() {
         <div className="mt-4">
           <Link
             to="/agencies/new"
-            className="block w-full rounded-xl bg-accent px-4 py-3 text-center text-base font-bold text-void"
+            className="block w-full rounded-lg bg-accent px-4 py-3 text-center text-base font-semibold text-void"
           >
             Add your first agency
           </Link>
@@ -97,8 +97,12 @@ export function QuickAdd() {
       </ScreenTitle>
 
       <Card>
-        <p className="text-sm text-muted">This pay week</p>
-        <p className="font-mono text-5xl font-bold">{formatPence(weekGross)}</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-muted">
+          This pay week
+        </p>
+        <p className="mt-1 font-mono text-5xl font-semibold tracking-tight">
+          {formatPence(weekGross)}
+        </p>
         <p className="mt-1 text-sm text-muted">
           <span className="font-mono">{formatMinutes(weekMinutes)}</span> logged
         </p>
@@ -121,7 +125,7 @@ export function QuickAdd() {
         </div>
       )}
 
-      <h2 className="mb-3 mt-8 text-lg font-bold">Add a shift</h2>
+      <h2 className="mb-3 mt-8 text-lg font-semibold">Add a shift</h2>
       <ShiftForm
         agencies={agencies.data}
         initial={

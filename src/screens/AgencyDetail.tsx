@@ -138,7 +138,7 @@ export function AgencyDetail() {
           </p>
 
           <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="text-lg font-bold">Rate rules</h2>
+            <h2 className="text-lg font-semibold">Rate rules</h2>
             <Link
               to={`/agencies/${agency.id}/rules/new`}
               className="text-sm text-accent underline underline-offset-4"
@@ -153,7 +153,7 @@ export function AgencyDetail() {
               hint="Add night, weekend or overtime rates and Payweek prices each minute."
             />
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-edge bg-surface">
+            <div className="overflow-hidden rounded-xl border border-edge bg-surface">
               {agencyRules.map((rule, i) => (
                 <Link
                   key={rule.id}
@@ -162,7 +162,7 @@ export function AgencyDetail() {
                     rule.active ? '' : 'opacity-50'
                   }`}
                 >
-                  <p className="font-bold">
+                  <p className="font-semibold">
                     {rule.label}
                     {!rule.active && ' (off)'}
                   </p>

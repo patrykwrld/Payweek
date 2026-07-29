@@ -107,7 +107,7 @@ export function ShiftDetail() {
         <div className="space-y-4">
           <Card>
             <p className="text-sm text-muted">{agency?.name ?? 'Unknown agency'}</p>
-            <p className="font-mono text-4xl font-bold">
+            <p className="mt-1 font-mono text-4xl font-semibold tracking-tight">
               {pricing ? formatPence(pricing.grossPence) : '—'}
             </p>
             <p className="mt-1 text-sm text-muted">
@@ -131,7 +131,7 @@ export function ShiftDetail() {
 
           {pricing && (
             <Card>
-              <h2 className="mb-3 text-sm font-bold text-muted">
+              <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted">
                 How this was worked out
               </h2>
               <ul className="space-y-2">
@@ -148,7 +148,7 @@ export function ShiftDetail() {
                         <span className="font-mono">{formatRate(line.ratePence)}</span>
                       </span>
                     </span>
-                    <span className="font-mono font-bold">
+                    <span className="font-mono font-semibold">
                       {formatPence(line.subtotalPence)}
                     </span>
                   </li>

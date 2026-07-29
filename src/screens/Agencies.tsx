@@ -40,10 +40,10 @@ export function Agencies() {
           <Link
             key={agency.id}
             to={`/agencies/${agency.id}`}
-            className="flex items-center justify-between rounded-2xl border border-edge bg-surface px-4 py-4"
+            className="flex items-center justify-between rounded-xl border border-edge bg-surface px-4 py-4"
           >
             <div>
-              <p className="font-bold">{agency.name}</p>
+              <p className="font-semibold">{agency.name}</p>
               <p className="text-sm text-muted">
                 {agency.pay_cycle} ·{' '}
                 <span className="font-mono">
@@ -59,15 +59,15 @@ export function Agencies() {
 
       {archived.length > 0 && (
         <>
-          <h2 className="mb-2 mt-8 text-sm font-bold text-muted">Archived</h2>
+          <h2 className="mb-2 mt-8 text-sm font-semibold text-muted">Archived</h2>
           <div className="space-y-3 opacity-60">
             {archived.map((agency) => (
               <Link
                 key={agency.id}
                 to={`/agencies/${agency.id}`}
-                className="flex items-center justify-between rounded-2xl border border-edge bg-surface px-4 py-4"
+                className="flex items-center justify-between rounded-xl border border-edge bg-surface px-4 py-4"
               >
-                <p className="font-bold">{agency.name}</p>
+                <p className="font-semibold">{agency.name}</p>
                 <span className="text-muted">›</span>
               </Link>
             ))}

@@ -51,15 +51,15 @@ export function SignIn() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-10 px-6 py-12">
       <header className="space-y-3">
-        <h1 className="text-4xl font-extrabold tracking-tight">
+        <h1 className="text-3xl font-semibold tracking-tight">
           Payweek<span className="text-accent">.</span>
         </h1>
         <p className="text-muted">Know what&rsquo;s in your packet.</p>
       </header>
 
       {status.kind === 'sent' ? (
-        <div className="space-y-3 rounded-2xl border border-edge bg-surface p-6">
-          <p className="text-lg font-bold">Check your inbox</p>
+        <div className="space-y-3 rounded-xl border border-edge bg-surface p-6">
+          <p className="text-lg font-semibold">Check your inbox</p>
           <p className="text-sm text-muted">
             We sent a sign-in link to{' '}
             <span className="font-mono text-ink">{email}</span>. Open it on this
@@ -85,14 +85,14 @@ export function SignIn() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full rounded-xl border border-edge bg-surface px-4 py-3 font-mono text-base outline-none placeholder:text-muted/50 focus:border-accent"
+              className="w-full rounded-lg border border-edge bg-surface px-4 py-3 font-mono text-base outline-none placeholder:text-muted/50 focus:border-accent"
             />
           </label>
 
           <button
             type="submit"
             disabled={status.kind === 'sending'}
-            className="w-full rounded-xl bg-accent px-4 py-3 text-base font-bold text-void transition-opacity disabled:opacity-50"
+            className="w-full rounded-lg bg-accent px-4 py-3 text-base font-semibold text-void transition-opacity disabled:opacity-50"
           >
             {status.kind === 'sending' ? 'Sending…' : 'Email me a sign-in link'}
           </button>
@@ -110,7 +110,7 @@ export function SignIn() {
           <button
             type="button"
             onClick={signInWithGoogle}
-            className="w-full rounded-xl border border-edge bg-surface px-4 py-3 text-base font-bold transition-colors hover:border-accent"
+            className="w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold transition-colors hover:border-accent"
           >
             Continue with Google
           </button>
