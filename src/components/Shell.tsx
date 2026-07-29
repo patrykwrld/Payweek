@@ -3,7 +3,9 @@ import { NavLink, Outlet } from 'react-router-dom'
 const tabs = [
   { to: '/', label: 'Add' },
   { to: '/shifts', label: 'Shifts' },
-  { to: '/agencies', label: 'Agencies' },
+  { to: '/payday', label: 'Payday' },
+  { to: '/check', label: 'Check' },
+  { to: '/settings', label: 'Settings' },
 ]
 
 export function Shell() {

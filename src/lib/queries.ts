@@ -53,7 +53,7 @@ export function useShifts() {
   })
 }
 
-type Table = 'agencies' | 'rate_rules' | 'shifts'
+type Table = 'agencies' | 'rate_rules' | 'shifts' | 'profiles' | 'payslips'
 
 function useInvalidating<TArgs, TResult>(
   table: Table,
@@ -139,6 +139,58 @@ export function useUpdateShift() {
 export function useDeleteShift() {
   return useInvalidating('shifts', async (id: string) => {
     const { error } = await supabase.from('shifts').delete().eq('id', id)
+    if (error) throw error
+  })
+}
+
+export function useProfile() {
+  return useQuery({
+    queryKey: ['profiles'],
+    queryFn: async (): Promise<Tables<'profiles'> | null> => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .maybeSingle()
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function useUpsertProfile() {
+  return useInvalidating(
+    'profiles',
+    async (values: TablesInsert<'profiles'>) => {
+      const { error } = await supabase.from('profiles').upsert(values)
+      if (error) throw error
+    },
+  )
+}
+
+export function usePayslips() {
+  return useQuery({
+    queryKey: ['payslips'],
+    queryFn: async (): Promise<Tables<'payslips'>[]> => {
+      const { data, error } = await supabase
+        .from('payslips')
+        .select('*')
+        .order('period_end', { ascending: false })
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function useInsertPayslip() {
+  return useInvalidating('payslips', async (values: TablesInsert<'payslips'>) => {
+    const { error } = await supabase.from('payslips').insert(values)
+    if (error) throw error
+  })
+}
+
+export function useDeletePayslip() {
+  return useInvalidating('payslips', async (id: string) => {
+    const { error } = await supabase.from('payslips').delete().eq('id', id)
     if (error) throw error
   })
 }

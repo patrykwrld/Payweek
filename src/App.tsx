@@ -5,9 +5,12 @@ import { Shell } from './components/Shell'
 import { Agencies } from './screens/Agencies'
 import { AgencyDetail } from './screens/AgencyDetail'
 import { AgencyNew } from './screens/AgencyNew'
+import { Payday } from './screens/Payday'
+import { PayslipCheck } from './screens/PayslipCheck'
 import { QuickAdd } from './screens/QuickAdd'
 import { RuleForm } from './screens/RuleForm'
 import { ShiftDetail } from './screens/ShiftDetail'
+import { Settings } from './screens/Settings'
 import { Shifts } from './screens/Shifts'
 
 export default function App() {
@@ -32,6 +35,9 @@ export default function App() {
           <Route path="/" element={<QuickAdd />} />
           <Route path="/shifts" element={<Shifts />} />
           <Route path="/shifts/:id" element={<ShiftDetail />} />
+          <Route path="/payday" element={<Payday />} />
+          <Route path="/check" element={<PayslipCheck />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/agencies" element={<Agencies />} />
           <Route path="/agencies/new" element={<AgencyNew />} />
           <Route path="/agencies/:id" element={<AgencyDetail />} />

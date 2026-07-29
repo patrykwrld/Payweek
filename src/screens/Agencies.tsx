@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { EmptyState, ScreenTitle } from '../components/ui'
 import { formatRate } from '../lib/money'
 import { useAgencies } from '../lib/queries'
-import { supabase } from '../lib/supabase'
 
 export function Agencies() {
   const agencies = useAgencies()
@@ -74,16 +73,6 @@ export function Agencies() {
           </div>
         </>
       )}
-
-      <div className="mt-12 text-center">
-        <button
-          type="button"
-          onClick={() => void supabase.auth.signOut()}
-          className="text-sm text-muted underline underline-offset-4 hover:text-ink"
-        >
-          Sign out
-        </button>
-      </div>
     </>
   )
 }
