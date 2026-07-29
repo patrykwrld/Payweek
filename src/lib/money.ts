@@ -34,7 +34,16 @@ export function parsePoundsToPence(input: string): number | null {
   return pounds * 100 + pence
 }
 
+/** Pence -> a plain decimal string with no currency symbol: 1250 ->
+ * '12.50'. Integer arithmetic only. Used for form inputs and for CSV
+ * columns a spreadsheet should read as numbers. */
+export function penceToDecimal(pence: number): string {
+  const sign = pence < 0 ? '-' : ''
+  const abs = Math.abs(Math.round(pence))
+  return `${sign}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, '0')}`
+}
+
 /** Pence -> editable pounds string: 1250 -> '12.50'. */
 export function penceToPoundsInput(pence: number): string {
-  return (Math.round(pence) / 100).toFixed(2)
+  return penceToDecimal(pence)
 }

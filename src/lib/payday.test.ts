@@ -132,15 +132,49 @@ describe('csv', () => {
     expect(toCsv([['a', 'b'], ['c,d', 1]])).toBe('a,b\r\n"c,d",1\r\n')
   })
 
-  it('builds a shifts export with priced grosses', () => {
+  it('builds a spreadsheet-shaped export', () => {
     const csv = buildShiftsCsv(
-      [shift('s1', 'a1', '2026-07-27', '09:00', '17:00')],
+      [
+        shift('s1', 'a1', '2026-07-27', '09:00', '17:00'),
+        shift('s2', 'a1', '2026-07-28', '18:00', '02:00', 60),
+      ],
       [{ ...agencyA, name: 'Acme, Ltd' }],
+      [nightRule],
+      { holidayAccrualPct: 12.07 },
+    )
+
+    expect(csv.startsWith('\uFEFF')).toBe(true) // Excel needs the BOM for £
+    const lines = csv.slice(1).trim().split('\r\n')
+
+    expect(lines[0]).toBe(
+      'Date,Day,Agency,Start,End,Break (min),Hours,Gross (GBP),Rate breakdown,Pay week ending,Payday,Notes',
+    )
+    expect(lines[1]).toBe(
+      '2026-07-27,Mon,"Acme, Ltd",09:00,17:00,0,8.00,96.00,Base rate 8h @ £12.00,2026-08-02,2026-08-06,',
+    )
+    expect(lines[2]).toBe(
+      // semicolons need no quoting — that's why the breakdown uses them
+      '2026-07-28,Tue,"Acme, Ltd",18:00,02:00,60,7.00,92.75,' +
+        'Base rate 3.5h @ £12.00; Night rate 3.5h @ £14.50,2026-08-02,2026-08-06,',
+    )
+
+    // blank separator, then totals: 15h, £188.75, accrual £22.78
+    expect(lines[3]).toBe(',,,,,,,,,,,')
+    expect(lines[4]).toBe('Total,,,,,,15.00,188.75,,,,')
+    expect(lines[5]).toBe('Holiday accrual (12.07%),,,,,,,22.78,,,,')
+  })
+
+  it('names the manual rate instead of a breakdown when overridden', () => {
+    const csv = buildShiftsCsv(
+      [{ ...shift('s1', 'a1', '2026-07-27', '09:00', '17:00'), manual_rate_pence: 2000 }],
+      [agencyA],
       [],
     )
-    const lines = csv.trim().split('\r\n')
-    expect(lines).toHaveLength(2)
-    expect(lines[0]).toContain('expected_gross_pence')
-    expect(lines[1]).toBe('2026-07-27,"Acme, Ltd",09:00,17:00,0,480,9600,£96.00,,')
+    expect(csv).toContain('Manual rate £20.00')
+  })
+
+  it('omits the totals block when there are no shifts', () => {
+    const csv = buildShiftsCsv([], [agencyA], [])
+    expect(csv.slice(1).trim().split('\r\n')).toHaveLength(1)
   })
 })

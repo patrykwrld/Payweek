@@ -77,7 +77,10 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
 
   function exportCsv() {
     if (!shifts.data || !agencies.data || !rules.data) return
-    const csv = buildShiftsCsv(shifts.data, agencies.data, rules.data)
+    const pct = Number(holidayPct)
+    const csv = buildShiftsCsv(shifts.data, agencies.data, rules.data, {
+      holidayAccrualPct: showAccrual && Number.isFinite(pct) ? pct : null,
+    })
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
