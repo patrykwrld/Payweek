@@ -8,6 +8,9 @@ An Android app (Capacitor-wrapped web app) that logs shifts across multiple agen
 
 Vite · React 18 · TypeScript (strict) · Tailwind 4 · Capacitor 6 (Android) · Supabase (auth + Postgres + RLS) · TanStack Query · date-fns. All money is integer pence — no floats, ever.
 
+**New here?** [docs/START_HERE.md](docs/START_HERE.md) walks through running
+the app and publishing it, step by step.
+
 ## Setup
 
 ### 1. Supabase project
