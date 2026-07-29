@@ -19,7 +19,9 @@ create table public.profiles (
 alter table public.profiles enable row level security;
 
 create policy "profiles: own row" on public.profiles
-  for all using (id = auth.uid()) with check (id = auth.uid());
+  for all to authenticated
+  using (id = (select auth.uid()))
+  with check (id = (select auth.uid()));
 
 -- Auto-create a profile when a user signs up
 create function public.handle_new_user()
@@ -62,7 +64,9 @@ create index agencies_user_idx on public.agencies (user_id);
 alter table public.agencies enable row level security;
 
 create policy "agencies: own rows" on public.agencies
-  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
 
 -- ============================================================
 -- rate_rules (owned via agency)
@@ -111,17 +115,17 @@ create index rate_rules_agency_idx on public.rate_rules (agency_id);
 alter table public.rate_rules enable row level security;
 
 create policy "rate_rules: via agency ownership" on public.rate_rules
-  for all
+  for all to authenticated
   using (
     exists (
       select 1 from public.agencies a
-      where a.id = rate_rules.agency_id and a.user_id = auth.uid()
+      where a.id = rate_rules.agency_id and a.user_id = (select auth.uid())
     )
   )
   with check (
     exists (
       select 1 from public.agencies a
-      where a.id = rate_rules.agency_id and a.user_id = auth.uid()
+      where a.id = rate_rules.agency_id and a.user_id = (select auth.uid())
     )
   );
 
@@ -147,7 +151,9 @@ create index shifts_agency_idx on public.shifts (agency_id);
 alter table public.shifts enable row level security;
 
 create policy "shifts: own rows" on public.shifts
-  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
 
 -- ============================================================
 -- payslips
@@ -171,4 +177,6 @@ create index payslips_agency_idx on public.payslips (agency_id);
 alter table public.payslips enable row level security;
 
 create policy "payslips: own rows" on public.payslips
-  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));

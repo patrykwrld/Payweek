@@ -12,16 +12,32 @@ Vite · React 18 · TypeScript (strict) · Tailwind 4 · Capacitor 6 (Android) �
 
 ### 1. Supabase project
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Apply the schema: paste `supabase/migrations/20260728000001_init.sql` into the SQL editor (or `supabase db push` with the CLI).
-3. **Auth → URL Configuration**: set the Site URL to your dev URL (`http://localhost:5173`) and add `payweek://auth-callback` to Redirect URLs (needed for Android).
-4. **Auth → Providers**: Email (magic link) is on by default. For Google, create OAuth credentials in Google Cloud Console and paste the client ID/secret into the Google provider settings.
+The live project is **payweek** (`jcwxxtimhrlzaojadmhx`, eu-west-2) with both
+migrations in `supabase/migrations/` already applied and the security/performance
+advisors clean. For a fresh project, apply the migrations in order via the SQL
+editor or `supabase db push`.
+
+Manual dashboard steps (not scriptable via migrations):
+
+1. **Auth → URL Configuration**: set the Site URL to your dev URL (`http://localhost:5173`) and add `payweek://auth-callback` to Redirect URLs (needed for Android).
+2. **Auth → Providers**: Email (magic link) is on by default. For Google, create OAuth credentials in Google Cloud Console and paste the client ID/secret into the Google provider settings.
+
+After schema changes, regenerate `src/lib/database.types.ts` (`supabase gen types typescript`).
 
 ### 2. Environment
 
 ```sh
-cp .env.example .env   # then fill in the project URL + anon key from Project Settings > API
+cp .env.example .env
 ```
+
+For the live project:
+
+```
+VITE_SUPABASE_URL=https://jcwxxtimhrlzaojadmhx.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_PXDZo1oea43av5x4lIj3lg_1vGP_8AI
+```
+
+(The publishable key is client-side by design; RLS is what protects the data.)
 
 ### 3. Run in the browser
 
