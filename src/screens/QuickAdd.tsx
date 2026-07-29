@@ -1,0 +1,146 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ShiftForm } from '../components/ShiftForm'
+import {
+  Card,
+  EmptyState,
+  GhostButton,
+  ScreenTitle,
+} from '../components/ui'
+import { formatMinutes, formatPence } from '../lib/money'
+import { priceShifts } from '../lib/pricing'
+import {
+  useAgencies,
+  useInsertShift,
+  useRateRules,
+  useShifts,
+} from '../lib/queries'
+import { shiftDurationMinutes } from '../lib/rateEngine'
+import { formatDay, payWeekEnd, todayISO } from '../lib/weeks'
+
+export function QuickAdd() {
+  const navigate = useNavigate()
+  const agencies = useAgencies()
+  const shifts = useShifts()
+  const rules = useRateRules()
+  const insert = useInsertShift()
+  const [repeated, setRepeated] = useState(false)
+
+  if (agencies.isPending || shifts.isPending || rules.isPending) {
+    return <p className="text-muted">Loading…</p>
+  }
+  if (agencies.isError || shifts.isError || rules.isError) {
+    return <p className="text-red-400">Couldn&rsquo;t load. Pull to retry.</p>
+  }
+
+  const active = agencies.data.filter((a) => !a.archived)
+  if (active.length === 0) {
+    return (
+      <>
+        <ScreenTitle>
+          Payweek<span className="text-accent">.</span>
+        </ScreenTitle>
+        <EmptyState
+          title="No agencies yet"
+          hint="Add the agency you work for and its rates — then logging a shift takes seconds."
+        />
+        <div className="mt-4">
+          <Link
+            to="/agencies/new"
+            className="block w-full rounded-xl bg-accent px-4 py-3 text-center text-base font-bold text-void"
+          >
+            Add your first agency
+          </Link>
+        </div>
+      </>
+    )
+  }
+
+  const last = shifts.data[0]
+  const lastAgency = last
+    ? agencies.data.find((a) => a.id === last.agency_id)
+    : undefined
+
+  // Header number: totals across every shift whose agency pay week
+  // contains today.
+  const priced = priceShifts(shifts.data, agencies.data, rules.data)
+  const today = todayISO()
+  let weekMinutes = 0
+  let weekGross = 0
+  for (const { pricing, weekStart } of priced.values()) {
+    if (today >= weekStart && today <= payWeekEnd(weekStart)) {
+      weekMinutes += pricing.paidMinutes
+      weekGross += pricing.grossPence
+    }
+  }
+
+  function repeatLast() {
+    if (!last) return
+    insert.mutate(
+      {
+        agency_id: last.agency_id,
+        date: todayISO(),
+        start_time: last.start_time,
+        end_time: last.end_time,
+        break_minutes: last.break_minutes,
+        manual_rate_pence: last.manual_rate_pence,
+        notes: null,
+      },
+      { onSuccess: () => setRepeated(true) },
+    )
+  }
+
+  return (
+    <>
+      <ScreenTitle>
+        Payweek<span className="text-accent">.</span>
+      </ScreenTitle>
+
+      <Card>
+        <p className="text-sm text-muted">This pay week</p>
+        <p className="font-mono text-5xl font-bold">{formatPence(weekGross)}</p>
+        <p className="mt-1 text-sm text-muted">
+          <span className="font-mono">{formatMinutes(weekMinutes)}</span> logged
+        </p>
+      </Card>
+
+      {last && lastAgency && (
+        <div className="mt-4">
+          <GhostButton onClick={repeatLast}>
+            {repeated
+              ? 'Added ✓'
+              : `Repeat last: ${lastAgency.name} ${last.start_time.slice(0, 5)}–${last.end_time.slice(0, 5)} (${formatMinutes(
+                  shiftDurationMinutes(last.start_time, last.end_time),
+                )})`}
+          </GhostButton>
+          {last && (
+            <p className="mt-1 text-center text-xs text-muted">
+              Last shift: {formatDay(last.date)}
+            </p>
+          )}
+        </div>
+      )}
+
+      <h2 className="mb-3 mt-8 text-lg font-bold">Add a shift</h2>
+      <ShiftForm
+        agencies={agencies.data}
+        initial={
+          last
+            ? {
+                agency_id: last.agency_id,
+                start_time: last.start_time,
+                end_time: last.end_time,
+                break_minutes: last.break_minutes,
+              }
+            : undefined
+        }
+        submitLabel="Log shift"
+        pending={insert.isPending}
+        error={insert.error}
+        onSubmit={(values) =>
+          insert.mutate(values, { onSuccess: () => navigate('/shifts') })
+        }
+      />
+    </>
+  )
+}
