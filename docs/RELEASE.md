@@ -91,8 +91,8 @@ bundletool install-apks --apks=payweek.apks
 1. **Create app** — name "Payweek: Hours & Pay Tracker", English (UK), App,
    Free.
 2. **App content** (all required before any release can roll out):
-   - Privacy policy URL: `https://payweek.app/privacy.html` (must be live and
-     public — it is served from `public/privacy.html` by the web build)
+   - Privacy policy URL: `https://payweek-self.vercel.app/privacy.html` — **live now**. Swap to
+     `https://payweek.app/privacy.html` once that domain is attached.
    - Ads: **No**
    - App access: all functionality requires a sign-in, so provide reviewer
      credentials — create a real account with a mailbox you control and give

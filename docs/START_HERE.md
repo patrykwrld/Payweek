@@ -128,9 +128,8 @@ Only do this once Part B works and you're happy with the app.
 - **A real email address for privacy questions** — set up
   `privacy@payweek.app`, or change the address in `public/privacy.html` to one
   you actually read
-- **The privacy policy online** — Google needs a public web address for it.
-  Easiest way: deploy this project to Vercel or Netlify (free), which puts the
-  page at `yoursite.com/privacy.html`
+- ~~The privacy policy online~~ — **done**. It is live at
+  <https://payweek-self.vercel.app/privacy.html>, which is the address to give Google Play.
 
 ### 11. Create your signing key
 

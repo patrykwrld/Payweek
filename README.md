@@ -1,5 +1,7 @@
 # Payweek
 
+**Live:** <https://payweek-self.vercel.app> · Privacy policy: <https://payweek-self.vercel.app/privacy.html>
+
 Hours & earnings tracker for agency workers paid weekly. Know what's in your packet.
 
 An Android app (Capacitor-wrapped web app) that logs shifts across multiple agencies, calculates expected gross pay with flexible rate rules, and diffs expected pay against actual payslips to catch underpayment. See `PROJECT_BRIEF.md` for the full spec.

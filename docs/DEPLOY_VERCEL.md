@@ -1,16 +1,23 @@
 # Deploy Payweek to Vercel
 
+**Live:** <https://payweek-self.vercel.app> — production, project `payweek` in *pepe30kg's projects*,
+git-connected to this repo so every push redeploys.
+Privacy policy: <https://payweek-self.vercel.app/privacy.html>
+
+Verified after deploy: `/privacy.html` and `/` return 200, the SPA rewrite
+serves `/shifts` correctly, and the deployed bundle hash matches a local build
+made **with** the Supabase keys present (a keyless build produces a different
+hash), confirming the environment variables are set.
+
 The repo is deploy-ready: `vercel.json` sets the SPA rewrite and asset caching,
 and the build (`npm run build` → `dist/`) is verified. The privacy policy ships
 at `/privacy.html` on whatever domain the site ends up on.
 
-> **Why this wasn't done automatically.** The Vercel connector available in the
-> build session could read the account (teams, projects) but was denied
-> project creation (`403 forbidden: You don't have permission to create a
-> project`) on every scope — a role/permission limit on the Vercel side. The
-> two routes below are done from your own Vercel account, which has the rights.
+> The initial project creation had to be done from the Vercel dashboard: the
+> MCP connector could read the account but was denied `create project` on every
+> scope. Once the project exists, redeploys happen automatically on push.
 
-## Route A — Connect the GitHub repo (recommended)
+## Route A — Connect the GitHub repo (what was used)
 
 Gives you automatic deploys on every push and a proper place to hold the
 Supabase keys.
