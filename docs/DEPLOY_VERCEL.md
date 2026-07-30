@@ -1,8 +1,8 @@
 # Deploy Payweek to Vercel
 
-**Live:** <https://payweek-self.vercel.app> — production, project `payweek` in *pepe30kg's projects*,
+**Live:** <https://payweek.app> — production, project `payweek` in *pepe30kg's projects*,
 git-connected to this repo so every push redeploys.
-Privacy policy: <https://payweek-self.vercel.app/privacy.html>
+Privacy policy: <https://payweek.app/privacy.html>
 
 Verified after deploy: `/privacy.html` and `/` return 200, the SPA rewrite
 serves `/shifts` correctly, and the deployed bundle hash matches a local build

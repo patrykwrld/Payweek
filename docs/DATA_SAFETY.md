@@ -78,9 +78,8 @@ Answer **No** to all of these — nothing in the app touches them:
 
 Play requires a way to request account deletion from outside the app. Provide:
 
-- **Deletion URL:** `https://payweek-self.vercel.app/privacy.html` (live; swap to the payweek.app
-  address once attached). The *Your rights* section carries the deletion
-  contact.
+- **Deletion URL:** `https://payweek.app/privacy.html` — live. The *Your
+  rights* section carries the deletion contact.
 - What is deleted: the account and all agencies, rate rules, shifts and
   payslips belonging to it
 - What is retained: nothing

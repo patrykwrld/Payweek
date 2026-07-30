@@ -9,7 +9,7 @@ Start those early and do other things while they run.**
 
 ---
 
-## Step 1 — Start the Play developer account (5 min, then wait days)
+## ~~Step 1 — Start the Play developer account~~ ✅ DONE — in review
 
 Do this **first**, before coffee. Google has to verify your identity and that
 takes 1–3 days; everything else can happen while the clock runs.
@@ -40,7 +40,7 @@ back to Play at Step 9.
 **Nothing else matters if this is wrong.** You're checking that Payweek
 calculates your real pay correctly.
 
-1. Open **<https://payweek-self.vercel.app>** on your laptop
+1. Open **<https://payweek.app>** on your laptop
 2. Enter your email → **Email me a sign-in link** → open the email on the same
    device → click the link
 3. **Agencies → Add** — your real agency, your real base rate
@@ -58,7 +58,7 @@ needs another look — screenshot the address bar and send it.
 
 ---
 
-## Step 3 — Buy payweek.app and attach it (20 min)
+## ~~Step 3 — Buy payweek.app and attach it~~ ✅ DONE — live on HTTPS
 
 Easiest route, because it configures DNS for you automatically:
 
@@ -73,16 +73,18 @@ registrar. Slower, ~£3 cheaper.)
 ✅ <https://payweek.app> loads Payweek, with a padlock in the address bar.
 Certificates can take up to an hour — don't panic if it's not instant.
 
-### Then update three things
+### ⚠️ Two follow-ups the domain does NOT do for you
 
-1. **Vercel** → payweek → Settings → Environment Variables → add:
-   `VITE_PRIVACY_URL` = `https://payweek.app/privacy.html`
-   Then **Deployments → ⋯ → Redeploy** on the latest one.
-2. **Supabase** → project `payweek` → Authentication → URL Configuration:
+1. **Supabase redirect URLs — sign-in on payweek.app fails until this is done.**
+   Supabase → project `payweek` → Authentication → URL Configuration:
    - Site URL → `https://payweek.app`
    - Redirect URLs → add `https://payweek.app/**`
    (Keep the vercel.app entries and `payweek://auth-callback` — extras are fine.)
-3. Your privacy policy address becomes `https://payweek.app/privacy.html`.
+2. **`VITE_PRIVACY_URL` for the Android build.** Vercel → payweek →
+   Settings → Environment Variables → add
+   `VITE_PRIVACY_URL` = `https://payweek.app/privacy.html`, then redeploy.
+   Also put it in your local `.env` before running `bundleRelease`, or the
+   in-app Privacy policy button on Android points at the wrong place.
 
 ---
 

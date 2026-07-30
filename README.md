@@ -1,6 +1,6 @@
 # Payweek
 
-**Live:** <https://payweek-self.vercel.app> · Privacy policy: <https://payweek-self.vercel.app/privacy.html>
+**Live:** <https://payweek.app> · Privacy policy: <https://payweek.app/privacy.html>
 
 Hours & earnings tracker for agency workers paid weekly. Know what's in your packet.
 

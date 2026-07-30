@@ -129,7 +129,7 @@ Only do this once Part B works and you're happy with the app.
   `privacy@payweek.app`, or change the address in `public/privacy.html` to one
   you actually read
 - ~~The privacy policy online~~ — **done**. It is live at
-  <https://payweek-self.vercel.app/privacy.html>, which is the address to give Google Play.
+  <https://payweek.app/privacy.html>, which is the address to give Google Play.
 
 ### 11. Create your signing key
 
