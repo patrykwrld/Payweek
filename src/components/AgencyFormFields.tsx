@@ -2,7 +2,15 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import type { Tables, TablesInsert } from '../lib/database.types'
 import { DAY_NAMES } from '../lib/days'
 import { parsePoundsToPence, penceToPoundsInput } from '../lib/money'
-import { ErrorText, Field, PrimaryButton, inputCls, selectCls } from './ui'
+import { useIsOnline } from '../lib/offline'
+import {
+  ErrorText,
+  Field,
+  NeedsConnection,
+  PrimaryButton,
+  inputCls,
+  selectCls,
+} from './ui'
 
 export interface AgencyFormValues {
   name: string
@@ -73,6 +81,7 @@ export function AgencyFormFields({
   error,
   onSubmit,
 }: Props) {
+  const online = useIsOnline()
   const [name, setName] = useState(initial?.name ?? '')
   const [baseRate, setBaseRate] = useState(
     initial ? penceToPoundsInput(initial.base_rate_pence) : '',
@@ -320,8 +329,9 @@ export function AgencyFormFields({
 
       {validation && <p className="text-sm text-red-400">{validation}</p>}
       <ErrorText error={error} />
+      {!online && <NeedsConnection />}
 
-      <PrimaryButton disabled={pending}>
+      <PrimaryButton disabled={pending || !online}>
         {pending ? 'Saving…' : submitLabel}
       </PrimaryButton>
     </form>

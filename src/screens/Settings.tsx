@@ -7,6 +7,7 @@ import {
   ErrorText,
   Field,
   GhostButton,
+  NeedsConnection,
   PrimaryButton,
   ScreenTitle,
   inputCls,
@@ -15,6 +16,7 @@ import {
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { useIsOnline } from '../lib/offline'
 import { buildShiftsCsv } from '../lib/csv'
+import { saveTextFile } from '../lib/download'
 import { DAY_NAMES } from '../lib/days'
 import type { Tables } from '../lib/database.types'
 import {
@@ -26,6 +28,70 @@ import {
 } from '../lib/queries'
 import { supabase } from '../lib/supabase'
 import { todayISO } from '../lib/weeks'
+
+/**
+ * Play requires an in-app route to account deletion for any app that offers
+ * sign-up. The deletion itself needs the service role, so it runs in the
+ * `delete-account` Edge Function; this only asks, twice, and signs out.
+ */
+function DeleteAccount({ online }: { online: boolean }) {
+  const [stage, setStage] = useState<'idle' | 'confirming' | 'deleting'>('idle')
+  const [error, setError] = useState<string | null>(null)
+
+  async function remove() {
+    setStage('deleting')
+    setError(null)
+    const { error: fnError } = await supabase.functions.invoke('delete-account', {
+      method: 'POST',
+    })
+    if (fnError) {
+      setError(
+        `Couldn't delete the account: ${fnError.message}. Nothing has been removed.`,
+      )
+      setStage('confirming')
+      return
+    }
+    // The account is gone; signing out drops the dead session and clears the
+    // cached copy on this device.
+    await supabase.auth.signOut()
+  }
+
+  return (
+    <section className="mt-12 border-t border-edge pt-6">
+      <h2 className="text-sm font-semibold">Delete my account</h2>
+      <p className="mb-3 mt-1 text-sm text-muted">
+        Removes your account and every shift, agency, rate and payslip in it,
+        straight away and for good. There is no undo, and no copy kept. Export
+        your shifts first if you want to keep them.
+      </p>
+      {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
+      {!online ? (
+        <NeedsConnection />
+      ) : stage === 'idle' ? (
+        <GhostButton danger onClick={() => setStage('confirming')}>
+          Delete my account
+        </GhostButton>
+      ) : (
+        <div className="space-y-2">
+          <GhostButton danger onClick={() => void remove()}>
+            {stage === 'deleting'
+              ? 'Deleting…'
+              : 'Yes, delete everything permanently'}
+          </GhostButton>
+          {stage !== 'deleting' && (
+            <button
+              type="button"
+              onClick={() => setStage('idle')}
+              className="w-full py-2 text-sm text-muted underline underline-offset-4"
+            >
+              Keep my account
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
 
 export function Settings() {
   const profile = useProfile()
@@ -63,6 +129,8 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
   )
   const [savedTick, setSavedTick] = useState(false)
   const [validation, setValidation] = useState<string | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
+  const online = useIsOnline()
 
   function save(event: FormEvent) {
     event.preventDefault()
@@ -87,19 +155,25 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
     )
   }
 
-  function exportCsv() {
+  async function exportCsv() {
+    setExportError(null)
     if (!shifts.data || !agencies.data || !rules.data) return
+    if (shifts.data.length === 0) {
+      setExportError('There are no shifts to export yet.')
+      return
+    }
     const pct = Number(holidayPct)
     const csv = buildShiftsCsv(shifts.data, agencies.data, rules.data, {
       holidayAccrualPct: showAccrual && Number.isFinite(pct) ? pct : null,
     })
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `payweek-shifts-${todayISO()}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    try {
+      await saveTextFile(`payweek-shifts-${todayISO()}.csv`, csv, 'text/csv')
+    } catch (error) {
+      // Dismissing the Android share sheet rejects too; that isn't a failure
+      // worth shouting about.
+      const message = error instanceof Error ? error.message : String(error)
+      if (!/cancel/i.test(message)) setExportError(message)
+    }
   }
 
   function openPrivacyPolicy() {
@@ -170,8 +244,9 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
 
         {validation && <p className="text-sm text-red-400">{validation}</p>}
         <ErrorText error={upsert.error} />
+        {!online && <NeedsConnection />}
 
-        <PrimaryButton disabled={upsert.isPending}>
+        <PrimaryButton disabled={upsert.isPending || !online}>
           {upsert.isPending ? 'Saving…' : savedTick ? 'Saved ✓' : 'Save settings'}
         </PrimaryButton>
       </form>
@@ -183,11 +258,14 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
         >
           Check a payslip
         </Link>
-        <GhostButton onClick={exportCsv}>Export shifts as CSV</GhostButton>
+        <GhostButton onClick={() => void exportCsv()}>
+          Export my shifts as a spreadsheet
+        </GhostButton>
+        {exportError && <p className="text-sm text-red-400">{exportError}</p>}
         <GhostButton onClick={openPrivacyPolicy}>Privacy policy</GhostButton>
       </div>
 
-      <div className="mt-10 space-y-1 text-center">
+      <div className="mt-10 space-y-4 text-center">
         <p className="text-xs text-muted">
           Signed in as{' '}
           <span className="font-mono">{session?.user.email}</span>
@@ -200,6 +278,8 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
           Sign out
         </button>
       </div>
+
+      <DeleteAccount online={online} />
     </>
   )
 }

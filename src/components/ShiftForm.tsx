@@ -8,7 +8,8 @@ import {
   shiftDurationMinutes,
   type ShiftBreak,
 } from '../lib/rateEngine'
-import { todayISO } from '../lib/weeks'
+import { findOverlap } from '../lib/overlap'
+import { formatDay, todayISO } from '../lib/weeks'
 import { Card, ErrorText, Field, PrimaryButton, inputCls, selectCls } from './ui'
 
 export interface ShiftFormValues {
@@ -50,6 +51,10 @@ function draftsFromInitial(initial?: Partial<TablesInsert<'shifts'>>): BreakDraf
 interface Props {
   agencies: Tables<'agencies'>[]
   rules: Tables<'rate_rules'>[]
+  /** Everything already logged, so a clash can be pointed out. */
+  shifts?: Tables<'shifts'>[]
+  /** The shift being edited, which should not clash with itself. */
+  excludeId?: string
   initial?: Partial<TablesInsert<'shifts'>>
   submitLabel: string
   pending: boolean
@@ -60,6 +65,8 @@ interface Props {
 export function ShiftForm({
   agencies,
   rules,
+  shifts = [],
+  excludeId,
   initial,
   submitLabel,
   pending,
@@ -109,6 +116,11 @@ export function ShiftForm({
             rules: rulesFromRows(rules.filter((r) => r.agency_id === agencyId)),
           },
         )
+      : null
+
+  const clash =
+    workedMinutes > 0
+      ? findOverlap({ date, startTime, endTime }, shifts, excludeId)
       : null
 
   function setBreak(key: string, patch: Partial<BreakDraft>) {
@@ -214,6 +226,20 @@ export function ShiftForm({
           'Set the times'
         )}
       </p>
+
+      {clash && (
+        <p className="rounded-lg border border-amber-500/40 bg-amber-500/5 px-4 py-3 text-sm">
+          <span className="font-semibold">You already have a shift here.</span>{' '}
+          <span className="text-muted">
+            {formatDay(clash.date)}{' '}
+            <span className="font-mono">
+              {clash.start_time.slice(0, 5)}–{clash.end_time.slice(0, 5)}
+            </span>{' '}
+            overlaps this one. Saving both counts those hours twice — check
+            before you do.
+          </span>
+        </p>
+      )}
 
       {/* Breaks. Giving one a time takes it out of the rate band it actually
           falls in, which matters when the shift spans two rates. */}

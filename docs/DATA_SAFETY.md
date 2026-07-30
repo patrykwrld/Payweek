@@ -12,8 +12,8 @@ form that disagrees with the app's behaviour is a policy violation.
 | Shifts / agencies / rules / payslips are collected | `supabase/migrations/20260728000001_init.sql` |
 | Data is sent off-device | `src/lib/supabase.ts`, `src/lib/queries.ts` |
 | Data is encrypted in transit | Supabase client uses HTTPS only |
-| Users can delete data | Delete actions in `AgencyDetail`, `ShiftDetail`, `PayslipCheck` |
-| Users can export data | `src/lib/csv.ts`, Settings → Export shifts as CSV |
+| Users can delete data | Delete actions in `AgencyDetail`, `ShiftDetail`, `PayslipCheck`, plus Settings → Delete my account (`supabase/functions/delete-account`) |
+| Users can export data | `src/lib/csv.ts`, `src/lib/download.ts`, Settings → Export my shifts as a spreadsheet |
 | No ads, analytics or tracking SDKs | No such dependency in `package.json` |
 
 ## Overview answers
@@ -76,16 +76,20 @@ Answer **No** to all of these — nothing in the app touches them:
 
 ## Account deletion (required URL)
 
-Play requires a way to request account deletion from outside the app. Provide:
+Play requires **both** an in-app route to deletion and a web URL, for any app
+that lets users create an account.
 
+- **In-app:** Settings → **Delete my account**. Two taps, no support ticket.
+  It calls the `delete-account` Edge Function, which removes the `auth.users`
+  row; every table cascades from it.
 - **Deletion URL:** `https://payweek.app/privacy.html` — live. The *Your
-  rights* section carries the deletion contact.
+  rights* section names the in-app route and the contact address.
 - What is deleted: the account and all agencies, rate rules, shifts and
   payslips belonging to it
 - What is retained: nothing
 
-If you later add a self-serve "Delete my account" button in Settings, update
-this section and the privacy policy together.
+Test the in-app button with a throwaway account before each release — it is
+irreversible, and a broken deletion path is a policy violation.
 
 ## Keeping it honest
 

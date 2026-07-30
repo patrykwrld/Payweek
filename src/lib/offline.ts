@@ -15,9 +15,9 @@ export const mutationKeys = {
 type ShiftRow = Tables<'shifts'>
 
 /** Optimistic row for a shift that hasn't reached the server yet. */
-function optimisticShift(values: TablesInsert<'shifts'>): ShiftRow {
+function optimisticShift(values: TablesInsert<'shifts'> & { id: string }): ShiftRow {
   return {
-    id: crypto.randomUUID(),
+    id: values.id,
     user_id: values.user_id ?? 'pending',
     agency_id: values.agency_id,
     date: values.date,
@@ -54,15 +54,24 @@ export function registerMutationDefaults(client: QueryClient): void {
   }
 
   client.setMutationDefaults(mutationKeys.insertShift, {
+    // Upsert, not insert: the id is settled in `onMutate` before the first
+    // attempt, so a retry — or a replay after the app restarts — writes the
+    // same row again instead of logging the shift twice.
     mutationFn: async (values: TablesInsert<'shifts'>) => {
-      const { error } = await supabase.from('shifts').insert(values)
+      const { error } = await supabase.from('shifts').upsert(values)
       if (error) throw error
     },
     onMutate: (values: TablesInsert<'shifts'>) => {
+      // Runs once per mutation, not once per attempt, and the object it
+      // mutates is the one that gets persisted — so the id survives both.
+      values.id ??= crypto.randomUUID()
       const previous = snapshot()
       client.setQueryData(
         ['shifts'],
-        sortShifts([...previous, optimisticShift(values)]),
+        sortShifts([
+          ...previous,
+          optimisticShift(values as TablesInsert<'shifts'> & { id: string }),
+        ]),
       )
       return previous
     },

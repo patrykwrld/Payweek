@@ -6,6 +6,7 @@ import {
   ErrorText,
   Field,
   GhostButton,
+  NeedsConnection,
   PrimaryButton,
   ScreenTitle,
   inputCls,
@@ -193,6 +194,7 @@ function RuleFormInner({
   const agencyId = agency.id
   const ruleId = existing?.id
   const navigate = useNavigate()
+  const online = useIsOnline()
   const insert = useInsertRule()
   const update = useUpdateRule()
   const remove = useDeleteRule()
@@ -460,8 +462,11 @@ function RuleFormInner({
 
         {validation && <p className="text-sm text-red-400">{validation}</p>}
         <ErrorText error={existing ? update.error : insert.error} />
+        {!online && <NeedsConnection />}
 
-        <PrimaryButton disabled={insert.isPending || update.isPending}>
+        <PrimaryButton
+          disabled={insert.isPending || update.isPending || !online}
+        >
           {existing ? 'Save changes' : 'Add this rate'}
         </PrimaryButton>
 

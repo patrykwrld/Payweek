@@ -113,6 +113,7 @@ export function QuickAdd() {
       <ShiftForm
         agencies={agencies}
         rules={rules}
+        shifts={shifts}
         initial={
           last
             ? {

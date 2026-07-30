@@ -74,6 +74,21 @@ bundletool build-apks --bundle=app-release.aab --output=payweek.apks \
 bundletool install-apks --apks=payweek.apks
 ```
 
+## 2b. Server-side pieces
+
+The app is not purely client-side any more. Before a release, confirm the
+`delete-account` Edge Function is deployed and healthy — Settings → Delete my
+account fails without it, and Play requires that route to work:
+
+```sh
+supabase functions list --project-ref jcwxxtimhrlzaojadmhx
+supabase functions deploy delete-account --project-ref jcwxxtimhrlzaojadmhx
+```
+
+Source lives in `supabase/functions/delete-account/`. It runs with
+`verify_jwt` on and resolves the caller from their own token, so it can only
+ever delete the account that asked.
+
 ## 3. Before every release
 
 - Bump `versionCode` (must increase every upload) and `versionName` in

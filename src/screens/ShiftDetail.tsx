@@ -76,6 +76,8 @@ export function ShiftDetail() {
           <ShiftForm
             agencies={agencies}
             rules={rules}
+            shifts={shifts}
+            excludeId={shift.id}
             initial={shift}
             submitLabel="Save changes"
             pending={update.isPending}

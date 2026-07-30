@@ -68,6 +68,20 @@ export function Card({ children }: { children: ReactNode }) {
   )
 }
 
+/**
+ * Only shifts are queued for later — agencies, rates, payslips and settings
+ * all need a live connection. Saying so beats a button that looks like it
+ * worked and quietly waits for signal.
+ */
+export function NeedsConnection() {
+  return (
+    <p className="rounded-lg border border-edge bg-surface px-4 py-3 text-sm text-muted">
+      You&rsquo;re offline. Logging shifts still works, but saving this needs a
+      connection — try again once you&rsquo;re back on signal.
+    </p>
+  )
+}
+
 export function ErrorText({ error }: { error: unknown }) {
   if (!error) return null
   const message = error instanceof Error ? error.message : String(error)
