@@ -61,8 +61,8 @@ payslip or advice from your agency.
 
 | Asset | Size | Source |
 | --- | --- | --- |
-| App icon | 512×512 PNG, no transparency | `assets/icon.png` (downscale) |
-| Feature graphic | 1024×500 PNG | needs designing — the five-bar mark on `#0d1117` with the wordmark works |
+| App icon | 512×512 PNG, no transparency | ✅ `assets/play/icon-512.png` — ready |
+| Feature graphic | 1024×500 PNG | ✅ `assets/play/feature-graphic.png` — ready |
 | Phone screenshots (2–8) | min 320px, 16:9 or 9:16 | capture Quick Add, Shifts, a shift breakdown, the rule builder, Payslip check |
 
 Screenshots must be of the real app. The ones in the repo's development history
