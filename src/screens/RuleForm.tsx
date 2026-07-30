@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { DAY_NAMES } from '../lib/days'
 import {
   Card,
@@ -44,7 +44,7 @@ function draftRow(state: {
   payValue: string
   priority: string
 }): { row: TablesInsert<'rate_rules'> } | { error: string } {
-  if (state.label.trim() === '') return { error: 'Give the rule a name.' }
+  if (state.label.trim() === '') return { error: 'Give this rate a name.' }
 
   let rate_pence: number | null = null
   let multiplier: number | null = null
@@ -101,8 +101,56 @@ function draftRow(state: {
   }
 }
 
+/** Starting points for the rates people actually have, so the form arrives
+ * mostly filled in instead of blank. Chosen from the agency page. */
+const PRESETS = {
+  night: {
+    kind: 'time_band',
+    label: 'Night rate',
+    days: [] as number[],
+    bandStart: '22:00',
+    bandEnd: '06:00',
+    payKind: 'fixed',
+    payValue: '',
+    priority: '5',
+    blurb: 'A higher hourly rate between two times — most nights run 22:00 to 06:00.',
+  },
+  weekend: {
+    kind: 'time_band',
+    label: 'Weekend',
+    // Equal start and end means the whole day.
+    days: [0, 6] as number[],
+    bandStart: '00:00',
+    bandEnd: '00:00',
+    payKind: 'fixed',
+    payValue: '',
+    priority: '10',
+    blurb: 'A different hourly rate on the days you pick. Saturday and Sunday are ticked already.',
+  },
+  overtime: {
+    kind: 'threshold',
+    label: 'Overtime',
+    days: [] as number[],
+    bandStart: '22:00',
+    bandEnd: '06:00',
+    payKind: 'multiplier',
+    payValue: '1.5',
+    priority: '0',
+    blurb: 'Extra pay once you pass a number of hours. 1.5 is time and a half.',
+  },
+} as const
+
+type PresetName = keyof typeof PRESETS
+
+function presetFrom(value: string | null) {
+  return value !== null && value in PRESETS
+    ? PRESETS[value as PresetName]
+    : undefined
+}
+
 export function RuleForm() {
   const { id: agencyId, ruleId } = useParams()
+  const [searchParams] = useSearchParams()
   const agencies = useAgencies()
   const rules = useRateRules()
   const online = useIsOnline()
@@ -139,6 +187,7 @@ export function RuleForm() {
       agency={agency}
       agencyRules={rules.data.filter((r) => r.agency_id === agencyId)}
       existing={existing}
+      preset={existing ? undefined : presetFrom(searchParams.get('preset'))}
     />
   )
 }
@@ -147,10 +196,12 @@ function RuleFormInner({
   agency,
   agencyRules,
   existing,
+  preset,
 }: {
   agency: Tables<'agencies'>
   agencyRules: Tables<'rate_rules'>[]
   existing: Tables<'rate_rules'> | undefined
+  preset: (typeof PRESETS)[PresetName] | undefined
 }) {
   const agencyId = agency.id
   const ruleId = existing?.id
@@ -160,15 +211,19 @@ function RuleFormInner({
   const remove = useDeleteRule()
 
   const [kind, setKind] = useState<'time_band' | 'threshold'>(
-    existing?.kind === 'threshold' ? 'threshold' : 'time_band',
+    existing?.kind === 'threshold' || preset?.kind === 'threshold'
+      ? 'threshold'
+      : 'time_band',
   )
-  const [label, setLabel] = useState(existing?.label ?? '')
-  const [days, setDays] = useState<number[]>(existing?.days_of_week ?? [])
+  const [label, setLabel] = useState(existing?.label ?? preset?.label ?? '')
+  const [days, setDays] = useState<number[]>(
+    existing?.days_of_week ?? [...(preset?.days ?? [])],
+  )
   const [bandStart, setBandStart] = useState(
-    existing?.band_start?.slice(0, 5) ?? '22:00',
+    existing?.band_start?.slice(0, 5) ?? preset?.bandStart ?? '22:00',
   )
   const [bandEnd, setBandEnd] = useState(
-    existing?.band_end?.slice(0, 5) ?? '06:00',
+    existing?.band_end?.slice(0, 5) ?? preset?.bandEnd ?? '06:00',
   )
   const [thresholdHours, setThresholdHours] = useState(
     existing?.threshold_minutes != null
@@ -179,16 +234,22 @@ function RuleFormInner({
     existing?.threshold_scope === 'pay_week' ? 'pay_week' : 'shift',
   )
   const [payKind, setPayKind] = useState<'fixed' | 'multiplier'>(
-    existing?.multiplier != null ? 'multiplier' : 'fixed',
+    existing
+      ? existing.multiplier != null
+        ? 'multiplier'
+        : 'fixed'
+      : (preset?.payKind ?? 'fixed'),
   )
   const [payValue, setPayValue] = useState(
     existing?.multiplier != null
       ? String(existing.multiplier)
       : existing?.rate_pence != null
         ? penceToPoundsInput(existing.rate_pence)
-        : '',
+        : (preset?.payValue ?? ''),
   )
-  const [priority, setPriority] = useState(String(existing?.priority ?? 0))
+  const [priority, setPriority] = useState(
+    existing ? String(existing.priority) : (preset?.priority ?? '0'),
+  )
   const [active, setActive] = useState(existing?.active ?? true)
   const [validation, setValidation] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -277,20 +338,32 @@ function RuleFormInner({
 
   return (
     <>
-      <ScreenTitle>{existing ? 'Edit rule' : 'New rule'}</ScreenTitle>
-      <p className="mb-4 text-sm text-muted">{agency.name}</p>
+      <ScreenTitle>
+        {existing ? 'Edit rate' : (preset?.label ?? 'Extra rate')}
+      </ScreenTitle>
+      <p className="mb-4 text-sm text-muted">
+        {agency.name} · normally{' '}
+        <span className="font-mono">{formatPence(agency.base_rate_pence)}</span> an
+        hour
+      </p>
+      {preset && !existing && (
+        <p className="mb-4 text-sm text-muted">{preset.blurb}</p>
+      )}
 
       <form onSubmit={submit} className="space-y-4">
-        <div className="flex gap-2 rounded-lg border border-edge p-1">
-          <button type="button" className={segCls(kind === 'time_band')} onClick={() => setKind('time_band')}>
-            Time band
-          </button>
-          <button type="button" className={segCls(kind === 'threshold')} onClick={() => setKind('threshold')}>
-            After N hours
-          </button>
+        <div>
+          <p className="mb-2 text-sm text-muted">When does this rate apply?</p>
+          <div className="flex gap-2 rounded-lg border border-edge p-1">
+            <button type="button" className={segCls(kind === 'time_band')} onClick={() => setKind('time_band')}>
+              At certain hours
+            </button>
+            <button type="button" className={segCls(kind === 'threshold')} onClick={() => setKind('threshold')}>
+              After so many hours
+            </button>
+          </div>
         </div>
 
-        <Field label="Name">
+        <Field label="Call it">
           <input
             value={label}
             onChange={(e) => setLabel(e.target.value)}
@@ -310,9 +383,14 @@ function RuleFormInner({
                 <input type="time" value={bandEnd} onChange={(e) => setBandEnd(e.target.value)} className={inputCls} required />
               </Field>
             </div>
+            {bandStart === bandEnd && (
+              <p className="-mt-1 text-xs text-muted">
+                Same time in both boxes means the whole day.
+              </p>
+            )}
             <div>
               <p className="mb-2 text-sm text-muted">
-                On days (none selected = every day)
+                Which days? Leave them all off to mean every day.
               </p>
               <div className="flex gap-1">
                 {DAY_NAMES.map((name, d) => (
@@ -334,7 +412,7 @@ function RuleFormInner({
           </>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            <Field label="After (hours)">
+            <Field label="After how many hours">
               <input
                 type="number"
                 min={0.5}
@@ -352,25 +430,29 @@ function RuleFormInner({
                 onChange={(e) => setThresholdScope(e.target.value as 'shift' | 'pay_week')}
                 className={selectCls}
               >
-                <option value="shift">shift</option>
-                <option value="pay_week">pay week</option>
+                <option value="shift">single shift</option>
+                <option value="pay_week">whole week</option>
               </select>
             </Field>
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Pays">
+          <Field label="How is it paid?">
             <select
               value={payKind}
               onChange={(e) => setPayKind(e.target.value as 'fixed' | 'multiplier')}
               className={selectCls}
             >
-              <option value="fixed">fixed £/h</option>
-              <option value="multiplier">multiplier ×</option>
+              <option value="fixed">a set hourly rate</option>
+              <option value="multiplier">times your normal rate</option>
             </select>
           </Field>
-          <Field label={payKind === 'fixed' ? 'Rate £/h' : 'Multiplier'}>
+          <Field
+            label={
+              payKind === 'fixed' ? 'That hourly rate' : 'Times your normal rate'
+            }
+          >
             <input
               value={payValue}
               onChange={(e) => setPayValue(e.target.value)}
@@ -381,11 +463,18 @@ function RuleFormInner({
             />
           </Field>
         </div>
+        <p className="text-xs text-muted">
+          {payKind === 'fixed'
+            ? 'What one hour pays while this rate applies — not the extra on top.'
+            : '1.5 means time and a half, 2 means double time.'}
+        </p>
 
         <details>
-          <summary className="cursor-pointer text-sm text-muted">Advanced</summary>
+          <summary className="cursor-pointer text-sm text-muted">
+            Advanced — you probably don&rsquo;t need this
+          </summary>
           <div className="mt-3 space-y-3">
-            <Field label="Priority (higher wins on overlap)">
+            <Field label="Priority (if two rates cover the same hour, the higher number wins)">
               <input
                 type="number"
                 step={1}
@@ -401,14 +490,14 @@ function RuleFormInner({
                 onChange={(e) => setActive(e.target.checked)}
                 className="size-4 accent-(--color-accent)"
               />
-              Rule is active
+              Use this rate (untick to pause it without deleting)
             </label>
           </div>
         </details>
 
         <Card>
           <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted">
-            Preview · 12h shift · Fri 18:00 → Sat 06:00
+            What an example shift would pay · Fri 18:00 → Sat 06:00
           </h2>
           {'error' in draft ? (
             <p className="text-sm text-muted">{draft.error}</p>
@@ -436,7 +525,9 @@ function RuleFormInner({
               </p>
             </>
           ) : (
-            <p className="text-sm text-muted">Rule is off — preview skipped.</p>
+            <p className="text-sm text-muted">
+              This rate is paused, so it isn&rsquo;t in the example.
+            </p>
           )}
         </Card>
 
@@ -444,7 +535,7 @@ function RuleFormInner({
         <ErrorText error={existing ? update.error : insert.error} />
 
         <PrimaryButton disabled={insert.isPending || update.isPending}>
-          {existing ? 'Save rule' : 'Add rule'}
+          {existing ? 'Save changes' : 'Add this rate'}
         </PrimaryButton>
 
         {existing && (
@@ -460,7 +551,7 @@ function RuleFormInner({
               })
             }}
           >
-            {confirmDelete ? 'Tap again to delete' : 'Delete rule'}
+            {confirmDelete ? 'Tap again to delete' : 'Delete this rate'}
           </GhostButton>
         )}
       </form>

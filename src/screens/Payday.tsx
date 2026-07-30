@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Card, EmptyState, ScreenTitle } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { useIsOnline } from '../lib/offline'
@@ -35,6 +36,9 @@ export function Payday() {
   return (
     <>
       <ScreenTitle>Payday</ScreenTitle>
+      <p className="mb-6 text-sm text-muted">
+        What each pay week should be worth, and when it lands.
+      </p>
 
       {weeks.length === 0 && (
         <EmptyState
@@ -88,6 +92,21 @@ export function Payday() {
           )
         })}
       </div>
+
+      <Link
+        to="/check"
+        className="mt-8 flex items-center justify-between rounded-xl border border-edge bg-surface px-4 py-4 transition-colors hover:border-accent"
+      >
+        <span>
+          <span className="block font-semibold">Been paid? Check the payslip</span>
+          <span className="block text-sm text-muted">
+            Type in what you were actually paid and see if it matches
+          </span>
+        </span>
+        <span aria-hidden className="text-muted">
+          ›
+        </span>
+      </Link>
     </>
   )
 }

@@ -158,7 +158,7 @@ export function ShiftForm({
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <Field label="Agency">
+      <Field label="Who you worked for">
         <select
           value={agencyId}
           onChange={(e) => setAgencyId(e.target.value)}
@@ -173,7 +173,7 @@ export function ShiftForm({
         </select>
       </Field>
 
-      <Field label="Date">
+      <Field label="Which day">
         <input
           type="date"
           value={date}
@@ -184,7 +184,7 @@ export function ShiftForm({
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Start">
+        <Field label="Started">
           <input
             type="time"
             value={startTime}
@@ -193,7 +193,7 @@ export function ShiftForm({
             required
           />
         </Field>
-        <Field label="End">
+        <Field label="Finished">
           <input
             type="time"
             value={endTime}
@@ -281,14 +281,14 @@ export function ShiftForm({
 
       <details>
         <summary className="cursor-pointer text-sm text-muted">
-          One-off rate for this shift
+          Paid a one-off rate for this shift?
         </summary>
         <div className="mt-3">
-          <Field label="Manual rate £/h">
+          <Field label="Pay the whole shift at (£ an hour)">
             <input
               type="text"
               inputMode="decimal"
-              placeholder="leave blank to use the agency rules"
+              placeholder="leave blank to use your usual rates"
               value={manualRate}
               onChange={(e) => setManualRate(e.target.value)}
               className={inputCls}

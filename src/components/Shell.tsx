@@ -1,12 +1,22 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useIsOnline, useQueuedWriteCount } from '../lib/offline'
+import {
+  GearIcon,
+  ListIcon,
+  PlusIcon,
+  RatesIcon,
+  WalletIcon,
+} from './icons'
 
+// Five tabs is the most that stays tappable on a phone. "Check a payslip"
+// lives on Payday instead — it's the thing you do once the money lands, and
+// Rates earns the slot: it was buried in Settings and people never found it.
 const tabs = [
-  { to: '/', label: 'Add' },
-  { to: '/shifts', label: 'Shifts' },
-  { to: '/payday', label: 'Payday' },
-  { to: '/check', label: 'Check' },
-  { to: '/settings', label: 'Settings' },
+  { to: '/', label: 'Add', Icon: PlusIcon },
+  { to: '/shifts', label: 'Shifts', Icon: ListIcon },
+  { to: '/payday', label: 'Payday', Icon: WalletIcon },
+  { to: '/agencies', label: 'Rates', Icon: RatesIcon },
+  { to: '/settings', label: 'Settings', Icon: GearIcon },
 ]
 
 function OfflineBar() {
@@ -38,18 +48,19 @@ export function Shell() {
       </main>
       <nav className="fixed inset-x-0 bottom-0 border-t border-edge bg-void/95 backdrop-blur">
         <div className="mx-auto flex max-w-md">
-          {tabs.map((tab) => (
+          {tabs.map(({ to, label, Icon }) => (
             <NavLink
-              key={tab.to}
-              to={tab.to}
-              end={tab.to === '/'}
+              key={to}
+              to={to}
+              end={to === '/'}
               className={({ isActive }) =>
-                `flex-1 py-4 text-center text-sm font-semibold ${
+                `flex flex-1 flex-col items-center gap-1 py-3 text-xs font-semibold ${
                   isActive ? 'text-accent' : 'text-muted'
                 }`
               }
             >
-              {tab.label}
+              <Icon />
+              {label}
             </NavLink>
           ))}
         </div>

@@ -31,20 +31,26 @@ export function QuickAdd() {
           Payweek<span className="text-accent">.</span>
         </ScreenTitle>
         <EmptyState
-          title="No agencies yet"
-          hint="Add the agency you work for and its rates — then logging a shift takes seconds."
+          title="One thing first"
+          hint="Tell Payweek who you work for and what they pay you. After that, logging a shift takes seconds."
         />
         <div className="mt-4">
           <Link
             to="/agencies/new"
             className="block w-full rounded-lg bg-accent px-4 py-3 text-center text-base font-semibold text-void"
           >
-            Add your first agency
+            Add who you work for
           </Link>
         </div>
       </>
     )
   }
+
+  // Nobody goes looking for a settings screen they've never seen, so if an
+  // agency is still priced at one flat rate, say so where they already are.
+  const noRates = active.filter(
+    (a) => !rules.some((r) => r.agency_id === a.id && r.active),
+  )
 
   const last = shifts[0]
   // Header number: totals across every shift whose agency pay week
@@ -77,6 +83,31 @@ export function QuickAdd() {
           <span className="font-mono">{formatMinutes(weekMinutes)}</span> logged
         </p>
       </Card>
+
+      {noRates.length > 0 && (
+        <Link
+          to={
+            noRates.length === 1 && noRates[0]
+              ? `/agencies/${noRates[0].id}`
+              : '/agencies'
+          }
+          className="mt-4 flex items-center justify-between rounded-xl border border-accent/40 bg-accent/5 px-4 py-3 transition-colors hover:border-accent"
+        >
+          <span>
+            <span className="block font-semibold">
+              Paid more at night or weekends?
+            </span>
+            <span className="block text-sm text-muted">
+              {noRates.length === 1 && noRates[0]
+                ? `${noRates[0].name} is priced at one flat rate. Set the extras.`
+                : 'Some of your agencies are priced at one flat rate.'}
+            </span>
+          </span>
+          <span aria-hidden className="text-muted">
+            ›
+          </span>
+        </Link>
+      )}
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">Add a shift</h2>
       <ShiftForm

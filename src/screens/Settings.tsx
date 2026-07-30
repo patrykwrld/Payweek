@@ -174,10 +174,10 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
 
       <div className="mt-8 space-y-3">
         <Link
-          to="/agencies"
+          to="/check"
           className="block w-full rounded-lg border border-edge bg-surface px-4 py-3 text-center text-base font-semibold transition-colors hover:border-accent"
         >
-          Agencies &amp; rates
+          Check a payslip
         </Link>
         <GhostButton onClick={exportCsv}>Export shifts as CSV</GhostButton>
         <GhostButton onClick={openPrivacyPolicy}>Privacy policy</GhostButton>
