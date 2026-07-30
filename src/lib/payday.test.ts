@@ -60,6 +60,7 @@ const shift = (
   start_time: start,
   end_time: end,
   break_minutes: breakMin,
+  breaks: [],
   manual_rate_pence: null,
   notes: null,
   created_at: '',

@@ -187,6 +187,7 @@ export type Database = {
         Row: {
           agency_id: string
           break_minutes: number
+          breaks: Json
           created_at: string
           date: string
           end_time: string
@@ -199,6 +200,7 @@ export type Database = {
         Insert: {
           agency_id: string
           break_minutes?: number
+          breaks?: Json
           created_at?: string
           date: string
           end_time: string
@@ -211,6 +213,7 @@ export type Database = {
         Update: {
           agency_id?: string
           break_minutes?: number
+          breaks?: Json
           created_at?: string
           date?: string
           end_time?: string

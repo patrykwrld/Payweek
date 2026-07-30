@@ -81,6 +81,7 @@ export function QuickAdd() {
         start_time: last.start_time,
         end_time: last.end_time,
         break_minutes: last.break_minutes,
+        breaks: last.breaks,
         manual_rate_pence: last.manual_rate_pence,
         notes: null,
       },
@@ -126,6 +127,7 @@ export function QuickAdd() {
       <h2 className="mb-3 mt-8 text-lg font-semibold">Add a shift</h2>
       <ShiftForm
         agencies={agencies}
+        rules={rules}
         initial={
           last
             ? {
@@ -133,6 +135,7 @@ export function QuickAdd() {
                 start_time: last.start_time,
                 end_time: last.end_time,
                 break_minutes: last.break_minutes,
+                breaks: last.breaks,
               }
             : undefined
         }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Tables } from '../database.types'
-import { ruleFromRow, rulesFromRows, shiftFromRow } from './adapters'
+import { breaksFromJson, ruleFromRow, rulesFromRows, shiftFromRow } from './adapters'
 
 const baseRow: Tables<'rate_rules'> = {
   id: 'r1',
@@ -71,6 +71,7 @@ describe('shiftFromRow', () => {
       start_time: '22:00:00',
       end_time: '06:00:00',
       break_minutes: 30,
+      breaks: [],
       manual_rate_pence: null,
       notes: null,
       created_at: '2026-07-29T00:00:00Z',
@@ -80,7 +81,46 @@ describe('shiftFromRow', () => {
       startTime: '22:00:00',
       endTime: '06:00:00',
       breakMinutes: 30,
+      breaks: [],
       manualRatePence: null,
     })
+  })
+})
+
+describe('breaksFromJson', () => {
+  it('maps well-formed entries and normalises the time', () => {
+    expect(
+      breaksFromJson([
+        { minutes: 30, start_time: '21:00' },
+        { minutes: 45, start_time: '00:30:00' },
+        { minutes: 15, start_time: null },
+      ]),
+    ).toEqual([
+      { minutes: 30, startTime: '21:00' },
+      { minutes: 45, startTime: '00:30:00' },
+      { minutes: 15, startTime: null },
+    ])
+  })
+
+  it('drops junk instead of throwing — a bad row must not break pricing', () => {
+    expect(
+      breaksFromJson([
+        { minutes: 0 },
+        { minutes: -5 },
+        { minutes: 'thirty' },
+        { start_time: '21:00' },
+        { minutes: 30, start_time: 'half nine' },
+        { minutes: 30, start_time: '25:00' },
+        null,
+        'nonsense',
+      ]),
+    ).toEqual([
+      // the last two keep their minutes but lose the unusable time
+      { minutes: 30, startTime: null },
+      { minutes: 30, startTime: null },
+    ])
+    expect(breaksFromJson(null)).toEqual([])
+    expect(breaksFromJson('[]')).toEqual([])
+    expect(breaksFromJson(undefined)).toEqual([])
   })
 })

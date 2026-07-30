@@ -223,6 +223,158 @@ describe('priceShift', () => {
     expectInternallyConsistent(p)
   })
 
+  // A break has to come out of the band it actually falls in. Spreading it
+  // pro-rata misprices the shift whenever the bands pay differently.
+  describe('positioned breaks', () => {
+    // £13 base, £15 from 22:00.
+    const evening = (): AgencyRates => ({
+      baseRatePence: 1300,
+      rules: [
+        nightBand({ label: 'Night rate', pay: { ratePence: 1500 }, priority: 5 }),
+      ],
+    })
+
+    it('takes each break from the band it falls in (unequal bands)', () => {
+      // 17:00 -> 01:00. 300min @1300 then 180min @1500.
+      // 30min break at 21:00 (day rate) and 30min at 00:00 (night rate).
+      // -> 270 @1300 + 150 @1500 = 5850 + 3750 = 9600
+      const p = priceShift(
+        {
+          date: '2026-07-28',
+          startTime: '17:00',
+          endTime: '01:00',
+          breakMinutes: 60,
+          breaks: [
+            { startTime: '21:00', minutes: 30 },
+            { startTime: '00:00', minutes: 30 },
+          ],
+        },
+        evening(),
+      )
+      expect(p.paidMinutes).toBe(420)
+      expect(p.breakdown).toEqual([
+        { label: 'Base rate', minutes: 270, ratePence: 1300, subtotalPence: 5850 },
+        { label: 'Night rate', minutes: 150, ratePence: 1500, subtotalPence: 3750 },
+      ])
+      expect(p.grossPence).toBe(9600)
+    })
+
+    it('differs from pro-rata when both breaks sit in the cheaper band', () => {
+      // 18:00 -> 02:00: 240 @1300 + 240 @1500, both breaks before 22:00.
+      // -> 180 @1300 + 240 @1500 = 3900 + 6000 = 9900 (pro-rata gives 9800)
+      const p = priceShift(
+        {
+          date: '2026-07-28',
+          startTime: '18:00',
+          endTime: '02:00',
+          breakMinutes: 60,
+          breaks: [
+            { startTime: '19:00', minutes: 30 },
+            { startTime: '21:00', minutes: 30 },
+          ],
+        },
+        evening(),
+      )
+      expect(p.grossPence).toBe(9900)
+
+      const proRata = priceShift(
+        {
+          date: '2026-07-28',
+          startTime: '18:00',
+          endTime: '02:00',
+          breakMinutes: 60,
+        },
+        evening(),
+      )
+      expect(proRata.grossPence).toBe(9800)
+    })
+
+    it('splits a break that straddles a band boundary', () => {
+      // 30min break at 21:45 -> 15min off the day rate, 15min off nights.
+      const p = priceShift(
+        {
+          date: '2026-07-28',
+          startTime: '18:00',
+          endTime: '02:00',
+          breakMinutes: 30,
+          breaks: [{ startTime: '21:45', minutes: 30 }],
+        },
+        evening(),
+      )
+      expect(p.breakdown).toEqual([
+        { label: 'Base rate', minutes: 225, ratePence: 1300, subtotalPence: 4875 },
+        { label: 'Night rate', minutes: 225, ratePence: 1500, subtotalPence: 5625 },
+      ])
+    })
+
+    it('handles a break after midnight on a shift that crosses it', () => {
+      const p = priceShift(
+        {
+          date: '2026-07-28',
+          startTime: '18:00',
+          endTime: '02:00',
+          breakMinutes: 30,
+          breaks: [{ startTime: '01:30', minutes: 30 }],
+        },
+        evening(),
+      )
+      expect(p.breakdown).toEqual([
+        { label: 'Base rate', minutes: 240, ratePence: 1300, subtotalPence: 5200 },
+        { label: 'Night rate', minutes: 210, ratePence: 1500, subtotalPence: 5250 },
+      ])
+    })
+
+    it('mixes positioned and unpositioned breaks', () => {
+      // 30min pinned to the day rate, 30min left to spread pro-rata over
+      // what remains (210 day + 240 night = 450 -> 30 off, 14/16 split).
+      const p = priceShift(
+        {
+          date: '2026-07-28',
+          startTime: '18:00',
+          endTime: '02:00',
+          breakMinutes: 60,
+          breaks: [{ startTime: '19:00', minutes: 30 }, { minutes: 30 }],
+        },
+        evening(),
+      )
+      expect(p.paidMinutes).toBe(420)
+      expect(p.breakdown.reduce((s, l) => s + l.minutes, 0)).toBe(420)
+      // the pinned 30 came wholly off the day rate, so it keeps fewer minutes
+      // than the night band even though they started equal
+      expect(p.breakdown[0]!.minutes).toBeLessThan(p.breakdown[1]!.minutes)
+    })
+
+    it('ignores a break that falls outside the shift', () => {
+      const p = priceShift(
+        {
+          date: '2026-07-28',
+          startTime: '18:00',
+          endTime: '22:00',
+          breakMinutes: 30,
+          breaks: [{ startTime: '09:00', minutes: 30 }],
+        },
+        evening(),
+      )
+      expect(p.paidMinutes).toBe(240)
+      expect(p.grossPence).toBe(5200)
+    })
+
+    it('clamps a break running past the end of the shift', () => {
+      const p = priceShift(
+        {
+          date: '2026-07-28',
+          startTime: '18:00',
+          endTime: '22:00',
+          breakMinutes: 60,
+          breaks: [{ startTime: '21:30', minutes: 60 }],
+        },
+        evening(),
+      )
+      expect(p.paidMinutes).toBe(210)
+      expect(p.grossPence).toBe(4550)
+    })
+  })
+
   it('applies a multiplier time band against the base rate', () => {
     // Fri 16:00 -> 24:00 with "Fri evening x1.25" from 18:00
     const p = priceShift(

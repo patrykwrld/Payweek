@@ -57,10 +57,15 @@ interface Run {
   minutes: number
 }
 
-/** Resolve every worked minute against time-band rules (highest priority
- * wins; ties go to the higher resulting rate; no match = base rate) and
- * group contiguous equal-rate minutes into runs. */
-function resolveRuns(shift: ShiftInput, rates: AgencyRates): Run[] {
+/** The rate resolved for one worked minute. */
+interface MinuteRate {
+  label: string
+  ratePence: number
+}
+
+/** Resolve every worked minute against time-band rules: highest priority
+ * wins, ties go to the higher resulting rate, no match = base rate. */
+function resolveMinutes(shift: ShiftInput, rates: AgencyRates): MinuteRate[] {
   const bands = rates.rules.filter(
     (r): r is TimeBandRule => r.kind === 'time_band',
   )
@@ -68,7 +73,7 @@ function resolveRuns(shift: ShiftInput, rates: AgencyRates): Run[] {
   const startMin = timeToMinutes(shift.startTime)
   const startDow = dayOfWeek(shift.date)
 
-  const runs: Run[] = []
+  const minutes: MinuteRate[] = []
   for (let i = 0; i < duration; i++) {
     const absolute = startMin + i
     const dow = (startDow + Math.floor(absolute / 1440)) % 7
@@ -94,15 +99,54 @@ function resolveRuns(shift: ShiftInput, rates: AgencyRates): Run[] {
         bestPriority = band.priority
       }
     }
+    minutes.push({ label, ratePence })
+  }
+  return minutes
+}
 
+/** Group contiguous equal-rate minutes into runs, skipping unpaid ones. */
+function toRuns(minutes: MinuteRate[], paid: boolean[]): Run[] {
+  const runs: Run[] = []
+  for (let i = 0; i < minutes.length; i++) {
+    if (!paid[i]) continue
+    const m = minutes[i]!
     const last = runs[runs.length - 1]
-    if (last && last.label === label && last.ratePence === ratePence) {
+    if (last && last.label === m.label && last.ratePence === m.ratePence) {
       last.minutes++
     } else {
-      runs.push({ label, ratePence, minutes: 1 })
+      runs.push({ label: m.label, ratePence: m.ratePence, minutes: 1 })
     }
   }
   return runs
+}
+
+/** Mark the minutes covered by each positioned break as unpaid, and return
+ * how many break minutes were left unplaced (to spread pro-rata later).
+ * A break outside the shift is ignored; one overrunning the end is clamped. */
+function applyPositionedBreaks(
+  shift: ShiftInput,
+  paid: boolean[],
+): number {
+  const breaks = shift.breaks ?? []
+  if (breaks.length === 0) return shift.breakMinutes
+
+  const duration = paid.length
+  const shiftStart = timeToMinutes(shift.startTime)
+  let unplaced = 0
+
+  for (const brk of breaks) {
+    if (brk.minutes <= 0) continue
+    if (brk.startTime === null || brk.startTime === undefined) {
+      unplaced += brk.minutes
+      continue
+    }
+    // Offset from the shift start, wrapping past midnight.
+    const offset = (timeToMinutes(brk.startTime) - shiftStart + 1440) % 1440
+    if (offset >= duration) continue // break falls outside the shift
+    const end = Math.min(offset + brk.minutes, duration)
+    for (let i = offset; i < end; i++) paid[i] = false
+  }
+  return unplaced
 }
 
 /** Scale run minutes down to paidTotal, apportioning the break pro-rata
@@ -235,41 +279,38 @@ export function priceShift(
   options: PriceShiftOptions = {},
 ): ShiftPricing {
   const workedMinutes = shiftDurationMinutes(shift.startTime, shift.endTime)
-  const paidMinutes = Math.max(0, workedMinutes - shift.breakMinutes)
+  const override = shift.manualRatePence
 
-  if (shift.manualRatePence !== null && shift.manualRatePence !== undefined) {
-    const breakdown: BreakdownLine[] =
-      paidMinutes > 0
-        ? [
-            {
-              label: 'Manual rate',
-              minutes: paidMinutes,
-              ratePence: shift.manualRatePence,
-              subtotalPence: Math.round(
-                (paidMinutes * shift.manualRatePence) / 60,
-              ),
-            },
-          ]
-        : []
-    return {
-      workedMinutes,
-      paidMinutes,
-      grossPence: breakdown.reduce((s, l) => s + l.subtotalPence, 0),
-      breakdown,
-    }
+  // A manual override replaces every minute's rate but still loses break
+  // time, so both paths share one pipeline.
+  const minutes: MinuteRate[] =
+    override !== null && override !== undefined
+      ? Array.from({ length: workedMinutes }, () => ({
+          label: 'Manual rate',
+          ratePence: override,
+        }))
+      : resolveMinutes(shift, rates)
+
+  const paid = new Array<boolean>(minutes.length).fill(true)
+  const unplacedBreak = applyPositionedBreaks(shift, paid)
+  let runs = toRuns(minutes, paid)
+  // Anything not pinned to a clock time still spreads pro-rata.
+  const placedTotal = runs.reduce((sum, r) => sum + r.minutes, 0)
+  runs = deductBreakProRata(runs, placedTotal - unplacedBreak)
+
+  if (override === null || override === undefined) {
+    const thresholds = rates.rules.filter(
+      (r): r is ThresholdRule => r.kind === 'threshold',
+    )
+    runs = applyThresholds(runs, thresholds, options.weekPaidMinutesBefore ?? 0)
   }
-
-  const thresholds = rates.rules.filter(
-    (r): r is ThresholdRule => r.kind === 'threshold',
-  )
-  let runs = resolveRuns(shift, rates)
-  runs = deductBreakProRata(runs, paidMinutes)
-  runs = applyThresholds(runs, thresholds, options.weekPaidMinutesBefore ?? 0)
 
   const breakdown = toBreakdown(runs)
   return {
     workedMinutes,
-    paidMinutes,
+    // Derived from the minutes actually paid, so it always agrees with the
+    // breakdown even when a break sits outside the shift or overruns it.
+    paidMinutes: breakdown.reduce((s, l) => s + l.minutes, 0),
     grossPence: breakdown.reduce((s, l) => s + l.subtotalPence, 0),
     breakdown,
   }

@@ -10,6 +10,7 @@ import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { useIsOnline } from '../lib/offline'
 import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence, formatRate } from '../lib/money'
+import { breaksFromJson } from '../lib/rateEngine'
 import { priceShifts } from '../lib/pricing'
 import { useDeleteShift, useUpdateShift } from '../lib/queries'
 import { formatDay } from '../lib/weeks'
@@ -51,6 +52,7 @@ export function ShiftDetail() {
   const pricing = priceShifts(shifts, agencies, rules).get(
     shift.id,
   )?.pricing
+  const shiftBreaks = breaksFromJson(shift.breaks)
 
   return (
     <>
@@ -72,6 +74,7 @@ export function ShiftDetail() {
         <>
           <ShiftForm
             agencies={agencies}
+            rules={rules}
             initial={shift}
             submitLabel="Save changes"
             pending={update.isPending}
@@ -122,6 +125,26 @@ export function ShiftDetail() {
               )}
             </p>
           </Card>
+
+          {shiftBreaks.length > 0 && (
+            <Card>
+              <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted">
+                Unpaid breaks
+              </h2>
+              <ul className="space-y-1">
+                {shiftBreaks.map((b, i) => (
+                  <li key={i} className="flex justify-between text-sm">
+                    <span className="font-mono">{formatMinutes(b.minutes)}</span>
+                    <span className="text-muted">
+                      {b.startTime
+                        ? `from ${b.startTime.slice(0, 5)}`
+                        : 'spread across the shift'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           {pricing && (
             <Card>

@@ -31,6 +31,16 @@ export interface ThresholdRule {
 
 export type RateRule = TimeBandRule | ThresholdRule
 
+/** An unpaid break. `startTime` places it at a clock time so it comes out
+ * of the band it actually falls in — a 30-minute break at 21:00 on a shift
+ * paying £13 until 22:00 and £15 after costs £13, not a blend of the two.
+ * Omit `startTime` and the minutes are apportioned pro-rata instead. */
+export interface ShiftBreak {
+  /** HH:MM or HH:MM:SS. Null/undefined = unpositioned. */
+  startTime?: string | null
+  minutes: number
+}
+
 export interface ShiftInput {
   /** YYYY-MM-DD — the calendar day the shift starts. */
   date: string
@@ -39,7 +49,12 @@ export interface ShiftInput {
   /** HH:MM or HH:MM:SS. end <= start means the shift crosses midnight;
    * equal start/end is a 24h shift. */
   endTime: string
+  /** Total unpaid minutes. Used on its own (pro-rata) when `breaks` is
+   * empty; when `breaks` is given this should equal their sum. */
   breakMinutes: number
+  /** Itemised breaks. When non-empty these replace `breakMinutes` as the
+   * source of truth for how much comes off and from where. */
+  breaks?: readonly ShiftBreak[]
   /** Escape hatch: bypasses all rules when set. Breaks still deduct. */
   manualRatePence?: number | null
 }

@@ -24,6 +24,7 @@ function optimisticShift(values: TablesInsert<'shifts'>): ShiftRow {
     start_time: values.start_time,
     end_time: values.end_time,
     break_minutes: values.break_minutes ?? 0,
+    breaks: values.breaks ?? [],
     manual_rate_pence: values.manual_rate_pence ?? null,
     notes: values.notes ?? null,
     created_at: new Date().toISOString(),
