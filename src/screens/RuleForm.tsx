@@ -9,7 +9,6 @@ import {
   PrimaryButton,
   ScreenTitle,
   inputCls,
-  selectCls,
 } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { useIsOnline } from '../lib/offline'
@@ -33,69 +32,35 @@ import { priceShift, ruleFromRow, rulesFromRows } from '../lib/rateEngine'
 /** Build the row this form currently describes, or null + why not. */
 function draftRow(state: {
   agencyId: string
-  kind: 'time_band' | 'threshold'
   label: string
   days: number[]
   bandStart: string
   bandEnd: string
-  thresholdHours: string
-  thresholdScope: 'shift' | 'pay_week'
-  payKind: 'fixed' | 'multiplier'
   payValue: string
   priority: string
 }): { row: TablesInsert<'rate_rules'> } | { error: string } {
   if (state.label.trim() === '') return { error: 'Give this rate a name.' }
 
-  let rate_pence: number | null = null
-  let multiplier: number | null = null
-  if (state.payKind === 'fixed') {
-    rate_pence = parsePoundsToPence(state.payValue)
-    if (rate_pence === null) return { error: 'Rate must look like 14.50.' }
-  } else {
-    multiplier = Number(state.payValue)
-    if (!Number.isFinite(multiplier) || multiplier <= 0) {
-      return { error: 'Multiplier must be a positive number like 1.5.' }
-    }
-  }
+  const rate_pence = parsePoundsToPence(state.payValue)
+  if (rate_pence === null) return { error: 'The rate should look like 14.50.' }
 
   const priority = Number(state.priority || '0')
-  if (!Number.isInteger(priority)) return { error: 'Priority must be a whole number.' }
+  if (!Number.isInteger(priority)) return { error: 'Order must be a whole number.' }
 
-  if (state.kind === 'time_band') {
-    if (!state.bandStart || !state.bandEnd) return { error: 'Set the band times.' }
-    return {
-      row: {
-        agency_id: state.agencyId,
-        kind: 'time_band',
-        label: state.label.trim(),
-        days_of_week: state.days.length === 0 ? null : [...state.days].sort(),
-        band_start: state.bandStart,
-        band_end: state.bandEnd,
-        threshold_minutes: null,
-        threshold_scope: null,
-        rate_pence,
-        multiplier,
-        priority,
-      },
-    }
-  }
+  if (!state.bandStart || !state.bandEnd) return { error: 'Set both times.' }
 
-  const hours = Number(state.thresholdHours)
-  if (!Number.isFinite(hours) || hours <= 0) {
-    return { error: 'Threshold must be a positive number of hours.' }
-  }
   return {
     row: {
       agency_id: state.agencyId,
-      kind: 'threshold',
+      kind: 'time_band',
       label: state.label.trim(),
-      days_of_week: null,
-      band_start: null,
-      band_end: null,
-      threshold_minutes: Math.round(hours * 60),
-      threshold_scope: state.thresholdScope,
+      days_of_week: state.days.length === 0 ? null : [...state.days].sort(),
+      band_start: state.bandStart,
+      band_end: state.bandEnd,
+      threshold_minutes: null,
+      threshold_scope: null,
       rate_pence,
-      multiplier,
+      multiplier: null,
       priority,
     },
   }
@@ -105,38 +70,21 @@ function draftRow(state: {
  * mostly filled in instead of blank. Chosen from the agency page. */
 const PRESETS = {
   night: {
-    kind: 'time_band',
     label: 'Night rate',
     days: [] as number[],
     bandStart: '22:00',
     bandEnd: '06:00',
-    payKind: 'fixed',
-    payValue: '',
     priority: '5',
-    blurb: 'A higher hourly rate between two times — most nights run 22:00 to 06:00.',
+    blurb: 'A higher hourly rate between two times. Most nights run 22:00 to 06:00.',
   },
   weekend: {
-    kind: 'time_band',
     label: 'Weekend',
     // Equal start and end means the whole day.
     days: [0, 6] as number[],
     bandStart: '00:00',
     bandEnd: '00:00',
-    payKind: 'fixed',
-    payValue: '',
     priority: '10',
-    blurb: 'A different hourly rate on the days you pick. Saturday and Sunday are ticked already.',
-  },
-  overtime: {
-    kind: 'threshold',
-    label: 'Overtime',
-    days: [] as number[],
-    bandStart: '22:00',
-    bandEnd: '06:00',
-    payKind: 'multiplier',
-    payValue: '1.5',
-    priority: '0',
-    blurb: 'Extra pay once you pass a number of hours. 1.5 is time and a half.',
+    blurb: 'A different hourly rate on the days you choose. Saturday and Sunday are already ticked.',
   },
 } as const
 
@@ -192,6 +140,45 @@ export function RuleForm() {
   )
 }
 
+/** An older rate this form can no longer describe. Nothing creates these any
+ * more, but anything already saved must still be removable. */
+function LegacyRule({
+  agencyId,
+  rule,
+}: {
+  agencyId: string
+  rule: Tables<'rate_rules'>
+}) {
+  const navigate = useNavigate()
+  const remove = useDeleteRule()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  return (
+    <>
+      <ScreenTitle>{rule.label}</ScreenTitle>
+      <p className="mb-6 text-sm text-muted">
+        This is an older kind of rate that Payweek no longer sets up. It still
+        counts towards your pay. You can delete it, but not change it here.
+      </p>
+      <ErrorText error={remove.error} />
+      <GhostButton
+        danger
+        onClick={() => {
+          if (!confirmDelete) {
+            setConfirmDelete(true)
+            return
+          }
+          remove.mutate(rule.id, {
+            onSuccess: () => navigate(`/agencies/${agencyId}`),
+          })
+        }}
+      >
+        {confirmDelete ? 'Tap again to delete' : 'Delete this rate'}
+      </GhostButton>
+    </>
+  )
+}
+
 function RuleFormInner({
   agency,
   agencyRules,
@@ -210,11 +197,6 @@ function RuleFormInner({
   const update = useUpdateRule()
   const remove = useDeleteRule()
 
-  const [kind, setKind] = useState<'time_band' | 'threshold'>(
-    existing?.kind === 'threshold' || preset?.kind === 'threshold'
-      ? 'threshold'
-      : 'time_band',
-  )
   const [label, setLabel] = useState(existing?.label ?? preset?.label ?? '')
   const [days, setDays] = useState<number[]>(
     existing?.days_of_week ?? [...(preset?.days ?? [])],
@@ -225,27 +207,15 @@ function RuleFormInner({
   const [bandEnd, setBandEnd] = useState(
     existing?.band_end?.slice(0, 5) ?? preset?.bandEnd ?? '06:00',
   )
-  const [thresholdHours, setThresholdHours] = useState(
-    existing?.threshold_minutes != null
-      ? String(existing.threshold_minutes / 60)
-      : '8',
-  )
-  const [thresholdScope, setThresholdScope] = useState<'shift' | 'pay_week'>(
-    existing?.threshold_scope === 'pay_week' ? 'pay_week' : 'shift',
-  )
-  const [payKind, setPayKind] = useState<'fixed' | 'multiplier'>(
-    existing
-      ? existing.multiplier != null
-        ? 'multiplier'
-        : 'fixed'
-      : (preset?.payKind ?? 'fixed'),
-  )
   const [payValue, setPayValue] = useState(
-    existing?.multiplier != null
-      ? String(existing.multiplier)
-      : existing?.rate_pence != null
-        ? penceToPoundsInput(existing.rate_pence)
-        : (preset?.payValue ?? ''),
+    existing?.rate_pence != null ? penceToPoundsInput(existing.rate_pence) : '',
+  )
+  // Equal start and end is how the engine spells "the whole day". Showing that
+  // as 00:00–00:00 confuses people, so it gets a tick of its own.
+  const [allDay, setAllDay] = useState(
+    existing
+      ? existing.band_start === existing.band_end
+      : preset !== undefined && preset.bandStart === preset.bandEnd,
   )
   const [priority, setPriority] = useState(
     existing ? String(existing.priority) : (preset?.priority ?? '0'),
@@ -254,22 +224,25 @@ function RuleFormInner({
   const [validation, setValidation] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  if (existing && (existing.kind !== 'time_band' || existing.multiplier !== null)) {
+    return <LegacyRule agencyId={agencyId} rule={existing} />
+  }
+
+  const band = allDay
+    ? { bandStart: '00:00', bandEnd: '00:00' }
+    : { bandStart, bandEnd }
+
   const draft = draftRow({
     agencyId,
-    kind,
-    label: label || '(this rule)',
+    label: label || '(this rate)',
     days,
-    bandStart,
-    bandEnd,
-    thresholdHours,
-    thresholdScope,
-    payKind,
+    ...band,
     payValue,
     priority,
   })
 
-  // Live preview: a sample 12h Fri-night shift priced under the agency's
-  // other rules plus the current draft.
+  // Live example: a 12h Friday-night shift priced under the agency's other
+  // rates plus whatever is currently typed in.
   const otherRules = agencyRules.filter((r) => r.id !== ruleId)
   const previewRules = rulesFromRows(otherRules)
   let preview = null
@@ -282,16 +255,16 @@ function RuleFormInner({
       days_of_week: draft.row.days_of_week ?? null,
       band_start: draft.row.band_start ?? null,
       band_end: draft.row.band_end ?? null,
-      threshold_minutes: draft.row.threshold_minutes ?? null,
-      threshold_scope: draft.row.threshold_scope ?? null,
+      threshold_minutes: null,
+      threshold_scope: null,
       rate_pence: draft.row.rate_pence ?? null,
-      multiplier: draft.row.multiplier ?? null,
+      multiplier: null,
       priority: draft.row.priority ?? 0,
     })
     if (draftRule) previewRules.push(draftRule)
     preview = priceShift(
-      // Fri 18:00 -> Sat 06:00: touches evening, night, midnight and a
-      // weekend day, so most rules show up.
+      // Fri 18:00 -> Sat 06:00: covers evening, night, midnight and a weekend
+      // day, so most rates show up in it.
       { date: '2026-07-31', startTime: '18:00', endTime: '06:00', breakMinutes: 0 },
       { baseRatePence: agency.base_rate_pence, rules: previewRules },
     )
@@ -308,14 +281,9 @@ function RuleFormInner({
     setValidation(null)
     const result = draftRow({
       agencyId,
-      kind,
       label,
       days,
-      bandStart,
-      bandEnd,
-      thresholdHours,
-      thresholdScope,
-      payKind,
+      ...band,
       payValue,
       priority,
     })
@@ -330,11 +298,6 @@ function RuleFormInner({
       insert.mutate({ ...result.row, active }, { onSuccess })
     }
   }
-
-  const segCls = (selected: boolean) =>
-    `flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${
-      selected ? 'bg-accent text-void' : 'bg-surface text-muted'
-    }`
 
   return (
     <>
@@ -351,130 +314,90 @@ function RuleFormInner({
       )}
 
       <form onSubmit={submit} className="space-y-4">
-        <div>
-          <p className="mb-2 text-sm text-muted">When does this rate apply?</p>
-          <div className="flex gap-2 rounded-lg border border-edge p-1">
-            <button type="button" className={segCls(kind === 'time_band')} onClick={() => setKind('time_band')}>
-              At certain hours
-            </button>
-            <button type="button" className={segCls(kind === 'threshold')} onClick={() => setKind('threshold')}>
-              After so many hours
-            </button>
-          </div>
-        </div>
-
         <Field label="Call it">
           <input
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             className={inputCls}
-            placeholder={kind === 'time_band' ? 'Night rate' : 'Overtime'}
+            placeholder="Night rate"
             required
           />
         </Field>
 
-        {kind === 'time_band' ? (
-          <>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="From">
-                <input type="time" value={bandStart} onChange={(e) => setBandStart(e.target.value)} className={inputCls} required />
-              </Field>
-              <Field label="To">
-                <input type="time" value={bandEnd} onChange={(e) => setBandEnd(e.target.value)} className={inputCls} required />
-              </Field>
-            </div>
-            {bandStart === bandEnd && (
-              <p className="-mt-1 text-xs text-muted">
-                Same time in both boxes means the whole day.
-              </p>
-            )}
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={allDay}
+              onChange={(e) => setAllDay(e.target.checked)}
+              className="size-4 accent-(--color-accent)"
+            />
+            All day — any hour counts
+          </label>
+          {!allDay && (
             <div>
-              <p className="mb-2 text-sm text-muted">
-                Which days? Leave them all off to mean every day.
-              </p>
-              <div className="flex gap-1">
-                {DAY_NAMES.map((name, d) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => toggleDay(d)}
-                    className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
-                      days.includes(d)
-                        ? 'bg-accent text-void'
-                        : 'border border-edge bg-surface text-muted'
-                    }`}
-                  >
-                    {name}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="From">
+                  <input type="time" value={bandStart} onChange={(e) => setBandStart(e.target.value)} className={inputCls} required />
+                </Field>
+                <Field label="Until">
+                  <input type="time" value={bandEnd} onChange={(e) => setBandEnd(e.target.value)} className={inputCls} required />
+                </Field>
               </div>
+              <p className="mt-1 text-xs text-muted">
+                {bandStart > bandEnd
+                  ? 'This one runs past midnight, which is fine.'
+                  : 'Hours worked between these two times pay the rate below.'}
+              </p>
             </div>
-          </>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="After how many hours">
-              <input
-                type="number"
-                min={0.5}
-                step={0.5}
-                inputMode="decimal"
-                value={thresholdHours}
-                onChange={(e) => setThresholdHours(e.target.value)}
-                className={inputCls}
-                required
-              />
-            </Field>
-            <Field label="Counted per">
-              <select
-                value={thresholdScope}
-                onChange={(e) => setThresholdScope(e.target.value as 'shift' | 'pay_week')}
-                className={selectCls}
-              >
-                <option value="shift">single shift</option>
-                <option value="pay_week">whole week</option>
-              </select>
-            </Field>
-          </div>
-        )}
+          )}
+        </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="How is it paid?">
-            <select
-              value={payKind}
-              onChange={(e) => setPayKind(e.target.value as 'fixed' | 'multiplier')}
-              className={selectCls}
-            >
-              <option value="fixed">a set hourly rate</option>
-              <option value="multiplier">times your normal rate</option>
-            </select>
-          </Field>
-          <Field
-            label={
-              payKind === 'fixed' ? 'That hourly rate' : 'Times your normal rate'
-            }
-          >
+        <div>
+          <p className="mb-2 text-sm text-muted">
+            Which days? Leave them all off to mean every day.
+          </p>
+          <div className="flex gap-1">
+            {DAY_NAMES.map((name, d) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => toggleDay(d)}
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
+                  days.includes(d)
+                    ? 'bg-accent text-void'
+                    : 'border border-edge bg-surface text-muted'
+                }`}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <Field label="What those hours pay, each">
             <input
               value={payValue}
               onChange={(e) => setPayValue(e.target.value)}
               className={inputCls}
               inputMode="decimal"
-              placeholder={payKind === 'fixed' ? '14.50' : '1.5'}
+              placeholder="14.50"
               required
             />
           </Field>
+          <p className="mt-1 text-xs text-muted">
+            The full hourly rate, not the extra on top of{' '}
+            <span className="font-mono">{formatPence(agency.base_rate_pence)}</span>.
+          </p>
         </div>
-        <p className="text-xs text-muted">
-          {payKind === 'fixed'
-            ? 'What one hour pays while this rate applies — not the extra on top.'
-            : '1.5 means time and a half, 2 means double time.'}
-        </p>
 
         <details>
           <summary className="cursor-pointer text-sm text-muted">
             Advanced — you probably don&rsquo;t need this
           </summary>
           <div className="mt-3 space-y-3">
-            <Field label="Priority (if two rates cover the same hour, the higher number wins)">
+            <Field label="Order (if two rates cover the same hour, the higher number wins)">
               <input
                 type="number"
                 step={1}
@@ -499,7 +422,11 @@ function RuleFormInner({
           <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted">
             What an example shift would pay · Fri 18:00 → Sat 06:00
           </h2>
-          {'error' in draft ? (
+          {payValue.trim() === '' ? (
+            <p className="text-sm text-muted">
+              Fill in the rate above and this will show what it comes to.
+            </p>
+          ) : 'error' in draft ? (
             <p className="text-sm text-muted">{draft.error}</p>
           ) : preview ? (
             <>

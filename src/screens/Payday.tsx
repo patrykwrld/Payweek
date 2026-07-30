@@ -78,7 +78,7 @@ export function Payday() {
                       </p>
                       {showAccrual && (
                         <p className="mt-2 border-t border-edge pt-2 text-sm text-muted">
-                          Holiday accrual ({accrualPct}%){' '}
+                          Holiday pay ({accrualPct}%){' '}
                           <span className="float-right font-mono text-ink">
                             +{formatPence(accrual)}
                           </span>

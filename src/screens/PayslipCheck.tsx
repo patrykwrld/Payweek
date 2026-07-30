@@ -93,7 +93,7 @@ export function PayslipCheck() {
         <ScreenTitle>Payslip check</ScreenTitle>
         <EmptyState
           title="Nothing to check yet"
-          hint="Once you've logged shifts, compare a payslip's gross against what Payweek expected."
+          hint="Log a few shifts first. Then you can put in what you were paid and see whether it adds up."
         />
       </>
     )
@@ -102,9 +102,13 @@ export function PayslipCheck() {
   return (
     <>
       <ScreenTitle>Payslip check</ScreenTitle>
+      <p className="mb-6 text-sm text-muted">
+        Put in what you were actually paid and Payweek will tell you whether it
+        matches the hours you logged.
+      </p>
 
       <div className="space-y-4">
-        <Field label="Agency">
+        <Field label="Who paid you">
           <select
             value={effectiveAgencyId}
             onChange={(e) => {
@@ -122,7 +126,7 @@ export function PayslipCheck() {
           </select>
         </Field>
 
-        <Field label="Pay week">
+        <Field label="Which pay week">
           <select
             value={effectiveWeekStart}
             onChange={(e) => {
@@ -133,40 +137,46 @@ export function PayslipCheck() {
           >
             {agencyWeeks.map((w) => (
               <option key={w.weekStart} value={w.weekStart}>
-                w/e {formatDay(w.weekEnd)} · {formatPence(w.grossPence)} expected
+                Week ending {formatDay(w.weekEnd)} · {formatPence(w.grossPence)}{' '}
+                expected
               </option>
             ))}
           </select>
         </Field>
 
-        <Field label="Gross on the payslip £">
-          <input
-            value={grossInput}
-            onChange={(e) => {
-              setGrossInput(e.target.value)
-              setSaved(false)
-            }}
-            className={inputCls}
-            inputMode="decimal"
-            placeholder="512.30"
-          />
-        </Field>
+        <div>
+          <Field label="Gross pay on the payslip">
+            <input
+              value={grossInput}
+              onChange={(e) => {
+                setGrossInput(e.target.value)
+                setSaved(false)
+              }}
+              className={inputCls}
+              inputMode="decimal"
+              placeholder="512.30"
+            />
+          </Field>
+          <p className="mt-1 text-xs text-muted">
+            The figure before tax and National Insurance come off, in pounds.
+          </p>
+        </div>
 
         {week && verdict && (
           <Card>
             {verdict.status === 'match' ? (
               <p className="font-semibold text-emerald-400">
-                Matches — {formatPence(week.grossPence)} as expected ✓
+                That matches — {formatPence(week.grossPence)}, just as expected ✓
               </p>
             ) : verdict.status === 'short' ? (
               <p className="font-semibold text-red-400">
-                {formatPence(verdict.diffPence)} short of the expected{' '}
-                {formatPence(week.grossPence)}
+                You&rsquo;re {formatPence(verdict.diffPence)} short. Your hours
+                come to {formatPence(week.grossPence)}.
               </p>
             ) : (
               <p className="font-semibold text-accent">
-                {formatPence(verdict.diffPence)} over the expected{' '}
-                {formatPence(week.grossPence)}
+                That&rsquo;s {formatPence(verdict.diffPence)} more than your hours
+                come to ({formatPence(week.grossPence)}).
               </p>
             )}
 
@@ -234,7 +244,7 @@ export function PayslipCheck() {
                 >
                   <div>
                     <p className="text-sm font-semibold">
-                      {slipWeek?.agency.name ?? 'Agency'} · w/e{' '}
+                      {slipWeek?.agency.name ?? 'Agency'} · week ending{' '}
                       {formatDay(slip.period_end)}
                     </p>
                     <p className="text-sm text-muted">

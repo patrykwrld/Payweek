@@ -130,7 +130,7 @@ export function buildShiftsCsv(
     if (pct != null) {
       rows.push(
         row([
-          `Holiday accrual (${pct}%)`,
+          `Holiday pay (${pct}%)`,
           '',
           '',
           '',

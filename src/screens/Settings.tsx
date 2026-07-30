@@ -131,7 +131,7 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Week starts">
+          <Field label="Your week starts">
             <select
               value={weekStartsOn}
               onChange={(e) => setWeekStartsOn(e.target.value)}
@@ -144,7 +144,7 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
               ))}
             </select>
           </Field>
-          <Field label="Holiday accrual %">
+          <Field label="Holiday pay %">
             <input
               value={holidayPct}
               onChange={(e) => setHolidayPct(e.target.value)}
@@ -153,6 +153,10 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
             />
           </Field>
         </div>
+        <p className="-mt-1 text-xs text-muted">
+          Holiday pay builds up as you work. 12.07% is the usual figure for
+          agency work — check your contract if you&rsquo;re not sure.
+        </p>
 
         <label className="flex items-center gap-3 text-sm">
           <input
@@ -161,7 +165,7 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
             onChange={(e) => setShowAccrual(e.target.checked)}
             className="size-4 accent-(--color-accent)"
           />
-          Show holiday accrual on the Payday screen
+          Show holiday pay on the Payday screen
         </label>
 
         {validation && <p className="text-sm text-red-400">{validation}</p>}

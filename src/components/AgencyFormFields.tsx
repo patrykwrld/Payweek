@@ -94,11 +94,6 @@ export function AgencyFormFields({
   const [weekend, setWeekend] = useState(false)
   const [weekendRate, setWeekendRate] = useState('')
 
-  const [overtime, setOvertime] = useState(false)
-  const [otHours, setOtHours] = useState('8')
-  const [otScope, setOtScope] = useState<'shift' | 'pay_week'>('shift')
-  const [otMultiplier, setOtMultiplier] = useState('1.5')
-
   function submit(event: FormEvent) {
     event.preventDefault()
     setValidation(null)
@@ -157,31 +152,6 @@ export function AgencyFormFields({
       })
     }
 
-    if (overtime) {
-      const hours = Number(otHours)
-      const mult = Number(otMultiplier)
-      if (!Number.isFinite(hours) || hours <= 0) {
-        setValidation('Overtime hours must be a positive number.')
-        return
-      }
-      if (!Number.isFinite(mult) || mult <= 0) {
-        setValidation('Overtime multiplier must look like 1.5.')
-        return
-      }
-      extras.push({
-        kind: 'threshold',
-        label: 'Overtime',
-        days_of_week: null,
-        band_start: null,
-        band_end: null,
-        threshold_minutes: Math.round(hours * 60),
-        threshold_scope: otScope,
-        rate_pence: null,
-        multiplier: mult,
-        priority: 0,
-      })
-    }
-
     onSubmit(
       {
         name: name.trim(),
@@ -219,18 +189,17 @@ export function AgencyFormFields({
           />
         </Field>
         <p className="mt-1 text-xs text-muted">
-          What one normal daytime hour pays, in pounds. Higher rates for nights
-          and weekends go below — don&rsquo;t average them in here.
+          What one ordinary daytime hour pays, in pounds. Nights and weekends go
+          below, so don&rsquo;t average them into this.
         </p>
       </div>
 
       {offerRates && (
         <section className="space-y-3">
           <div>
-            <h2 className="text-sm font-semibold">Do you get paid more sometimes?</h2>
+            <h2 className="text-sm font-semibold">Do some hours pay more?</h2>
             <p className="text-xs text-muted">
-              Tick any that apply. You can change these later, and add more
-              unusual rates from the agency page.
+              Tick any that apply. You can change them later.
             </p>
           </div>
 
@@ -238,7 +207,7 @@ export function AgencyFormFields({
             on={night}
             onChange={setNight}
             title="Night rate"
-            subtitle="A higher rate between certain hours"
+            subtitle="A higher rate between two times"
           >
             <div className="grid grid-cols-2 gap-3">
               <Field label="From">
@@ -285,51 +254,6 @@ export function AgencyFormFields({
               />
             </Field>
           </RateToggle>
-
-          <RateToggle
-            on={overtime}
-            onChange={setOvertime}
-            title="Overtime"
-            subtitle="Extra pay once you pass a number of hours"
-          >
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="After how many hours">
-                <input
-                  type="number"
-                  min={0.5}
-                  step={0.5}
-                  inputMode="decimal"
-                  value={otHours}
-                  onChange={(e) => setOtHours(e.target.value)}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="Counted per">
-                <select
-                  value={otScope}
-                  onChange={(e) =>
-                    setOtScope(e.target.value as 'shift' | 'pay_week')
-                  }
-                  className={selectCls}
-                >
-                  <option value="shift">single shift</option>
-                  <option value="pay_week">whole week</option>
-                </select>
-              </Field>
-            </div>
-            <Field label="Times your normal rate">
-              <input
-                value={otMultiplier}
-                onChange={(e) => setOtMultiplier(e.target.value)}
-                className={inputCls}
-                inputMode="decimal"
-                placeholder="1.5"
-              />
-            </Field>
-            <p className="text-xs text-muted">
-              1.5 means time and a half, 2 means double time.
-            </p>
-          </RateToggle>
         </section>
       )}
 
@@ -349,7 +273,7 @@ export function AgencyFormFields({
                 className={selectCls}
               >
                 <option value="weekly">week</option>
-                <option value="fortnightly">2 weeks</option>
+                <option value="fortnightly">fortnight</option>
                 <option value="monthly">month</option>
               </select>
             </Field>
@@ -368,7 +292,7 @@ export function AgencyFormFields({
             </Field>
           </div>
           <div>
-            <Field label="Days between the week ending and payday">
+            <Field label="Days from the week ending to payday">
               <input
                 type="number"
                 min={0}

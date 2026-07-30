@@ -29,7 +29,11 @@ function describeRule(rule: {
       : `${rule.multiplier}× your normal rate`
   if (rule.kind === 'time_band') {
     const days = rule.days_of_week
-      ? rule.days_of_week.map((d) => DAY_NAMES[d]).join(' & ')
+      ? // Stored Sunday-first, but read Monday-first: "Sat & Sun", not "Sun & Sat".
+        [...rule.days_of_week]
+          .sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7))
+          .map((d) => DAY_NAMES[d])
+          .join(' & ')
       : 'Every day'
     const start = rule.band_start?.slice(0, 5)
     const end = rule.band_end?.slice(0, 5)
@@ -60,17 +64,11 @@ const PRESETS = [
   {
     key: 'weekend',
     label: 'Add weekend rate',
-    hint: 'Different on Sat & Sun',
+    hint: 'Different on Saturdays and Sundays',
     covered: (r: { kind: string; days_of_week: number[] | null }) =>
       r.kind === 'time_band' &&
       r.days_of_week !== null &&
       r.days_of_week.every((d) => d === 0 || d === 6),
-  },
-  {
-    key: 'overtime',
-    label: 'Add overtime',
-    hint: 'After so many hours',
-    covered: (r: { kind: string }) => r.kind === 'threshold',
   },
 ] as const
 

@@ -162,7 +162,7 @@ describe('csv', () => {
     // blank separator, then totals: 15h, £188.75, accrual £22.78
     expect(lines[3]).toBe(',,,,,,,,,,,')
     expect(lines[4]).toBe('Total,,,,,,15.00,188.75,,,,')
-    expect(lines[5]).toBe('Holiday accrual (12.07%),,,,,,,22.78,,,,')
+    expect(lines[5]).toBe('Holiday pay (12.07%),,,,,,,22.78,,,,')
   })
 
   it('names the manual rate instead of a breakdown when overridden', () => {
