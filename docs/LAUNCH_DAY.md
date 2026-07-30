@@ -24,6 +24,14 @@ back to Play at Step 9.
 > ⚠️ Personal accounts must run a closed test with **12 testers for 14
 > continuous days** before going public. Line up 12 people (mates, family,
 > anyone with an Android phone) — you'll need their Gmail addresses at Step 10.
+>
+> ⚠️ Also install the **Play Console mobile app** on your Android phone and
+> sign in — new personal accounts must prove they have a real device before
+> they can publish.
+>
+> 📄 Full detail, with sources, in [GOOGLE_VERIFICATION.md](GOOGLE_VERIFICATION.md)
+> — including the 30 Sept 2026 Android developer verification deadline and why
+> you can skip Google OAuth verification.
 
 ---
 

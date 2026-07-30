@@ -67,7 +67,9 @@ Magic links and Google OAuth on Android return to the app via the `payweek://aut
 See [docs/RELEASE.md](docs/RELEASE.md) for the signed-AAB build and Play
 Console closed-testing runbook, [docs/DATA_SAFETY.md](docs/DATA_SAFETY.md) for
 the Data safety form answers, and [docs/STORE_LISTING.md](docs/STORE_LISTING.md)
-for listing copy, and [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md) to
+for listing copy, [docs/GOOGLE_VERIFICATION.md](docs/GOOGLE_VERIFICATION.md) for
+Google's identity/developer verification rules, and
+[docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md) to
 host the web app + privacy policy on Vercel. The privacy policy is served from
 `public/privacy.html`.
 
