@@ -1,15 +1,36 @@
+import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { EmptyState, ScreenTitle } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { UndoBar } from '../components/Undo'
+import type { Tables } from '../lib/database.types'
 import { useIsOnline } from '../lib/offline'
 import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence } from '../lib/money'
 import { priceShifts, type PricedShift } from '../lib/pricing'
-import { formatDay, formatWeekRange } from '../lib/weeks'
+import { useDeleteShift, useInsertShift } from '../lib/queries'
+import { formatDay, formatWeekRange, todayISO } from '../lib/weeks'
+
+/** Re-insert keeps the original id, so an undone delete restores the same
+ * shift rather than a copy of it. */
+function reinsertable(shift: Tables<'shifts'>) {
+  const { user_id: _user, created_at: _created, ...rest } = shift
+  return rest
+}
 
 export function Shifts() {
   const data = useAppData()
   const online = useIsOnline()
+  const remove = useDeleteShift()
+  const insert = useInsertShift()
+
+  const [selecting, setSelecting] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [undo, setUndo] = useState<{ rows: Tables<'shifts'>[]; message: string } | null>(
+    null,
+  )
+
+  const dismissUndo = useCallback(() => setUndo(null), [])
 
   if (data.status === 'pending') {
     return <ScreenSkeleton rows={3} />
@@ -34,9 +55,66 @@ export function Shifts() {
   }
   const ordered = [...weeks.entries()].sort((a, b) => b[0].localeCompare(a[0]))
 
+  function toggle(id: string) {
+    setSelected((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function exitSelection() {
+    setSelecting(false)
+    setSelected(new Set())
+  }
+
+  function deleteSelected() {
+    const rows = shifts.filter((s) => selected.has(s.id))
+    if (rows.length === 0) return
+    for (const row of rows) remove.mutate(row.id)
+    setUndo({
+      rows,
+      message: `${rows.length} shift${rows.length === 1 ? '' : 's'} deleted`,
+    })
+    exitSelection()
+  }
+
+  function duplicateSelectedToToday() {
+    const rows = shifts.filter((s) => selected.has(s.id))
+    if (rows.length === 0) return
+    for (const row of rows) {
+      const { id: _id, ...copy } = reinsertable(row)
+      insert.mutate({ ...copy, date: todayISO() })
+    }
+    exitSelection()
+  }
+
+  function restore() {
+    if (!undo) return
+    for (const row of undo.rows) insert.mutate(reinsertable(row))
+    setUndo(null)
+  }
+
+  const totalSelected = selected.size
+
   return (
     <>
-      <ScreenTitle>Shifts</ScreenTitle>
+      <ScreenTitle
+        action={
+          shifts.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => (selecting ? exitSelection() : setSelecting(true))}
+              className="text-sm text-accent underline underline-offset-4"
+            >
+              {selecting ? 'Done' : 'Select'}
+            </button>
+          ) : undefined
+        }
+      >
+        Shifts
+      </ScreenTitle>
 
       {ordered.length === 0 && (
         <EmptyState
@@ -49,11 +127,32 @@ export function Shifts() {
         {ordered.map(([weekStart, entries]) => {
           const minutes = entries.reduce((s, e) => s + e.pricing.paidMinutes, 0)
           const gross = entries.reduce((s, e) => s + e.pricing.grossPence, 0)
+          const weekIds = entries.map((e) => e.shift.id)
+          const allPicked = weekIds.every((id) => selected.has(id))
           return (
             <section key={weekStart}>
               <header className="mb-2 flex items-baseline justify-between">
                 <h2 className="text-sm font-semibold text-muted">
-                  {formatWeekRange(weekStart)}
+                  {selecting ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelected((current) => {
+                          const next = new Set(current)
+                          for (const id of weekIds) {
+                            if (allPicked) next.delete(id)
+                            else next.add(id)
+                          }
+                          return next
+                        })
+                      }
+                      className="text-accent underline underline-offset-4"
+                    >
+                      {allPicked ? 'Clear week' : 'Select week'}
+                    </button>
+                  ) : (
+                    formatWeekRange(weekStart)
+                  )}
                 </h2>
                 <p className="font-mono text-sm">
                   {formatMinutes(minutes)} ·{' '}
@@ -61,39 +160,98 @@ export function Shifts() {
                 </p>
               </header>
               <div className="overflow-hidden rounded-xl border border-edge bg-surface">
-                {entries.map((entry, i) => (
-                  <Link
-                    key={entry.shift.id}
-                    to={`/shifts/${entry.shift.id}`}
-                    className={`flex items-center justify-between px-4 py-3 ${
-                      i > 0 ? 'border-t border-edge' : ''
-                    }`}
-                  >
-                    <div>
-                      <p className="font-semibold">{formatDay(entry.shift.date)}</p>
-                      <p className="text-sm text-muted">
-                        {agencyName.get(entry.shift.agency_id) ?? '—'} ·{' '}
-                        <span className="font-mono">
-                          {entry.shift.start_time.slice(0, 5)}–
-                          {entry.shift.end_time.slice(0, 5)}
+                {entries.map((entry, i) => {
+                  const picked = selected.has(entry.shift.id)
+                  const body = (
+                    <>
+                      {selecting && (
+                        <span
+                          aria-hidden="true"
+                          className={`mr-3 grid size-5 shrink-0 place-items-center rounded-md border text-xs ${
+                            picked
+                              ? 'border-accent bg-accent text-void'
+                              : 'border-edge'
+                          }`}
+                        >
+                          {picked ? '✓' : ''}
                         </span>
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-mono font-semibold">
-                        {formatPence(entry.pricing.grossPence)}
-                      </p>
-                      <p className="font-mono text-sm text-muted">
-                        {formatMinutes(entry.pricing.paidMinutes)}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">{formatDay(entry.shift.date)}</p>
+                        <p className="truncate text-sm text-muted">
+                          {agencyName.get(entry.shift.agency_id) ?? '—'} ·{' '}
+                          <span className="font-mono">
+                            {entry.shift.start_time.slice(0, 5)}–
+                            {entry.shift.end_time.slice(0, 5)}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="font-mono font-semibold">
+                          {formatPence(entry.pricing.grossPence)}
+                        </p>
+                        <p className="font-mono text-sm text-muted">
+                          {formatMinutes(entry.pricing.paidMinutes)}
+                        </p>
+                      </div>
+                    </>
+                  )
+                  const cls = `flex w-full items-center px-4 py-3 text-left ${
+                    i > 0 ? 'border-t border-edge' : ''
+                  } ${picked ? 'bg-accent/10' : ''}`
+
+                  return selecting ? (
+                    <button
+                      key={entry.shift.id}
+                      type="button"
+                      onClick={() => toggle(entry.shift.id)}
+                      aria-pressed={picked}
+                      className={cls}
+                    >
+                      {body}
+                    </button>
+                  ) : (
+                    <Link
+                      key={entry.shift.id}
+                      to={`/shifts/${entry.shift.id}`}
+                      className={cls}
+                    >
+                      {body}
+                    </Link>
+                  )
+                })}
               </div>
             </section>
           )
         })}
       </div>
+
+      {/* Bulk actions sit above the tab bar while anything is picked. */}
+      {selecting && totalSelected > 0 && (
+        <div className="fixed inset-x-0 bottom-20 z-20 mx-auto w-full max-w-md px-5">
+          <div className="flex items-center gap-2 rounded-xl border border-edge bg-surface p-2 shadow-lg shadow-black/40">
+            <span className="px-2 font-mono text-sm">{totalSelected}</span>
+            <button
+              type="button"
+              onClick={duplicateSelectedToToday}
+              className="flex-1 rounded-lg border border-edge px-3 py-2 text-sm font-semibold hover:border-accent"
+            >
+              Copy to today
+            </button>
+            <button
+              type="button"
+              onClick={deleteSelected}
+              className="flex-1 rounded-lg border border-edge px-3 py-2 text-sm font-semibold text-red-400 hover:border-red-400"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+
+      {undo && (
+        <UndoBar message={undo.message} onUndo={restore} onDismiss={dismissUndo} />
+      )}
     </>
   )
 }

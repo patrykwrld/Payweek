@@ -12,8 +12,8 @@ import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence, formatRate } from '../lib/money'
 import { breaksFromJson } from '../lib/rateEngine'
 import { priceShifts } from '../lib/pricing'
-import { useDeleteShift, useUpdateShift } from '../lib/queries'
-import { formatDay } from '../lib/weeks'
+import { useDeleteShift, useInsertShift, useUpdateShift } from '../lib/queries'
+import { formatDay, todayISO } from '../lib/weeks'
 
 export function ShiftDetail() {
   const { id } = useParams()
@@ -22,6 +22,7 @@ export function ShiftDetail() {
   const online = useIsOnline()
   const update = useUpdateShift()
   const remove = useDeleteShift()
+  const duplicate = useInsertShift()
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -175,6 +176,16 @@ export function ShiftDetail() {
           )}
 
           {shift.notes && <p className="text-sm text-muted">{shift.notes}</p>}
+
+          <GhostButton
+            onClick={() => {
+              const { id: _id, user_id: _u, created_at: _c, ...copy } = shift
+              duplicate.mutate({ ...copy, date: todayISO() })
+              navigate('/shifts')
+            }}
+          >
+            Copy this shift to today
+          </GhostButton>
         </div>
       )}
     </>
