@@ -8,6 +8,7 @@ import {
   shiftDurationMinutes,
   type ShiftBreak,
 } from '../lib/rateEngine'
+import { randomId } from '../lib/ids'
 import { findOverlap } from '../lib/overlap'
 import { formatDay, todayISO } from '../lib/weeks'
 import { Card, ErrorText, Field, PrimaryButton, inputCls, selectCls } from './ui'
@@ -32,7 +33,7 @@ interface BreakDraft {
 }
 
 const newBreak = (minutes = '30', startTime = ''): BreakDraft => ({
-  key: crypto.randomUUID(),
+  key: randomId(),
   minutes,
   startTime,
 })

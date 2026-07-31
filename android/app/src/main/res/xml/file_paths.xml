@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Only what the app actually shares. The Capacitor template also exposes
+    the whole of external storage; Payweek shares one thing - a CSV it has
+    just written to its own cache - so granting more than that is a needless
+    hole. Keep the name in sync with @capacitor/filesystem's Cache directory.
+-->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="my_images" path="." />
     <cache-path name="my_cache_images" path="." />
 </paths>

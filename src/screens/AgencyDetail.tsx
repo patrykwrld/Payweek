@@ -6,10 +6,12 @@ import { GhostButton, ScreenTitle } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { useIsOnline } from '../lib/offline'
 import { formatPence } from '../lib/money'
+import { priceShifts } from '../lib/pricing'
 import {
   useAgencies,
   useDeleteAgency,
   useRateRules,
+  useShifts,
   useUpdateAgency,
 } from '../lib/queries'
 
@@ -77,6 +79,7 @@ export function AgencyDetail() {
   const navigate = useNavigate()
   const agencies = useAgencies()
   const rules = useRateRules()
+  const shifts = useShifts()
   const update = useUpdateAgency()
   const online = useIsOnline()
 
@@ -84,15 +87,15 @@ export function AgencyDetail() {
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  if (agencies.isPending || rules.isPending) {
+  if (agencies.isPending || rules.isPending || shifts.isPending) {
     return <ScreenSkeleton rows={2} />
   }
-  if (agencies.isError || rules.isError) {
+  if (agencies.isError || rules.isError || shifts.isError) {
     return (
       <LoadFailed
         offline={!online}
         onRetry={() => {
-          void agencies.refetch(); void rules.refetch()
+          void agencies.refetch(); void rules.refetch(); void shifts.refetch()
         }}
       />
     )
@@ -114,6 +117,12 @@ export function AgencyDetail() {
   }
 
   const agencyRules = rules.data.filter((r) => r.agency_id === agency.id)
+  // Deleting an agency cascades to its shifts, so say how much goes with it.
+  const agencyShifts = shifts.data.filter((s) => s.agency_id === agency.id)
+  const shiftCount = agencyShifts.length
+  const shiftValue = [...priceShifts(shifts.data, agencies.data, rules.data)]
+    .filter(([, entry]) => entry.shift.agency_id === agency.id)
+    .reduce((sum, [, entry]) => sum + entry.pricing.grossPence, 0)
 
   return (
     <>
@@ -169,9 +178,18 @@ export function AgencyDetail() {
               }}
             >
               {confirmDelete
-                ? 'Tap again — deletes its shifts too'
+                ? `Tap again to delete — ${
+                    shiftCount === 1 ? '1 shift goes' : `${shiftCount} shifts go`
+                  } with it`
                 : 'Delete agency'}
             </GhostButton>
+            {confirmDelete && shiftCount > 0 && (
+              <p className="text-center text-sm text-muted">
+                That&rsquo;s{' '}
+                <span className="font-mono">{formatPence(shiftValue)}</span> of
+                logged pay. Export from Settings first if you need the record.
+              </p>
+            )}
           </div>
         </>
       ) : (

@@ -10,6 +10,20 @@ type Status =
   | { kind: 'sent' }
   | { kind: 'error'; message: string }
 
+/**
+ * Sign-in is the one screen that can't work offline, and "Failed to fetch" on
+ * a warehouse floor tells nobody anything.
+ */
+function readable(message: string): string {
+  if (/failed to fetch|network|offline/i.test(message)) {
+    return 'No connection. Sign-in needs signal — try again when you have some.'
+  }
+  if (/rate limit/i.test(message)) {
+    return 'Too many sign-in emails for now. Wait a few minutes and try again.'
+  }
+  return message
+}
+
 export function SignIn() {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
@@ -21,7 +35,11 @@ export function SignIn() {
       email,
       options: { emailRedirectTo: authRedirectUrl() },
     })
-    setStatus(error ? { kind: 'error', message: error.message } : { kind: 'sent' })
+    setStatus(
+      error
+        ? { kind: 'error', message: readable(error.message) }
+        : { kind: 'sent' },
+    )
   }
 
   async function signInWithGoogle() {
@@ -35,7 +53,7 @@ export function SignIn() {
         options: { redirectTo, skipBrowserRedirect: true },
       })
       if (error) {
-        setStatus({ kind: 'error', message: error.message })
+        setStatus({ kind: 'error', message: readable(error.message) })
       } else if (data.url) {
         await Browser.open({ url: data.url })
       }
@@ -44,7 +62,7 @@ export function SignIn() {
         provider: 'google',
         options: { redirectTo },
       })
-      if (error) setStatus({ kind: 'error', message: error.message })
+      if (error) setStatus({ kind: 'error', message: readable(error.message) })
     }
   }
 

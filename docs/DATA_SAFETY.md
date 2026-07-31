@@ -15,6 +15,7 @@ form that disagrees with the app's behaviour is a policy violation.
 | Users can delete data | Delete actions in `AgencyDetail`, `ShiftDetail`, `PayslipCheck`, plus Settings → Delete my account (`supabase/functions/delete-account`) |
 | Users can export data | `src/lib/csv.ts`, `src/lib/download.ts`, Settings → Export my shifts as a spreadsheet |
 | No ads, analytics or tracking SDKs | No such dependency in `package.json` |
+| Nothing is backed up to Google Drive | `android:allowBackup="false"` plus `res/xml/data_extraction_rules.xml` exclude every domain from cloud backup and device transfer |
 
 ## Overview answers
 

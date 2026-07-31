@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ShiftForm } from '../components/ShiftForm'
 import { Card, EmptyState, ScreenTitle } from '../components/ui'
@@ -9,11 +10,23 @@ import { priceShifts } from '../lib/pricing'
 import { useInsertShift } from '../lib/queries'
 import { payWeekEnd, todayISO } from '../lib/weeks'
 
+const NUDGE_DISMISSED = 'payweek-rates-nudge-dismissed'
+
 export function QuickAdd() {
   const navigate = useNavigate()
   const data = useAppData()
   const online = useIsOnline()
   const insert = useInsertShift()
+  // Say it once. Someone genuinely on a single flat rate shouldn't be told
+  // about night pay every time they open the app.
+  const [nudgeHidden, setNudgeHidden] = useState(
+    () => localStorage.getItem(NUDGE_DISMISSED) === '1',
+  )
+
+  function hideNudge() {
+    localStorage.setItem(NUDGE_DISMISSED, '1')
+    setNudgeHidden(true)
+  }
 
   if (data.status === 'pending') {
     return <ScreenSkeleton rows={3} />
@@ -84,16 +97,16 @@ export function QuickAdd() {
         </p>
       </Card>
 
-      {noRates.length > 0 && (
-        <Link
-          to={
-            noRates.length === 1 && noRates[0]
-              ? `/agencies/${noRates[0].id}`
-              : '/agencies'
-          }
-          className="mt-4 flex items-center justify-between rounded-xl border border-accent/40 bg-accent/5 px-4 py-3 transition-colors hover:border-accent"
-        >
-          <span>
+      {noRates.length > 0 && !nudgeHidden && (
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-accent/40 bg-accent/5 pl-4 pr-2 py-3">
+          <Link
+            to={
+              noRates.length === 1 && noRates[0]
+                ? `/agencies/${noRates[0].id}`
+                : '/agencies'
+            }
+            className="min-w-0 flex-1"
+          >
             <span className="block font-semibold">
               Paid more at night or weekends?
             </span>
@@ -102,11 +115,16 @@ export function QuickAdd() {
                 ? `${noRates[0].name} is priced at one flat rate. Set the extras.`
                 : 'Some of your agencies are priced at one flat rate.'}
             </span>
-          </span>
-          <span aria-hidden className="text-muted">
-            ›
-          </span>
-        </Link>
+          </Link>
+          <button
+            type="button"
+            onClick={hideNudge}
+            aria-label="Dismiss"
+            className="shrink-0 rounded-lg px-2 py-1 text-muted hover:text-ink"
+          >
+            ✕
+          </button>
+        </div>
       )}
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">Add a shift</h2>

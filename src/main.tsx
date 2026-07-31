@@ -7,9 +7,19 @@ import App from './App'
 import { AuthProvider } from './auth/AuthProvider'
 import { registerAuthDeepLinks } from './auth/redirects'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import {
+  CACHE_KEY,
+  forgetLastUser,
+  noteSignedInUser,
+  purgeCacheIfAccountChanged,
+} from './lib/deviceCache'
 import { registerMutationDefaults } from './lib/offline'
 import { supabase } from './lib/supabase'
 import './index.css'
+
+// Before anything reads the cache back: if the account on this device isn't
+// the one the cache belongs to, it never gets loaded in the first place.
+purgeCacheIfAccountChanged()
 
 registerAuthDeepLinks()
 
@@ -33,31 +43,22 @@ registerMutationDefaults(queryClient)
 
 const persister = createSyncStoragePersister({
   storage: window.localStorage,
-  key: 'payweek-cache',
+  key: CACHE_KEY,
 })
-
-// The cache is written to disk so the app opens with no signal, which means
-// one person's shifts would otherwise still be sitting there for whoever signs
-// in next. Wipe it on sign-out, and on any sign-in that isn't the same account.
-const LAST_USER_KEY = 'payweek-last-user'
-
-function forgetCachedData() {
-  queryClient.clear()
-  void persister.removeClient()
-}
 
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
-    localStorage.removeItem(LAST_USER_KEY)
-    forgetCachedData()
+    // Deliberately does not clear: a session can end because it expired, and
+    // shifts logged offline are still queued in here waiting for signal —
+    // they go out the moment the same person signs back in. The launch-time
+    // check is what stops a handed-on phone showing the last account's data.
+    forgetLastUser()
     return
   }
   const userId = session?.user.id
-  if (!userId) return
-  if (localStorage.getItem(LAST_USER_KEY) !== userId) {
-    forgetCachedData()
-    localStorage.setItem(LAST_USER_KEY, userId)
-  }
+  // A different account signing in without a reload — drop what's in memory
+  // as well as on disk, so nothing of the previous one is on screen.
+  if (userId && noteSignedInUser(userId)) queryClient.clear()
 })
 
 createRoot(document.getElementById('root')!).render(
@@ -65,7 +66,13 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <PersistQueryClientProvider
         client={queryClient}
-        persistOptions={{ persister, maxAge: 7 * DAY_MS }}
+        persistOptions={{
+          persister,
+          maxAge: 7 * DAY_MS,
+          // Bump when the cached shape changes, so an old cache is discarded
+          // rather than fed to code that no longer understands it.
+          buster: 'v2',
+        }}
         onSuccess={() => {
           // Cache restored: flush anything logged while offline.
           void queryClient.resumePausedMutations()

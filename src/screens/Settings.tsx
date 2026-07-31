@@ -34,9 +34,20 @@ import { todayISO } from '../lib/weeks'
  * sign-up. The deletion itself needs the service role, so it runs in the
  * `delete-account` Edge Function; this only asks, twice, and signs out.
  */
-function DeleteAccount({ online }: { online: boolean }) {
+function DeleteAccount({
+  online,
+  onExport,
+}: {
+  online: boolean
+  onExport: () => void
+}) {
   const [stage, setStage] = useState<'idle' | 'confirming' | 'deleting'>('idle')
+  const [typed, setTyped] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // Two taps is too little for something with no undo and no backup — the
+  // word has to be typed. It's a once-ever action, so the friction costs
+  // nobody anything in normal use.
+  const confirmed = typed.trim().toUpperCase() === 'DELETE'
 
   async function remove() {
     setStage('deleting')
@@ -72,16 +83,44 @@ function DeleteAccount({ online }: { online: boolean }) {
           Delete my account
         </GhostButton>
       ) : (
-        <div className="space-y-2">
-          <GhostButton danger onClick={() => void remove()}>
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={onExport}
+            disabled={stage === 'deleting'}
+            className="w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold transition-colors hover:border-accent disabled:opacity-50"
+          >
+            Export my shifts first
+          </button>
+          <Field label="Type DELETE to confirm">
+            <input
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              className={inputCls}
+              autoComplete="off"
+              autoCapitalize="characters"
+              placeholder="DELETE"
+              disabled={stage === 'deleting'}
+            />
+          </Field>
+          <button
+            type="button"
+            onClick={() => void remove()}
+            disabled={!confirmed || stage === 'deleting'}
+            className="w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold text-red-400 transition-colors hover:border-red-400 disabled:opacity-40"
+          >
             {stage === 'deleting'
               ? 'Deleting…'
-              : 'Yes, delete everything permanently'}
-          </GhostButton>
+              : 'Delete my account permanently'}
+          </button>
           {stage !== 'deleting' && (
             <button
               type="button"
-              onClick={() => setStage('idle')}
+              onClick={() => {
+                setStage('idle')
+                setTyped('')
+                setError(null)
+              }}
               className="w-full py-2 text-sm text-muted underline underline-offset-4"
             >
               Keep my account
@@ -279,7 +318,7 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
         </button>
       </div>
 
-      <DeleteAccount online={online} />
+      <DeleteAccount online={online} onExport={() => void exportCsv()} />
     </>
   )
 }

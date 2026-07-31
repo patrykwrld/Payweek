@@ -9,6 +9,16 @@ Everything needed to get a signed AAB into Play Console closed testing.
 > machine with the Android SDK (Android Studio, or `sdkmanager`). The signing
 > configuration in `android/app/build.gradle` is wired and ready; the
 > `keytool` invocation in step 1 has been verified.
+>
+> ⚠️ **The Android toolchain moved and has not been compiled since.** Play
+> will not accept a new app targeting below API 35, so `targetSdk` and
+> `compileSdk` are now 35, which forced Android Gradle Plugin 8.2 → 8.7.2 and
+> Gradle 8.2.1 → 8.9. These three are a set. The very first thing to do on a
+> machine with the SDK is `cd android && ./gradlew bundleRelease` — if Gradle
+> complains about the Capacitor modules, the supported fix is upgrading to
+> Capacitor 7 (`npx @capacitor/cli@7 migrate`), which targets SDK 35 natively.
+> `minSdk` also moved 22 → 23, dropping Android 5.x, where the bundled
+> System WebView is too old to be worth supporting.
 
 ## 0. Prerequisites
 

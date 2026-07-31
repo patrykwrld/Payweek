@@ -1,6 +1,7 @@
 import { QueryClient, onlineManager, useMutationState } from '@tanstack/react-query'
 import { useSyncExternalStore } from 'react'
 import type { Tables, TablesInsert, TablesUpdate } from './database.types'
+import { randomId } from './ids'
 import { supabase } from './supabase'
 
 /** Mutation keys. Writes are queued while offline, so their functions
@@ -64,7 +65,7 @@ export function registerMutationDefaults(client: QueryClient): void {
     onMutate: (values: TablesInsert<'shifts'>) => {
       // Runs once per mutation, not once per attempt, and the object it
       // mutates is the one that gets persisted — so the id survives both.
-      values.id ??= crypto.randomUUID()
+      values.id ??= randomId()
       const previous = snapshot()
       client.setQueryData(
         ['shifts'],
