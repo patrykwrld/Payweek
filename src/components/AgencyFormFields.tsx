@@ -52,7 +52,7 @@ function RateToggle({
 }) {
   return (
     <div
-      className={`rounded-xl border p-4 transition-colors ${
+      className={`rounded-2xl border p-4 transition-colors ${
         on ? "border-accent/60 bg-accent/5" : "border-edge bg-surface"
       }`}
     >

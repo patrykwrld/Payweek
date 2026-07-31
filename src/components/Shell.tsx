@@ -42,14 +42,19 @@ function OfflineBar() {
 export function Shell() {
   return (
     <div className="mx-auto w-full max-w-md">
-      <main className="min-h-dvh px-5 pb-28 pt-8">
+      {/* Bottom padding clears the tab bar *and* the gesture bar underneath it;
+          the top respects a notch. viewport-fit=cover means the WebView hands
+          us the whole screen, so this is ours to get right. */}
+      <main className="min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[calc(2rem+env(safe-area-inset-top))]">
         <OfflineBar />
         <Outlet />
       </main>
-      {/* Explicitly above everything. Without a z-index this sits in the same
-          layer as the page content and can lose taps to whatever happens to
-          scroll under it. */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-void/95 backdrop-blur">
+      {/* Explicitly above everything: without a z-index this sits in the same
+          layer as the page content and can lose taps to whatever scrolls under
+          it. Solid, not translucent — a backdrop blur means the WebView
+          re-blurs a strip of the page on every frame of every scroll, which is
+          a real cost on a mid-range Android for an effect nobody notices. */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-void pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-md">
           {tabs.map(({ to, label, Icon }) => (
             <NavLink
@@ -57,7 +62,7 @@ export function Shell() {
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex flex-1 flex-col items-center gap-1 py-3 text-xs font-semibold ${
+                `flex flex-1 flex-col items-center gap-1 py-3 text-xs font-semibold transition-colors ${
                   isActive ? 'text-accent' : 'text-muted'
                 }`
               }

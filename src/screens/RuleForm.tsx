@@ -365,7 +365,7 @@ function RuleFormInner({
                 key={name}
                 type="button"
                 onClick={() => toggleDay(d)}
-                className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
+                className={`press flex-1 rounded-xl py-2.5 text-xs font-semibold transition-colors ${
                   days.includes(d)
                     ? 'bg-accent text-void'
                     : 'border border-edge bg-surface text-muted'

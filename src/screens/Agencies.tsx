@@ -58,7 +58,7 @@ export function Agencies() {
             <Link
               key={agency.id}
               to={`/agencies/${agency.id}`}
-              className="flex items-center justify-between rounded-xl border border-edge bg-surface px-4 py-4 transition-colors hover:border-accent"
+              className="press card-raised flex items-center justify-between rounded-2xl border border-edge bg-surface px-4 py-4 transition-colors hover:border-accent"
             >
               <div className="min-w-0">
                 <p className="font-semibold">{agency.name}</p>
@@ -88,7 +88,7 @@ export function Agencies() {
               <Link
                 key={agency.id}
                 to={`/agencies/${agency.id}`}
-                className="flex items-center justify-between rounded-xl border border-edge bg-surface px-4 py-4"
+                className="flex items-center justify-between rounded-2xl border border-edge bg-surface px-4 py-4"
               >
                 <p className="font-semibold">{agency.name}</p>
                 <span className="text-muted">›</span>

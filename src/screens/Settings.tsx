@@ -89,7 +89,7 @@ function DeleteAccount({
             type="button"
             onClick={onExport}
             disabled={stage === 'deleting'}
-            className="w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold transition-colors hover:border-accent disabled:opacity-50"
+            className="press w-full rounded-xl border border-edge bg-surface px-4 py-3.5 text-base font-semibold transition-colors hover:border-accent disabled:opacity-50"
           >
             Export my shifts first
           </button>
@@ -108,7 +108,7 @@ function DeleteAccount({
             type="button"
             onClick={() => void remove()}
             disabled={!confirmed || stage === 'deleting'}
-            className="w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold text-negative transition-colors hover:border-negative disabled:opacity-40"
+            className="press w-full rounded-xl border border-edge bg-surface px-4 py-3.5 text-base font-semibold text-negative transition-colors hover:border-negative disabled:opacity-40"
           >
             {stage === 'deleting'
               ? 'Deleting…'
@@ -294,7 +294,7 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
       <div className="mt-8 space-y-3">
         <Link
           to="/check"
-          className="block w-full rounded-lg border border-edge bg-surface px-4 py-3 text-center text-base font-semibold transition-colors hover:border-accent"
+          className="press block w-full rounded-xl border border-edge bg-surface px-4 py-3.5 text-center text-base font-semibold transition-colors hover:border-accent"
         >
           Check a payslip
         </Link>

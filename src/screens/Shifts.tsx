@@ -159,7 +159,7 @@ export function Shifts() {
                   <span className="font-semibold text-ink">{formatPence(gross)}</span>
                 </p>
               </header>
-              <div className="overflow-hidden rounded-xl border border-edge bg-surface">
+              <div className="card-raised overflow-hidden rounded-2xl border border-edge bg-surface">
                 {entries.map((entry, i) => {
                   const picked = selected.has(entry.shift.id)
                   const body = (
@@ -196,7 +196,7 @@ export function Shifts() {
                       </div>
                     </>
                   )
-                  const cls = `flex w-full items-center px-4 py-3 text-left ${
+                  const cls = `press flex w-full items-center px-4 py-3.5 text-left ${
                     i > 0 ? 'border-t border-edge' : ''
                   } ${picked ? 'bg-accent/10' : ''}`
 
@@ -228,7 +228,7 @@ export function Shifts() {
 
       {/* Bulk actions sit above the tab bar while anything is picked. */}
       {selecting && totalSelected > 0 && (
-        <div className="fixed inset-x-0 bottom-20 z-20 mx-auto w-full max-w-md px-5">
+        <div className="fixed inset-x-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 mx-auto w-full max-w-md px-5">
           <div className="flex items-center gap-2 rounded-xl border border-edge bg-surface p-2 shadow-lg shadow-black/40">
             <span className="px-2 font-mono text-sm">{totalSelected}</span>
             <button

@@ -3,7 +3,9 @@ import type { ReactNode } from 'react'
 /** Grey blocks standing in for content while it loads — steadier than a
  * spinner because the layout doesn't jump when data lands. */
 export function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse rounded-lg bg-edge/60 ${className}`} />
+  // animate-pulse is an opacity keyframe, which the compositor handles on its
+  // own thread. A shimmer sweep would repaint a gradient every frame instead.
+  return <div className={`animate-pulse rounded-xl bg-edge/50 ${className}`} />
 }
 
 export function ScreenSkeleton({ rows = 3 }: { rows?: number }) {
@@ -29,11 +31,11 @@ export function LoadFailed({
   offline?: boolean
 }) {
   return (
-    <div className="rounded-xl border border-edge bg-surface p-6 text-center">
+    <div className="card-raised rounded-2xl border border-edge bg-surface p-6 text-center">
       <p className="font-semibold">
         {offline ? 'No connection' : 'Couldn’t load your data'}
       </p>
-      <p className="mt-1 text-sm text-muted">
+      <p className="mx-auto mt-1 max-w-[34ch] text-sm text-muted">
         {offline
           ? 'Showing what was saved on this device. It’ll refresh when you’re back online.'
           : 'Something went wrong reaching Payweek.'}
@@ -42,7 +44,7 @@ export function LoadFailed({
         <button
           type="button"
           onClick={onRetry}
-          className="mt-4 rounded-lg border border-edge px-4 py-2 text-sm font-semibold hover:border-accent"
+          className="press mt-4 rounded-xl border border-edge px-4 py-2.5 text-sm font-semibold hover:border-accent"
         >
           Try again
         </button>

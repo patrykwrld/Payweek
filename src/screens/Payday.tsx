@@ -95,7 +95,7 @@ export function Payday() {
 
       <Link
         to="/check"
-        className="mt-8 flex items-center justify-between rounded-xl border border-edge bg-surface px-4 py-4 transition-colors hover:border-accent"
+        className="press card-raised mt-8 flex items-center justify-between rounded-2xl border border-edge bg-surface px-4 py-4 transition-colors hover:border-accent"
       >
         <span>
           <span className="block font-semibold">Been paid? Check the payslip</span>

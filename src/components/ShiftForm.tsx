@@ -295,7 +295,7 @@ export function ShiftForm({
               type="button"
               onClick={() => setBreaks((rows) => rows.filter((r) => r.key !== b.key))}
               aria-label="Remove break"
-              className="shrink-0 rounded-lg border border-edge px-2.5 py-2 text-sm text-muted hover:border-negative hover:text-negative"
+              className="grid size-11 shrink-0 place-items-center rounded-xl border border-edge text-sm text-muted hover:border-negative hover:text-negative"
             >
               ✕
             </button>

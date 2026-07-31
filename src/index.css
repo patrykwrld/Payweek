@@ -37,12 +37,39 @@ body,
   min-height: 100%;
 }
 
+html {
+  /* Rotating a phone must not resize the type. */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background-color: var(--color-void);
   color: var(--color-ink);
   font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* No rubber-band chaining to whatever is behind the WebView. */
+  overscroll-behavior-y: none;
+}
+
+/* Removes the ~300ms wait older Android WebViews spend deciding whether a tap
+ * was a double-tap. It is the single cheapest thing that makes an app feel
+ * native rather than like a web page. */
+a,
+button,
+input,
+select,
+label,
+[role='button'] {
+  touch-action: manipulation;
+}
+
+/* Chrome shouldn't be selectable — long-pressing a tab label to get a text
+ * caret is a giveaway that this isn't a native app. Content still is. */
+nav,
+button {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Numbers: same family as the text, but lining tabular figures so money and
@@ -84,8 +111,14 @@ body {
   );
 }
 
-/* Motion is confirmation, not decoration: short, downward-resisting, and
- * only ever on something that just changed. */
+/* Motion is confirmation, not decoration: short, downward-resisting, and only
+ * ever on something that just changed.
+ *
+ * Everything below animates transform and opacity and nothing else. Those two
+ * are the only properties a phone can hand to the compositor — anything that
+ * touches width, top, filter or colour drags layout or paint onto the main
+ * thread every frame, which is exactly how a web app starts feeling like one
+ * on a £150 Android. */
 @media (prefers-reduced-motion: no-preference) {
   .rise {
     animation: rise 0.34s cubic-bezier(0.2, 0.7, 0.3, 1) both;
@@ -101,16 +134,66 @@ body {
   .press:active {
     transform: scale(0.985);
   }
+
+  /* Intro: content arrives from the right, one element after another. The
+     delay is set per element so the eye is led down the card rather than
+     hit with all of it at once. */
+  .enter {
+    animation: enter 0.52s cubic-bezier(0.16, 0.84, 0.32, 1) both;
+  }
+
+  /* The whole overlay letting go at the end. */
+  .exit {
+    animation: exit 0.32s cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  /* A slow drift behind the intro. One composited layer, no filter, no
+     repaint — it costs a texture and nothing per frame. */
+  .drift {
+    animation: drift 24s ease-in-out infinite alternate;
+    will-change: transform;
+  }
 }
 
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translate3d(0, 6px, 0);
   }
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translate3d(28px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes exit {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(-6%, -3%, 0) scale(1.05);
+  }
+  to {
+    transform: translate3d(6%, 4%, 0) scale(1.22);
   }
 }
 
