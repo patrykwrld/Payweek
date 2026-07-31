@@ -1,8 +1,13 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
-import type { Tables, TablesInsert } from '../lib/database.types'
-import { DAY_NAMES } from '../lib/days'
-import { parsePoundsToPence, penceToPoundsInput } from '../lib/money'
-import { useIsOnline } from '../lib/offline'
+import { useState, type FormEvent, type ReactNode } from "react";
+import type { Tables } from "../lib/database.types";
+import { DAY_NAMES } from "../lib/days";
+import { parsePoundsToPence, penceToPoundsInput } from "../lib/money";
+import { useIsOnline } from "../lib/offline";
+import {
+  findNightRule,
+  findWeekendRule,
+  type RatePlan,
+} from "../lib/rateShapes";
 import {
   ErrorText,
   Field,
@@ -10,30 +15,25 @@ import {
   PrimaryButton,
   inputCls,
   selectCls,
-} from './ui'
+} from "./ui";
 
 export interface AgencyFormValues {
-  name: string
-  base_rate_pence: number
-  pay_cycle: string
-  pay_week_start_day: number
-  pay_delay_days: number
-  notes: string | null
+  name: string;
+  base_rate_pence: number;
+  pay_cycle: string;
+  pay_week_start_day: number;
+  pay_delay_days: number;
+  notes: string | null;
 }
 
-/** Rate rules the create flow can set up for you, so the common ones
- * don't have to be discovered separately. */
-export type NewRule = Omit<TablesInsert<'rate_rules'>, 'agency_id'>
-
 interface Props {
-  initial?: Tables<'agencies'>
-  /** Offer night/weekend/overtime setup inline. On by default for new
-   * agencies; existing ones manage rules from the agency page. */
-  offerRates?: boolean
-  submitLabel: string
-  pending: boolean
-  error: unknown
-  onSubmit: (values: AgencyFormValues, extraRules: NewRule[]) => void
+  initial?: Tables<"agencies">;
+  /** The agency's current rules, so the two tick boxes show its real rates. */
+  rules?: readonly Tables<"rate_rules">[];
+  submitLabel: string;
+  pending: boolean;
+  error: unknown;
+  onSubmit: (values: AgencyFormValues, rates: RatePlan) => void;
 }
 
 /** A rate you can switch on, with its fields revealed underneath. */
@@ -44,16 +44,16 @@ function RateToggle({
   subtitle,
   children,
 }: {
-  on: boolean
-  onChange: (on: boolean) => void
-  title: string
-  subtitle: string
-  children: ReactNode
+  on: boolean;
+  onChange: (on: boolean) => void;
+  title: string;
+  subtitle: string;
+  children: ReactNode;
 }) {
   return (
     <div
       className={`rounded-xl border p-4 transition-colors ${
-        on ? 'border-accent/60 bg-accent/5' : 'border-edge bg-surface'
+        on ? "border-accent/60 bg-accent/5" : "border-edge bg-surface"
       }`}
     >
       <label className="flex cursor-pointer items-start gap-3">
@@ -70,95 +70,90 @@ function RateToggle({
       </label>
       {on && <div className="mt-4 space-y-3">{children}</div>}
     </div>
-  )
+  );
 }
 
 export function AgencyFormFields({
   initial,
-  offerRates = !initial,
+  rules = [],
   submitLabel,
   pending,
   error,
   onSubmit,
 }: Props) {
-  const online = useIsOnline()
-  const [name, setName] = useState(initial?.name ?? '')
+  const online = useIsOnline();
+  const existingNight = findNightRule(rules);
+  const existingWeekend = findWeekendRule(rules);
+  const [name, setName] = useState(initial?.name ?? "");
   const [baseRate, setBaseRate] = useState(
-    initial ? penceToPoundsInput(initial.base_rate_pence) : '',
-  )
-  const [payCycle, setPayCycle] = useState(initial?.pay_cycle ?? 'weekly')
+    initial ? penceToPoundsInput(initial.base_rate_pence) : ""
+  );
+  const [payCycle, setPayCycle] = useState(initial?.pay_cycle ?? "weekly");
   const [weekStartDay, setWeekStartDay] = useState(
-    String(initial?.pay_week_start_day ?? 1),
-  )
-  const [payDelay, setPayDelay] = useState(String(initial?.pay_delay_days ?? 4))
-  const [notes, setNotes] = useState(initial?.notes ?? '')
-  const [validation, setValidation] = useState<string | null>(null)
+    String(initial?.pay_week_start_day ?? 1)
+  );
+  const [payDelay, setPayDelay] = useState(
+    String(initial?.pay_delay_days ?? 4)
+  );
+  const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [validation, setValidation] = useState<string | null>(null);
 
-  // Optional extras, offered while creating so they aren't hidden away.
-  const [night, setNight] = useState(false)
-  const [nightFrom, setNightFrom] = useState('22:00')
-  const [nightTo, setNightTo] = useState('06:00')
-  const [nightRate, setNightRate] = useState('')
+  // The two rates almost everyone has sit right here beside the normal one,
+  // both when adding an agency and when changing it later. Unticking removes
+  // the rate; there is nowhere else to go for it.
+  const [night, setNight] = useState(existingNight !== undefined);
+  const [nightFrom, setNightFrom] = useState(
+    existingNight?.band_start?.slice(0, 5) ?? "22:00"
+  );
+  const [nightTo, setNightTo] = useState(
+    existingNight?.band_end?.slice(0, 5) ?? "06:00"
+  );
+  const [nightRate, setNightRate] = useState(
+    existingNight?.rate_pence != null
+      ? penceToPoundsInput(existingNight.rate_pence)
+      : ""
+  );
 
-  const [weekend, setWeekend] = useState(false)
-  const [weekendRate, setWeekendRate] = useState('')
+  const [weekend, setWeekend] = useState(existingWeekend !== undefined);
+  const [weekendRate, setWeekendRate] = useState(
+    existingWeekend?.rate_pence != null
+      ? penceToPoundsInput(existingWeekend.rate_pence)
+      : ""
+  );
 
   function submit(event: FormEvent) {
-    event.preventDefault()
-    setValidation(null)
+    event.preventDefault();
+    setValidation(null);
 
-    const ratePence = parsePoundsToPence(baseRate)
+    const ratePence = parsePoundsToPence(baseRate);
     if (ratePence === null) {
-      setValidation('Your normal hourly rate should look like 12.50.')
-      return
+      setValidation("Your normal hourly rate should look like 12.50.");
+      return;
     }
-    const delay = Number(payDelay || '0')
+    const delay = Number(payDelay || "0");
     if (!Number.isInteger(delay) || delay < 0) {
-      setValidation('Days until payday must be a whole number.')
-      return
+      setValidation("Days until payday must be a whole number.");
+      return;
     }
 
-    const extras: NewRule[] = []
+    const plan: RatePlan = { night: null, weekend: null };
 
     if (night) {
-      const pence = parsePoundsToPence(nightRate)
+      const pence = parsePoundsToPence(nightRate);
       if (pence === null) {
-        setValidation('Night rate should look like 14.50.')
-        return
+        setValidation("The night rate should look like 14.50.");
+        return;
       }
-      extras.push({
-        kind: 'time_band',
-        label: 'Night rate',
-        days_of_week: null,
-        band_start: nightFrom,
-        band_end: nightTo,
-        threshold_minutes: null,
-        threshold_scope: null,
-        rate_pence: pence,
-        multiplier: null,
-        priority: 5,
-      })
+      plan.night = { from: nightFrom, to: nightTo, ratePence: pence };
     }
 
     if (weekend) {
-      const pence = parsePoundsToPence(weekendRate)
+      const pence = parsePoundsToPence(weekendRate);
       if (pence === null) {
-        setValidation('Weekend rate should look like 15.00.')
-        return
+        setValidation("The weekend rate should look like 15.00.");
+        return;
       }
-      extras.push({
-        kind: 'time_band',
-        label: 'Weekend',
-        days_of_week: [0, 6],
-        // Equal start and end means the whole day.
-        band_start: '00:00',
-        band_end: '00:00',
-        threshold_minutes: null,
-        threshold_scope: null,
-        rate_pence: pence,
-        multiplier: null,
-        priority: 10,
-      })
+      plan.weekend = { ratePence: pence };
     }
 
     onSubmit(
@@ -168,10 +163,10 @@ export function AgencyFormFields({
         pay_cycle: payCycle,
         pay_week_start_day: Number(weekStartDay),
         pay_delay_days: delay,
-        notes: notes.trim() === '' ? null : notes.trim(),
+        notes: notes.trim() === "" ? null : notes.trim(),
       },
-      extras,
-    )
+      plan
+    );
   }
 
   return (
@@ -203,68 +198,71 @@ export function AgencyFormFields({
         </p>
       </div>
 
-      {offerRates && (
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-sm font-semibold">Do some hours pay more?</h2>
-            <p className="text-xs text-muted">
-              Tick any that apply. You can change them later.
-            </p>
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold">Do some hours pay more?</h2>
+          <p className="text-xs text-muted">
+            Tick any that apply. Untick one to remove it.
+          </p>
+        </div>
+
+        <RateToggle
+          on={night}
+          onChange={setNight}
+          title="Night rate"
+          subtitle="A higher rate between two times"
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="From">
+              <input
+                type="time"
+                value={nightFrom}
+                onChange={(e) => setNightFrom(e.target.value)}
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Until">
+              <input
+                type="time"
+                value={nightTo}
+                onChange={(e) => setNightTo(e.target.value)}
+                className={inputCls}
+              />
+            </Field>
           </div>
+          <Field label="Night hourly rate">
+            <input
+              value={nightRate}
+              onChange={(e) => setNightRate(e.target.value)}
+              className={inputCls}
+              inputMode="decimal"
+              placeholder="14.50"
+            />
+          </Field>
+        </RateToggle>
 
-          <RateToggle
-            on={night}
-            onChange={setNight}
-            title="Night rate"
-            subtitle="A higher rate between two times"
-          >
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="From">
-                <input
-                  type="time"
-                  value={nightFrom}
-                  onChange={(e) => setNightFrom(e.target.value)}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="Until">
-                <input
-                  type="time"
-                  value={nightTo}
-                  onChange={(e) => setNightTo(e.target.value)}
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-            <Field label="Night hourly rate">
-              <input
-                value={nightRate}
-                onChange={(e) => setNightRate(e.target.value)}
-                className={inputCls}
-                inputMode="decimal"
-                placeholder="14.50"
-              />
-            </Field>
-          </RateToggle>
-
-          <RateToggle
-            on={weekend}
-            onChange={setWeekend}
-            title="Weekend rate"
-            subtitle="A different rate on Saturdays and Sundays"
-          >
-            <Field label="Weekend hourly rate">
-              <input
-                value={weekendRate}
-                onChange={(e) => setWeekendRate(e.target.value)}
-                className={inputCls}
-                inputMode="decimal"
-                placeholder="15.00"
-              />
-            </Field>
-          </RateToggle>
-        </section>
-      )}
+        <RateToggle
+          on={weekend}
+          onChange={setWeekend}
+          title="Weekend rate"
+          subtitle="A different rate on Saturdays and Sundays"
+        >
+          <Field label="Weekend hourly rate">
+            <input
+              value={weekendRate}
+              onChange={(e) => setWeekendRate(e.target.value)}
+              className={inputCls}
+              inputMode="decimal"
+              placeholder="15.00"
+            />
+          </Field>
+          {night && (
+            <p className="text-xs text-muted">
+              Hours that are both — a Saturday night — pay this weekend rate.
+            </p>
+          )}
+        </RateToggle>
+      </section>
 
       <details className="rounded-xl border border-edge bg-surface p-4">
         <summary className="cursor-pointer text-sm font-semibold">
@@ -313,7 +311,8 @@ export function AgencyFormFields({
               />
             </Field>
             <p className="mt-1 text-xs text-muted">
-              Week ends Sunday and you&rsquo;re paid the following Friday? That&rsquo;s 5.
+              Week ends Sunday and you&rsquo;re paid the following Friday?
+              That&rsquo;s 5.
             </p>
           </div>
           <Field label="Notes">
@@ -332,8 +331,8 @@ export function AgencyFormFields({
       {!online && <NeedsConnection />}
 
       <PrimaryButton disabled={pending || !online}>
-        {pending ? 'Saving…' : submitLabel}
+        {pending ? "Saving…" : submitLabel}
       </PrimaryButton>
     </form>
-  )
+  );
 }

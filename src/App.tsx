@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/AuthProvider'
 import { SignIn } from './auth/SignIn'
+import { Intro } from './components/Intro'
+import { REPLAY_EVENT, hasSeenIntro } from './lib/intro'
 import { Shell } from './components/Shell'
 import { Agencies } from './screens/Agencies'
 import { AgencyDetail } from './screens/AgencyDetail'
@@ -15,6 +18,15 @@ import { Shifts } from './screens/Shifts'
 
 export default function App() {
   const { session, loading } = useAuth()
+  // Read once, so dismissing it doesn't need a reload and reopening it from
+  // Settings works without one either.
+  const [introDone, setIntroDone] = useState(hasSeenIntro)
+
+  useEffect(() => {
+    const replay = () => setIntroDone(false)
+    window.addEventListener(REPLAY_EVENT, replay)
+    return () => window.removeEventListener(REPLAY_EVENT, replay)
+  }, [])
 
   if (loading) {
     return (
@@ -27,6 +39,10 @@ export default function App() {
   }
 
   if (!session) return <SignIn />
+
+  // After sign-in, not before: someone who hasn't decided to use Payweek yet
+  // shouldn't be read four cards about it.
+  if (!introDone) return <Intro onDone={() => setIntroDone(true)} />
 
   return (
     <BrowserRouter>

@@ -14,6 +14,7 @@ import {
   selectCls,
 } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { replayIntro } from '../lib/intro'
 import { useIsOnline } from '../lib/offline'
 import { buildShiftsCsv } from '../lib/csv'
 import { saveTextFile } from '../lib/download'
@@ -301,6 +302,7 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
           Export my shifts as a spreadsheet
         </GhostButton>
         {exportError && <p className="text-sm text-negative">{exportError}</p>}
+        <GhostButton onClick={replayIntro}>Show the intro again</GhostButton>
         <GhostButton onClick={openPrivacyPolicy}>Privacy policy</GhostButton>
       </div>
 

@@ -23,6 +23,10 @@ migrations in `supabase/migrations/` already applied and the security/performanc
 advisors clean. For a fresh project, apply the migrations in order via the SQL
 editor or `supabase db push`.
 
+The `delete-account` Edge Function in `supabase/functions/` is deployed
+separately (`supabase functions deploy delete-account`); Settings → Delete my
+account depends on it.
+
 Manual dashboard steps (not scriptable via migrations):
 
 1. **Auth → URL Configuration**: set the Site URL to your dev URL (`http://localhost:5173`) and add `payweek://auth-callback` to Redirect URLs (needed for Android).

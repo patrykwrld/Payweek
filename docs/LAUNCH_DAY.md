@@ -43,11 +43,11 @@ calculates your real pay correctly.
 1. Open **<https://payweek.app>** on your laptop
 2. Enter your email → **Email me a sign-in link** → open the email on the same
    device → click the link
-3. **Agencies → Add** — your real agency, your real base rate
-4. **Add rule** — your actual night / weekend / overtime rules
-   (e.g. From `22:00` To `06:00`, tap Mon–Fri, rate `14.50`)
-5. **Add** tab → log a shift you already know the pay for
-6. **Shifts** tab → tap it → read the breakdown
+3. **Rates tab → Add agency** — your real agency, your real hourly rate.
+   Tick **Night rate** and/or **Weekend rate** on the same screen and put
+   your actual figures in.
+4. **Add** tab → log a shift you already know the pay for
+5. **Shifts** tab → tap it → read the breakdown
 
 ✅ **Go:** the total matches your own arithmetic (or your last payslip).
 ❌ **Stop:** if any figure is off, screenshot the breakdown and send it to me.
