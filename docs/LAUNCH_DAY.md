@@ -1,127 +1,90 @@
-# Launch day — start here
+# What's left, in order
 
-Everything already done is listed at the bottom. This is only what's left, in
-the order that wastes the least time. Each step says how long it takes and how
-you know it worked.
+Everything already done is at the bottom. This is only what still needs you,
+ordered so nothing waits on anything above it.
 
-**Two steps have waiting built in (Play verification, Android Studio download).
-Start those early and do other things while they run.**
-
----
-
-## ~~Step 1 — Start the Play developer account~~ ✅ DONE — in review
-
-Do this **first**, before coffee. Google has to verify your identity and that
-takes 1–3 days; everything else can happen while the clock runs.
-
-1. Go to <https://play.google.com/console/signup>
-2. Sign up as **Yourself** (personal), pay the **$25** one-off fee
-3. Upload ID when asked
-
-✅ You'll see "Verification in progress". That's all you need for now — come
-back to Play at Step 9.
-
-> ⚠️ Personal accounts must run a closed test with **12 testers for 14
-> continuous days** before going public. Line up 12 people (mates, family,
-> anyone with an Android phone) — you'll need their Gmail addresses at Step 10.
->
-> ⚠️ Also install the **Play Console mobile app** on your Android phone and
-> sign in — new personal accounts must prove they have a real device before
-> they can publish.
->
-> 📄 Full detail, with sources, in [GOOGLE_VERIFICATION.md](GOOGLE_VERIFICATION.md)
-> — including the 30 Sept 2026 Android developer verification deadline and why
-> you can skip Google OAuth verification.
+Two steps have waiting built in — **Step 4** and **Step 10**. Start those early
+and do the others while they run.
 
 ---
 
-## Step 2 — Check the maths (20 min) ← the important one
+## Step 1 — Decide the privacy email (5 minutes) ⚠️ blocks Play
 
-**Nothing else matters if this is wrong.** You're checking that Payweek
-calculates your real pay correctly.
+The policy says `privacy@payweek.app` in three places. **That mailbox does not
+exist.** Google checks it, and a bounced address is a rejection.
 
-1. Open **<https://payweek.app>** on your laptop
-2. Enter your email → **Email me a sign-in link** → open the email on the same
-   device → click the link
-3. **Rates tab → Add agency** — your real agency, your real hourly rate.
-   Tick **Night rate** and/or **Weekend rate** on the same screen and put
-   your actual figures in.
-4. **Add** tab → log a shift you already know the pay for
-5. **Shifts** tab → tap it → read the breakdown
+Pick one:
 
-✅ **Go:** the total matches your own arithmetic (or your last payslip).
-❌ **Stop:** if any figure is off, screenshot the breakdown and send it to me.
-Do not carry on to the Play Store with wrong pay maths.
+- **Fastest:** use an address you already read. Tell me which and I'll change
+  `public/privacy.html` and push — it redeploys itself.
+- **Tidier:** free forwarding from `privacy@payweek.app` to your inbox.
+  Cloudflare Email Routing does this, but the domain's DNS would have to move
+  to Cloudflare — it is on Vercel now.
 
-If sign-in fails with "requested path is invalid", the Supabase redirect URL
-needs another look — screenshot the address bar and send it.
+✅ Send a test email to whichever address you pick and watch it arrive.
 
 ---
 
-## ~~Step 3 — Buy payweek.app and attach it~~ ✅ DONE — live on HTTPS
+## Step 2 — Check the maths against a real payslip (20 minutes) ← the important one
 
-Easiest route, because it configures DNS for you automatically:
+**Nothing else matters if this is wrong.** Everything below is packaging.
 
-1. <https://vercel.com> → your **payweek** project → **Settings → Domains**
-2. Type `payweek.app` → **Buy** (about £15/year) → complete checkout
-3. Vercel attaches it and issues the HTTPS certificate itself
+1. Open <https://payweek.app> and sign in
+2. **Rates → Add agency** — your real agency, your real hourly rate. Tick
+   **Night rate** and/or **Weekend rate** on the same screen and put your
+   actual figures in
+3. **Add** tab → log a week of shifts you already have the payslip for
+4. **Payday** tab → compare that week's total against the payslip
+5. **Shifts** → tap one → read *How this was worked out*
 
-(If you'd rather buy elsewhere — Namecheap, Cloudflare — buy there, then in
-Vercel use **Add Domain** and copy the DNS records it shows into your
-registrar. Slower, ~£3 cheaper.)
+✅ **Go:** the total matches the payslip's gross, or you can account for the
+difference — holiday pay is shown separately, and tax and NI are not modelled
+at all, so compare against **gross**.
+❌ **Stop:** if a figure is off, screenshot the breakdown and send it. Do not
+carry on to the Play Store with wrong pay maths.
 
-✅ <https://payweek.app> loads Payweek, with a padlock in the address bar.
-Certificates can take up to an hour — don't panic if it's not instant.
-
-### ⚠️ Two follow-ups the domain does NOT do for you
-
-1. **Supabase redirect URLs — sign-in on payweek.app fails until this is done.**
-   Supabase → project `payweek` → Authentication → URL Configuration:
-   - Site URL → `https://payweek.app`
-   - Redirect URLs → add `https://payweek.app/**`
-   (Keep the vercel.app entries and `payweek://auth-callback` — extras are fine.)
-2. **`VITE_PRIVACY_URL` for the Android build.** Vercel → payweek →
-   Settings → Environment Variables → add
-   `VITE_PRIVACY_URL` = `https://payweek.app/privacy.html`, then redeploy.
-   Also put it in your local `.env` before running `bundleRelease`, or the
-   in-app Privacy policy button on Android points at the wrong place.
+If sign-in fails with *"requested path is invalid"*, do Step 3 first.
 
 ---
 
-## Step 4 — Decide the privacy contact email (5 min)
+## Step 3 — Confirm the Supabase redirect URLs (10 minutes)
 
-The privacy policy currently says `privacy@payweek.app`, which doesn't exist
-yet. Google requires a working address. Pick one:
+This has never been verified — there is no API to read it, so it needs a human
+looking at the dashboard. **Sign-in fails without it.**
 
-- **Simplest:** change it to an email you already read. Tell me which and I'll
-  edit `public/privacy.html` and push — it redeploys automatically.
-- **Tidier:** set up free forwarding from `privacy@payweek.app` to your inbox.
-  Cloudflare Email Routing does this free, but you'd need the domain's DNS on
-  Cloudflare (so buy the domain there in Step 3 rather than at Vercel).
+Supabase → project `payweek` → **Authentication → URL Configuration**:
 
-✅ Send a test email to whichever address you chose and confirm it arrives.
+- Site URL → `https://payweek.app`
+- Redirect URLs → must include `https://payweek.app/**` **and**
+  `payweek://auth-callback` (the second is what returns you to the Android app)
+
+Keep the existing `vercel.app` entries; extras are harmless.
+
+✅ If Step 2 signed in fine, the web half is already right. The
+`payweek://auth-callback` entry still needs checking before Step 6.
 
 ---
 
-## Step 5 — Install Android Studio (10 min setup, 1 hour+ downloading)
+## Step 4 — Install Android Studio (10 min of work, 1 hour+ of downloading)
 
-Start this and go do something else.
+Start it, then go and do Steps 1–3 while it runs.
 
-1. <https://developer.android.com/studio> → download for your OS → install
+1. <https://developer.android.com/studio> → download → install
 2. Launch it, accept the **default** setup wizard, let it finish completely
 
-✅ It opens to a "Welcome to Android Studio" window with no pending downloads.
+✅ Opens to a Welcome window with nothing pending.
 
 ---
 
-## Step 6 — Get the app on your phone (20 min)
+## Step 5 — Build once, immediately, before anything else ⚠️ never compiled
 
-On your phone:
-1. **Settings → About phone** → tap **Build number** 7 times
-2. **Settings → System → Developer options** → turn on **USB debugging**
-3. Plug it into the laptop → tap **Allow** on the phone
+The Android toolchain moved and **has not been built by anyone yet**. Play will
+not accept a new app below API 35, so `targetSdk`/`compileSdk` are now 35,
+which forced Android Gradle Plugin 8.7.2 and Gradle 8.9. None of that could be
+compiled in my environment — `dl.google.com` is blocked there.
 
-On the laptop, in a terminal:
+Find out now, not after you have done the store listing:
+
 ```sh
 git clone https://github.com/patrykwrld/Payweek.git
 cd Payweek
@@ -130,6 +93,7 @@ npm install
 ```
 
 Create a file called `.env` in the `Payweek` folder:
+
 ```
 VITE_SUPABASE_URL=https://jcwxxtimhrlzaojadmhx.supabase.co
 VITE_SUPABASE_ANON_KEY=sb_publishable_PXDZo1oea43av5x4lIj3lg_1vGP_8AI
@@ -137,21 +101,46 @@ VITE_PRIVACY_URL=https://payweek.app/privacy.html
 ```
 
 Then:
+
 ```sh
 npm run build
 npx cap sync android
-npx cap run android
+cd android && ./gradlew assembleDebug
 ```
 
-✅ Payweek installs and opens on your phone. Sign in — open the magic-link
-email **on the phone this time**. Your agency and shift from Step 2 are
-already there.
+✅ It compiles.
+❌ If Gradle complains about the Capacitor modules or the SDK, run
+`npx @capacitor/cli@7 migrate` — Capacitor 7 targets SDK 35 natively — then
+build again. If it still fails, send me the error text.
 
 ---
 
-## Step 7 — Create your signing key (5 min, do it once ever)
+## Step 6 — On your phone, and the two buttons never run for real (25 minutes)
 
-In the `Payweek` folder:
+On the phone: **Settings → About phone** → tap **Build number** seven times →
+**Developer options** → turn on **USB debugging** → plug into the laptop → tap
+**Allow**.
+
+```sh
+npx cap run android
+```
+
+✅ Payweek installs and opens. Sign in — open the magic-link email **on the
+phone this time**. Your data from Step 2 is already there.
+
+Then test the two things that have only ever been tested against a stub:
+
+- **Export.** Settings → *Export my shifts as a spreadsheet*. The Android share
+  sheet should appear with a CSV file.
+- **Delete my account.** Sign in with a **throwaway Gmail**, add one agency,
+  then Settings → **Delete my account** → type DELETE. It should sign you out
+  and the account should be gone. **Throwaway only — this is irreversible.**
+  Play requires this path to work.
+
+---
+
+## Step 7 — Create your signing key (5 minutes, once ever)
+
 ```sh
 keytool -genkeypair -v \
   -keystore android/payweek-upload.jks \
@@ -159,8 +148,9 @@ keytool -genkeypair -v \
   -keyalg RSA -keysize 4096 -validity 10000 \
   -dname "CN=Payweek, O=Payweek, C=GB"
 ```
-It asks you to invent a password. Then create
-`android/keystore.properties`:
+
+Then create `android/keystore.properties`:
+
 ```
 storeFile=payweek-upload.jks
 storePassword=the-password-you-just-chose
@@ -168,89 +158,74 @@ keyAlias=payweek-upload
 keyPassword=the-password-you-just-chose
 ```
 
-🔐 **Back up `payweek-upload.jks` and the password now** — password manager,
-or email the file to yourself. Lose them and you can never update the app
-again. Neither file goes into Git; that's already set up.
+🔐 **Back up `payweek-upload.jks` and the password now** — password manager, or
+email the file to yourself. Lose them and you can never update the app again.
+Neither file goes into Git; that is already set up.
 
 ---
 
-## Step 8 — Build the file you upload (10 min)
+## Step 8 — Build the file you upload (10 minutes)
 
 ```sh
 npm run build
 npx cap sync android
-cd android
-./gradlew bundleRelease
-cd ..
+cd android && ./gradlew bundleRelease
 ```
+
 (Windows: `gradlew bundleRelease`, no `./`)
 
 ✅ Creates `android/app/build/outputs/bundle/release/app-release.aab`.
-First run takes a few minutes while Gradle downloads things.
 
 ---
 
-## Step 9 — Take screenshots (15 min)
+## Step 9 — Screenshots and the listing (45 minutes)
 
-With the app on your phone (Step 6), screenshot these five — they need real
-data in them, which you now have:
+With real data on the phone, screenshot these five:
 
-1. **Add** tab (the pay-week total)
-2. **Shifts** (grouped by week)
-3. A shift's **breakdown** ("How this was worked out")
-4. The **rule builder** with the live preview
-5. **Payslip check**
+1. **Add** tab — the pay-week total
+2. **Shifts** — grouped by week
+3. A shift's **How this was worked out**
+4. **Rates** → an agency, night rate ticked
+5. **Payday**
 
-Email them to yourself to get them onto the laptop. Play needs at least 2; use
-all five.
+Play needs at least two; use all five. Already made for you in `assets/play/`:
+`icon-512.png` (512×512) and `feature-graphic.png` (1024×500).
 
-**Already made for you** (in the repo at `assets/play/`):
-- `icon-512.png` — the 512×512 store icon
-- `feature-graphic.png` — the 1024×500 banner
-
----
-
-## Step 10 — Fill in the Play listing (45 min)
-
-Play Console → **Create app**: name **Payweek: Hours & Pay Tracker**,
-English (UK), App, Free.
-
-Work through **App content** — every item needs a green tick:
+Play Console → **Create app**: *Payweek: Hours & Pay Tracker*, English (UK),
+App, Free. Work through **App content** — every item needs a green tick:
 
 | Item | Answer |
 | --- | --- |
 | Privacy policy | `https://payweek.app/privacy.html` |
 | Ads | No |
-| App access | ⚠️ See below |
+| App access | ⚠️ see below |
 | Content rating | Fill in the questionnaire → expect Everyone / PEGI 3 |
 | Target audience | 18+ |
-| Data safety | Copy from [DATA_SAFETY.md](DATA_SAFETY.md) — every answer is listed |
+| Data safety | Copy from [DATA_SAFETY.md](DATA_SAFETY.md) — every answer is written out |
 | Financial features | **No** |
 | Government apps | No |
 
-> ⚠️ **App access** trips people up. Payweek needs a login, and the reviewer
-> **cannot receive your magic-link emails**. Create a throwaway Gmail, sign in
-> to Payweek with it once, then give Play that email address plus instructions:
-> *"Enter this email on the sign-in screen and open the emailed link."* If the
-> reviewer can't get in, they reject the app.
+> ⚠️ **App access** is what trips people up. Payweek needs a login and the
+> reviewer **cannot receive your magic-link emails**. Use the throwaway Gmail
+> from Step 6: give Play that address plus the instruction *"Enter this email
+> on the sign-in screen and open the emailed link."* If the reviewer can't get
+> in, they reject the app.
 
-**Store listing** — all the wording is written for you in
-[STORE_LISTING.md](STORE_LISTING.md): title, short description, full
-description. Upload the icon, feature graphic and screenshots.
+Listing copy — title, short description, full description — is written for you
+in [STORE_LISTING.md](STORE_LISTING.md).
 
 ---
 
-## Step 11 — Send it to testers (15 min)
+## Step 10 — Closed testing (15 minutes, then a 14-day wait)
 
 1. **Testing → Closed testing → Create track**
 2. **Testers** → add your 12 testers' Gmail addresses
 3. Upload `app-release.aab` → **Review release** → **Start rollout**
-4. Copy the opt-in link from the **Testers** tab and send it to all 12 —
-   **they must click it and accept before they can install**
+4. Copy the opt-in link from the **Testers** tab and send it to all 12 — **they
+   must click it and accept before they can install**
 
-⏱️ First review usually takes a few days. Then the 14-day clock starts, and it
-only counts days where 12 testers are opted in — so chase anyone who hasn't
-accepted.
+⏱️ First review usually takes a few days. The 14-day clock only counts days on
+which 12 testers are opted in, so chase anyone who hasn't accepted.
 
 ---
 
@@ -259,23 +234,27 @@ accepted.
 | What you see | What it means |
 | --- | --- |
 | `command not found` | Close the terminal, open a new one |
-| "Missing VITE_SUPABASE_URL" | The `.env` file is missing or in the wrong folder |
-| "requested path is invalid" on sign-in | Supabase redirect URL doesn't match the address you're on |
+| "Missing VITE_SUPABASE_URL" | `.env` is missing or in the wrong folder |
+| "requested path is invalid" on sign-in | Step 3 |
+| Gradle complains about Capacitor or SDK 35 | Step 5's fallback: `npx @capacitor/cli@7 migrate` |
 | `SDK location not found` | Android Studio hasn't finished its first-run setup |
-| Sign-in link does nothing on phone | You opened the email on a different device |
-| **A pay figure looks wrong** | **Stop and send me the breakdown screenshot** |
+| Sign-in link does nothing on the phone | You opened the email on a different device |
+| **A pay figure looks wrong** | **Stop. Send me the breakdown screenshot.** |
 
 ---
 
-## Already done — you don't need to touch these
+## Already done — don't touch these
 
 | | |
 | --- | --- |
-| Database | Live in London, all 5 tables, RLS on every one, security advisors clean |
-| Web app | Live at payweek-self.vercel.app, redeploys automatically on every push |
-| Privacy policy | Written and live |
-| Rate engine | 34 tests passing — night rates, weekends, daily/weekly overtime, midnight-crossing shifts, break apportioning |
-| Offline mode | Shifts log with no signal and sync on reconnect (verified) |
-| App icon & splash | Generated for every Android screen density |
-| Signing config | Wired — Step 7 just supplies the key |
+| Play account | Created and verified |
+| Database | Live in London, 5 tables, RLS on every one, advisors clean |
+| Website | payweek.app over HTTPS, redeploys on every push, proper desktop layout |
+| Privacy policy | Written, live, and matching the app's design |
+| Account deletion | In-app, backed by the `delete-account` Edge Function (deployed, ACTIVE) |
+| Rate engine | 79 tests — night, weekend, midnight-crossing shifts, breaks priced in the band they actually fall in |
+| Offline | Shifts log with no signal and sync on reconnect (verified) |
+| Play blockers in code | targetSdk 35, backups disabled, in-app deletion — all handled |
+| App icon & splash | Generated for every Android density |
+| Signing config | Wired — Step 7 only supplies the key |
 | Play paperwork | Data safety answers and listing copy written |
