@@ -327,7 +327,7 @@ export function AgencyFormFields({
         </div>
       </details>
 
-      {validation && <p className="text-sm text-red-400">{validation}</p>}
+      {validation && <p className="text-sm text-negative">{validation}</p>}
       <ErrorText error={error} />
       {!online && <NeedsConnection />}
 

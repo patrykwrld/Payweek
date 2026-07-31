@@ -2,12 +2,30 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-void: #0d1117;
-  --color-surface: #151b23;
-  --color-edge: #232c37;
+  /* Surfaces form a real elevation ramp rather than two flat greys. The base
+   * sits close to black so that on the OLED screens most phones now have, the
+   * one figure that matters carries the whole screen unaided. */
+  --color-void: #0b0f14;
+  --color-surface: #131a22;
+  --color-raised: #1a222c;
+  --color-edge: #242e3a;
+  --color-hairline: #2f3a47;
+
+  /* One accent, used sparingly. Anything blue is either the number you came
+   * for or the thing to tap next; spend it anywhere else and both stop
+   * reading as special. */
   --color-accent: #5e9bff;
-  --color-ink: #e9eef4;
-  --color-muted: #94a0ae;
+  --color-accent-soft: #17263e;
+
+  /* Semantics, and only these three. Green confirms, amber cautions, red is
+   * money missing — never decoration. */
+  --color-positive: #3ad29f;
+  --color-warn: #efb247;
+  --color-negative: #ff6f6f;
+
+  --color-ink: #eef3f8;
+  --color-muted: #8f9bab;
+  --color-faint: #64717f;
 
   --font-display: 'Inter Variable', system-ui, sans-serif;
   --font-mono: 'Inter Variable', system-ui, sans-serif;
@@ -24,12 +42,79 @@ body {
   color: var(--color-ink);
   font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Numbers: same family as text, but lining tabular figures so columns
- * of money and hours align. */
+/* Numbers: same family as the text, but lining tabular figures so money and
+ * hours line up in columns and don't shuffle sideways as they change. */
 .font-mono {
   font-feature-settings:
     'tnum' 1,
     'lnum' 1;
+}
+
+/* The one figure a screen is about. Large, tight, and optically settled —
+ * at this size Inter's default tracking reads loose and amateurish. */
+.figure-hero {
+  font-size: clamp(2.75rem, 13.5vw, 3.5rem);
+  line-height: 1;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  font-feature-settings:
+    'tnum' 1,
+    'lnum' 1;
+}
+
+.figure-lead {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-feature-settings:
+    'tnum' 1,
+    'lnum' 1;
+}
+
+/* A hairline of light along the top edge. It is what separates a card that
+ * looks printed on from one that looks like a raised surface, and it costs
+ * nothing. */
+.card-raised {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-hairline) 55%, transparent),
+    transparent 1px
+  );
+}
+
+/* Motion is confirmation, not decoration: short, downward-resisting, and
+ * only ever on something that just changed. */
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 0.34s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  }
+
+  .press {
+    transition:
+      transform 0.12s ease,
+      border-color 0.15s ease,
+      opacity 0.15s ease;
+  }
+
+  .press:active {
+    transform: scale(0.985);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Tap targets should never flash a grey box on Android. */
+* {
+  -webkit-tap-highlight-color: transparent;
 }

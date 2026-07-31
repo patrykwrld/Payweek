@@ -1,19 +1,18 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ShiftForm } from '../components/ShiftForm'
-import { Card, EmptyState, ScreenTitle } from '../components/ui'
+import { WeekHero } from '../components/WeekHero'
+import { EmptyState, ScreenTitle } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { useIsOnline } from '../lib/offline'
 import { useAppData } from '../lib/useAppData'
-import { formatMinutes, formatPence } from '../lib/money'
-import { priceShifts } from '../lib/pricing'
 import { useInsertShift } from '../lib/queries'
-import { payWeekEnd, todayISO } from '../lib/weeks'
+import { weekPulse } from '../lib/weekPulse'
+import { todayISO } from '../lib/weeks'
 
 const NUDGE_DISMISSED = 'payweek-rates-nudge-dismissed'
 
 export function QuickAdd() {
-  const navigate = useNavigate()
   const data = useAppData()
   const online = useIsOnline()
   const insert = useInsertShift()
@@ -27,6 +26,15 @@ export function QuickAdd() {
     localStorage.setItem(NUDGE_DISMISSED, '1')
     setNudgeHidden(true)
   }
+
+  // Confirmation clears itself. A message about something you did four
+  // minutes ago is clutter, not reassurance.
+  const [justLogged, setJustLogged] = useState<number | null>(null)
+  useEffect(() => {
+    if (justLogged === null) return
+    const timer = setTimeout(() => setJustLogged(null), 4500)
+    return () => clearTimeout(timer)
+  }, [justLogged])
 
   if (data.status === 'pending') {
     return <ScreenSkeleton rows={3} />
@@ -66,18 +74,7 @@ export function QuickAdd() {
   )
 
   const last = shifts[0]
-  // Header number: totals across every shift whose agency pay week
-  // contains today.
-  const priced = priceShifts(shifts, agencies, rules)
-  const today = todayISO()
-  let weekMinutes = 0
-  let weekGross = 0
-  for (const { pricing, weekStart } of priced.values()) {
-    if (today >= weekStart && today <= payWeekEnd(weekStart)) {
-      weekMinutes += pricing.paidMinutes
-      weekGross += pricing.grossPence
-    }
-  }
+  const pulse = weekPulse(shifts, agencies, rules, todayISO())
 
   return (
     <>
@@ -85,17 +82,7 @@ export function QuickAdd() {
         Payweek<span className="text-accent">.</span>
       </ScreenTitle>
 
-      <Card>
-        <p className="text-xs font-medium uppercase tracking-wider text-muted">
-          This pay week
-        </p>
-        <p className="mt-1 font-mono text-5xl font-semibold tracking-tight">
-          {formatPence(weekGross)}
-        </p>
-        <p className="mt-1 text-sm text-muted">
-          <span className="font-mono">{formatMinutes(weekMinutes)}</span> logged
-        </p>
-      </Card>
+      <WeekHero pulse={pulse} />
 
       {noRates.length > 0 && !nudgeHidden && (
         <div className="mt-4 flex items-start gap-2 rounded-xl border border-accent/40 bg-accent/5 pl-4 pr-2 py-3">
@@ -148,9 +135,36 @@ export function QuickAdd() {
         error={insert.error}
         onSubmit={(values) => {
           insert.mutate(values)
-          navigate('/shifts')
+          // Staying put is the point: the total above climbs by what was just
+          // earned. Bouncing to a list would hide the one thing they came for.
+          setJustLogged(Date.now())
         }}
       />
+
+      {justLogged !== null && (
+        <div
+          role="status"
+          className="rise fixed inset-x-0 bottom-20 z-20 mx-auto w-full max-w-md px-5"
+        >
+          <div className="flex items-center gap-3 rounded-xl border border-positive/40 bg-surface px-4 py-3 shadow-lg shadow-black/40">
+            <span
+              aria-hidden
+              className="grid size-6 shrink-0 place-items-center rounded-full bg-positive/15 text-sm text-positive"
+            >
+              ✓
+            </span>
+            <p className="min-w-0 flex-1 text-sm">
+              Logged. Your week is up there.
+            </p>
+            <Link
+              to="/shifts"
+              className="shrink-0 text-sm font-semibold text-accent"
+            >
+              See it
+            </Link>
+          </div>
+        </div>
+      )}
     </>
   )
 }

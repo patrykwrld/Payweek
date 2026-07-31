@@ -460,7 +460,7 @@ function RuleFormInner({
           )}
         </Card>
 
-        {validation && <p className="text-sm text-red-400">{validation}</p>}
+        {validation && <p className="text-sm text-negative">{validation}</p>}
         <ErrorText error={existing ? update.error : insert.error} />
         {!online && <NeedsConnection />}
 

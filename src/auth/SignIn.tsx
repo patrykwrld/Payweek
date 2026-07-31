@@ -116,7 +116,7 @@ export function SignIn() {
           </button>
 
           {status.kind === 'error' && (
-            <p className="text-sm text-red-400">{status.message}</p>
+            <p className="text-sm text-negative">{status.message}</p>
           )}
 
           <div className="flex items-center gap-3 py-2 text-xs text-muted">

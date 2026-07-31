@@ -165,11 +165,11 @@ export function PayslipCheck() {
         {week && verdict && (
           <Card>
             {verdict.status === 'match' ? (
-              <p className="font-semibold text-emerald-400">
+              <p className="font-semibold text-positive">
                 That matches — {formatPence(week.grossPence)}, just as expected ✓
               </p>
             ) : verdict.status === 'short' ? (
-              <p className="font-semibold text-red-400">
+              <p className="font-semibold text-negative">
                 You&rsquo;re {formatPence(verdict.diffPence)} short. Your hours
                 come to {formatPence(week.grossPence)}.
               </p>
@@ -263,7 +263,7 @@ export function PayslipCheck() {
                   <button
                     type="button"
                     onClick={() => remove.mutate(slip.id)}
-                    className="text-sm text-muted hover:text-red-400"
+                    className="text-sm text-muted hover:text-negative"
                   >
                     Remove
                   </button>

@@ -75,7 +75,7 @@ function DeleteAccount({
         straight away and for good. There is no undo, and no copy kept. Export
         your shifts first if you want to keep them.
       </p>
-      {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
+      {error && <p className="mb-3 text-sm text-negative">{error}</p>}
       {!online ? (
         <NeedsConnection />
       ) : stage === 'idle' ? (
@@ -107,7 +107,7 @@ function DeleteAccount({
             type="button"
             onClick={() => void remove()}
             disabled={!confirmed || stage === 'deleting'}
-            className="w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold text-red-400 transition-colors hover:border-red-400 disabled:opacity-40"
+            className="w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold text-negative transition-colors hover:border-negative disabled:opacity-40"
           >
             {stage === 'deleting'
               ? 'Deleting…'
@@ -281,7 +281,7 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
           Show holiday pay on the Payday screen
         </label>
 
-        {validation && <p className="text-sm text-red-400">{validation}</p>}
+        {validation && <p className="text-sm text-negative">{validation}</p>}
         <ErrorText error={upsert.error} />
         {!online && <NeedsConnection />}
 
@@ -300,7 +300,7 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
         <GhostButton onClick={() => void exportCsv()}>
           Export my shifts as a spreadsheet
         </GhostButton>
-        {exportError && <p className="text-sm text-red-400">{exportError}</p>}
+        {exportError && <p className="text-sm text-negative">{exportError}</p>}
         <GhostButton onClick={openPrivacyPolicy}>Privacy policy</GhostButton>
       </div>
 

@@ -46,7 +46,10 @@ export function Shell() {
         <OfflineBar />
         <Outlet />
       </main>
-      <nav className="fixed inset-x-0 bottom-0 border-t border-edge bg-void/95 backdrop-blur">
+      {/* Explicitly above everything. Without a z-index this sits in the same
+          layer as the page content and can lose taps to whatever happens to
+          scroll under it. */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-void/95 backdrop-blur">
         <div className="mx-auto flex max-w-md">
           {tabs.map(({ to, label, Icon }) => (
             <NavLink

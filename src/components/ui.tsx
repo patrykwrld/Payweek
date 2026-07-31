@@ -1,10 +1,18 @@
 import type { ReactNode } from 'react'
 
-export const inputCls =
-  'w-full rounded-lg border border-edge bg-surface px-4 py-3 font-mono text-base outline-none placeholder:text-muted/50 focus:border-accent'
+// A focused field gets a ring as well as a border. On a phone held at arm's
+// length a 1px colour change is easy to miss, and "where am I typing" is the
+// question a form has to answer continuously.
+// Width deliberately excluded: `w-full` in a shared class silently beats any
+// `w-14` a caller adds, because Tailwind orders same-property utilities by
+// stylesheet position rather than by the order they're written.
+export const inputBoxCls =
+  'rounded-xl border border-edge bg-surface px-4 py-3 font-mono text-base outline-none transition-colors placeholder:text-faint focus:border-accent focus:ring-2 focus:ring-accent/25'
+
+export const inputCls = `w-full ${inputBoxCls}`
 
 export const selectCls =
-  'w-full appearance-none rounded-lg border border-edge bg-surface px-4 py-3 text-base outline-none focus:border-accent'
+  'w-full appearance-none rounded-xl border border-edge bg-surface px-4 py-3 text-base outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/25'
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -31,7 +39,7 @@ export function PrimaryButton({
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className="w-full rounded-lg bg-accent px-4 py-3 text-base font-semibold text-void transition-opacity disabled:opacity-50"
+      className="press w-full rounded-xl bg-accent px-4 py-3.5 text-base font-semibold text-void shadow-lg shadow-accent/20 transition-opacity disabled:opacity-40 disabled:shadow-none"
     >
       {children}
     </button>
@@ -53,8 +61,8 @@ export function GhostButton({
     <button
       type={type}
       onClick={onClick}
-      className={`w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold transition-colors ${
-        danger ? 'text-red-400 hover:border-red-400' : 'hover:border-accent'
+      className={`press w-full rounded-xl border border-edge bg-surface px-4 py-3.5 text-base font-semibold transition-colors ${
+        danger ? 'text-negative hover:border-negative' : 'hover:border-accent'
       }`}
     >
       {children}
@@ -64,7 +72,9 @@ export function GhostButton({
 
 export function Card({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-edge bg-surface p-5">{children}</div>
+    <div className="card-raised rounded-2xl border border-edge bg-surface p-5">
+      {children}
+    </div>
   )
 }
 
@@ -75,7 +85,7 @@ export function Card({ children }: { children: ReactNode }) {
  */
 export function NeedsConnection() {
   return (
-    <p className="rounded-lg border border-edge bg-surface px-4 py-3 text-sm text-muted">
+    <p className="rounded-xl border border-edge bg-surface px-4 py-3 text-sm text-muted">
       You&rsquo;re offline. Logging shifts still works, but saving this needs a
       connection — try again once you&rsquo;re back on signal.
     </p>
@@ -85,14 +95,16 @@ export function NeedsConnection() {
 export function ErrorText({ error }: { error: unknown }) {
   if (!error) return null
   const message = error instanceof Error ? error.message : String(error)
-  return <p className="text-sm text-red-400">{message}</p>
+  return <p className="text-sm text-negative">{message}</p>
 }
 
 export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-edge p-8 text-center">
+    <div className="rounded-2xl border border-dashed border-edge p-8 text-center">
       <p className="font-semibold">{title}</p>
-      {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
+      {hint && (
+        <p className="mx-auto mt-1 max-w-[36ch] text-sm text-muted">{hint}</p>
+      )}
     </div>
   )
 }
@@ -105,8 +117,10 @@ export function ScreenTitle({
   action?: ReactNode
 }) {
   return (
-    <header className="mb-6 flex items-baseline justify-between">
-      <h1 className="text-2xl font-semibold tracking-tight">{children}</h1>
+    <header className="mb-6 flex items-baseline justify-between gap-3">
+      <h1 className="text-[1.75rem] font-semibold tracking-[-0.02em]">
+        {children}
+      </h1>
       {action}
     </header>
   )

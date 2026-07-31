@@ -11,7 +11,15 @@ import {
 import { randomId } from '../lib/ids'
 import { findOverlap } from '../lib/overlap'
 import { formatDay, todayISO } from '../lib/weeks'
-import { Card, ErrorText, Field, PrimaryButton, inputCls, selectCls } from './ui'
+import {
+  Card,
+  ErrorText,
+  Field,
+  PrimaryButton,
+  inputBoxCls,
+  inputCls,
+  selectCls,
+} from './ui'
 
 export interface ShiftFormValues {
   agency_id: string
@@ -229,7 +237,7 @@ export function ShiftForm({
       </p>
 
       {clash && (
-        <p className="rounded-lg border border-amber-500/40 bg-amber-500/5 px-4 py-3 text-sm">
+        <p className="rounded-lg border border-warn/40 bg-warn/5 px-4 py-3 text-sm">
           <span className="font-semibold">You already have a shift here.</span>{' '}
           <span className="text-muted">
             {formatDay(clash.date)}{' '}
@@ -258,6 +266,9 @@ export function ShiftForm({
           <p className="text-xs text-muted">None — the whole shift is paid.</p>
         )}
 
+        {/* min-w-0 on the time field matters: a flex item defaults to
+            min-width:auto, and a native time input's intrinsic width is wide
+            enough to push this row past the width of a phone. */}
         {breaks.map((b) => (
           <div key={b.key} className="flex items-center gap-2">
             <input
@@ -268,7 +279,7 @@ export function ShiftForm({
               value={b.minutes}
               onChange={(e) => setBreak(b.key, { minutes: e.target.value })}
               aria-label="Break minutes"
-              className={`${inputCls} w-16 shrink-0 px-2 py-2 text-center`}
+              className={`${inputBoxCls} w-14 shrink-0 px-1 py-2 text-center`}
             />
             <span className="shrink-0 whitespace-nowrap text-sm text-muted">
               min at
@@ -278,13 +289,13 @@ export function ShiftForm({
               value={b.startTime}
               onChange={(e) => setBreak(b.key, { startTime: e.target.value })}
               aria-label="Break start time"
-              className={`${inputCls} flex-1 px-3 py-2`}
+              className={`${inputBoxCls} min-w-0 flex-1 px-2 py-2`}
             />
             <button
               type="button"
               onClick={() => setBreaks((rows) => rows.filter((r) => r.key !== b.key))}
               aria-label="Remove break"
-              className="shrink-0 rounded-lg border border-edge px-3 py-2 text-sm text-muted hover:border-red-400 hover:text-red-400"
+              className="shrink-0 rounded-lg border border-edge px-2.5 py-2 text-sm text-muted hover:border-negative hover:text-negative"
             >
               ✕
             </button>
@@ -364,7 +375,7 @@ export function ShiftForm({
         </Card>
       )}
 
-      {validation && <p className="text-sm text-red-400">{validation}</p>}
+      {validation && <p className="text-sm text-negative">{validation}</p>}
       <ErrorText error={error} />
 
       <PrimaryButton disabled={pending}>
