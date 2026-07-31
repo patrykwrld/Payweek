@@ -67,12 +67,26 @@ export function SignIn() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-10 px-6 py-12">
+    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-10 px-6 py-12 sm:max-w-md">
       <header className="space-y-3">
         <h1 className="text-3xl font-semibold tracking-tight">
           Payweek<span className="text-accent">.</span>
         </h1>
         <p className="text-muted">Know what&rsquo;s in your packet.</p>
+        {/* This screen is also what payweek.app shows a visitor, so it has to
+            say what the thing is — not just ask for an email. */}
+        <ul className="space-y-2 pt-3 text-sm text-muted">
+          {[
+            'Log your shifts and see what you’re owed as you go.',
+            'Night and weekend rates, breaks and midnight shifts, priced.',
+            'Check a payslip against your own hours when it lands.',
+          ].map((line) => (
+            <li key={line} className="flex gap-2.5">
+              <span aria-hidden className="mt-2 size-1 shrink-0 rounded-full bg-accent" />
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
       </header>
 
       {status.kind === 'sent' ? (

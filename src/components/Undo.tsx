@@ -32,7 +32,7 @@ export function UndoBar({
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 mx-auto flex w-full max-w-md items-center justify-between gap-3 px-5"
+      className="fixed inset-x-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 mx-auto md:bottom-8 md:left-60 flex w-full max-w-md md:max-w-2xl items-center justify-between gap-3 px-5"
     >
       <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-edge bg-surface px-4 py-3 shadow-lg shadow-black/40">
         <span className="text-sm">{message}</span>

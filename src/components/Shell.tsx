@@ -39,32 +39,45 @@ function OfflineBar() {
   )
 }
 
+/**
+ * One app, two shapes.
+ *
+ * On a phone it is what it has always been: a single column with the tabs
+ * under your thumb. From `md` up — which is where payweek.app is usually
+ * opened — the same navigation becomes a sidebar and the column gets room to
+ * breathe, because a 448px strip floating in a field of black is a phone app
+ * someone has left on a monitor, not a website.
+ *
+ * Deliberately one set of markup with responsive classes rather than two
+ * trees: the screens themselves stay identical, so there is no second version
+ * of anything to keep in step.
+ */
 export function Shell() {
   return (
-    <div className="mx-auto w-full max-w-md">
-      {/* Bottom padding clears the tab bar *and* the gesture bar underneath it;
-          the top respects a notch. viewport-fit=cover means the WebView hands
-          us the whole screen, so this is ours to get right. */}
-      <main className="min-h-dvh px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[calc(2rem+env(safe-area-inset-top))]">
-        <OfflineBar />
-        <Outlet />
-      </main>
-      {/* Explicitly above everything: without a z-index this sits in the same
-          layer as the page content and can lose taps to whatever scrolls under
-          it. Solid, not translucent — a backdrop blur means the WebView
-          re-blurs a strip of the page on every frame of every scroll, which is
-          a real cost on a mid-range Android for an effect nobody notices. */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-void pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto flex max-w-md">
+    <div className="md:flex">
+      <nav
+        className="
+          fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-void
+          pb-[env(safe-area-inset-bottom)]
+          md:inset-y-0 md:right-auto md:w-60 md:border-r md:border-t-0 md:pb-0
+        "
+      >
+        <div className="mx-auto flex max-w-md md:h-full md:max-w-none md:flex-col md:gap-1 md:p-4">
+          <p className="mb-6 hidden px-3 pt-2 text-lg font-semibold tracking-tight md:block">
+            Payweek<span className="text-accent">.</span>
+          </p>
           {tabs.map(({ to, label, Icon }) => (
             <NavLink
               key={to}
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex flex-1 flex-col items-center gap-1 py-3 text-xs font-semibold transition-colors ${
-                  isActive ? 'text-accent' : 'text-muted'
-                }`
+                `flex flex-1 flex-col items-center gap-1 py-3 text-xs font-semibold transition-colors
+                 md:flex-none md:flex-row md:justify-start md:gap-3 md:rounded-xl md:px-3 md:py-2.5 md:text-sm ${
+                   isActive
+                     ? 'text-accent md:bg-accent/10'
+                     : 'text-muted md:hover:bg-surface md:hover:text-ink'
+                 }`
               }
             >
               <Icon />
@@ -73,6 +86,24 @@ export function Shell() {
           ))}
         </div>
       </nav>
+
+      <div className="md:ml-60 md:min-w-0 md:flex-1">
+        {/* Bottom padding clears the tab bar *and* the gesture bar underneath
+            it; the top respects a notch. viewport-fit=cover means the WebView
+            hands us the whole screen, so this is ours to get right. Neither
+            applies once the tabs are a sidebar. */}
+        <main
+          className="
+            mx-auto min-h-dvh w-full max-w-md px-5
+            pb-[calc(7rem+env(safe-area-inset-bottom))]
+            pt-[calc(2rem+env(safe-area-inset-top))]
+            md:max-w-2xl md:px-8 md:pb-20 md:pt-12
+          "
+        >
+          <OfflineBar />
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }

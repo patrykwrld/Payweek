@@ -72,6 +72,19 @@ button {
   user-select: none;
 }
 
+/* Number spinners are useless on a phone and, on a desktop browser, eat so
+ * much of a narrow field that the number itself gets clipped. */
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* Numbers: same family as the text, but lining tabular figures so money and
  * hours line up in columns and don't shuffle sideways as they change. */
 .font-mono {

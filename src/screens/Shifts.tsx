@@ -228,7 +228,7 @@ export function Shifts() {
 
       {/* Bulk actions sit above the tab bar while anything is picked. */}
       {selecting && totalSelected > 0 && (
-        <div className="fixed inset-x-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 mx-auto w-full max-w-md px-5">
+        <div className="fixed inset-x-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 mx-auto md:bottom-8 md:left-60 w-full max-w-md px-5 md:max-w-2xl md:px-8">
           <div className="flex items-center gap-2 rounded-xl border border-edge bg-surface p-2 shadow-lg shadow-black/40">
             <span className="px-2 font-mono text-sm">{totalSelected}</span>
             <button

@@ -3,16 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0d1117" />
+    <meta name="theme-color" content="#0b0f14" />
     <title>Payweek — Privacy Policy</title>
     <style>
+      /* Kept in step with src/index.css by hand — this page is plain HTML so
+         it can be served without the app bundle, which is the point of it. */
       :root {
-        --void: #0d1117;
-        --surface: #151b23;
-        --edge: #232c37;
+        --void: #0b0f14;
+        --surface: #131a22;
+        --edge: #242e3a;
+        --hairline: #2f3a47;
         --accent: #5e9bff;
-        --ink: #e9eef4;
-        --muted: #94a0ae;
+        --ink: #eef3f8;
+        --muted: #8f9bab;
       }
       * {
         box-sizing: border-box;
@@ -22,12 +25,15 @@
         background: var(--void);
         color: var(--ink);
         font:
-          16px/1.65 system-ui,
+          16px/1.65 'Inter Variable',
+          Inter,
+          system-ui,
           -apple-system,
           'Segoe UI',
           Roboto,
           sans-serif;
         -webkit-font-smoothing: antialiased;
+        -webkit-text-size-adjust: 100%;
       }
       main {
         max-width: 46rem;
@@ -36,7 +42,8 @@
       }
       h1 {
         font-size: 1.9rem;
-        letter-spacing: -0.02em;
+        font-weight: 650;
+        letter-spacing: -0.03em;
         margin: 0 0 0.25rem;
       }
       h2 {
@@ -46,7 +53,13 @@
       }
       p,
       li {
-        color: #cbd4e0;
+        color: #cdd6e2;
+      }
+      ul {
+        padding-left: 1.15rem;
+      }
+      li {
+        margin: 0.35rem 0;
       }
       .lede,
       .updated {
@@ -76,6 +89,9 @@
         border: 1px solid var(--edge);
         vertical-align: top;
       }
+      tbody tr:nth-child(odd) td {
+        background: color-mix(in srgb, var(--surface) 45%, transparent);
+      }
       th {
         background: var(--surface);
         font-weight: 600;
@@ -90,10 +106,29 @@
         color: var(--muted);
         font-size: 0.875rem;
       }
+      .home {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: var(--muted);
+        font-size: 0.875rem;
+        text-decoration: none;
+      }
+      .home:hover {
+        color: var(--ink);
+      }
+      .brand {
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      .brand span {
+        color: var(--accent);
+      }
     </style>
   </head>
   <body>
     <main>
+      <a class="home" href="/">&larr; <span class="brand">Payweek<span>.</span></span></a>
       <h1>Payweek — Privacy Policy</h1>
       <p class="updated">Last updated 29 July 2026</p>
       <p class="lede">

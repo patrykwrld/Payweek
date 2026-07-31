@@ -78,9 +78,13 @@ export function QuickAdd() {
 
   return (
     <>
-      <ScreenTitle>
-        Payweek<span className="text-accent">.</span>
-      </ScreenTitle>
+      {/* The sidebar carries the name from `md` up, so showing it twice would
+          just be the logo saying hello to itself. */}
+      <div className="md:hidden">
+        <ScreenTitle>
+          Payweek<span className="text-accent">.</span>
+        </ScreenTitle>
+      </div>
 
       <WeekHero pulse={pulse} />
 
@@ -144,7 +148,7 @@ export function QuickAdd() {
       {justLogged !== null && (
         <div
           role="status"
-          className="rise fixed inset-x-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 mx-auto w-full max-w-md px-5"
+          className="rise fixed inset-x-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 mx-auto md:bottom-8 md:left-60 w-full max-w-md px-5 md:max-w-2xl md:px-8"
         >
           <div className="flex items-center gap-3 rounded-xl border border-positive/40 bg-surface px-4 py-3 shadow-lg shadow-black/40">
             <span
