@@ -8,20 +8,27 @@ and do the others while they run.
 
 ---
 
-## Step 1 — Decide the privacy email (5 minutes) ⚠️ blocks Play
+## ~~Step 1 — The privacy contact address~~ ✅ DONE
 
-The policy says `privacy@payweek.app` in three places. **That mailbox does not
-exist.** Google checks it, and a bounced address is a rejection.
+`privacy@payweek.app` is live on Google Workspace. Verified from Vercel's
+authoritative nameserver:
 
-Pick one:
+```
+MX   1 smtp.google.com
+TXT  google-site-verification=sChVyn_ri5HRdQzQUwlsZ4UJJEjYj3T5yFjMZHSE32c
+TXT  v=spf1 include:_spf.google.com ~all
+A    64.29.17.65, 216.198.79.1   (unchanged — the site was never affected)
+```
 
-- **Fastest:** use an address you already read. Tell me which and I'll change
-  `public/privacy.html` and push — it redeploys itself.
-- **Tidier:** free forwarding from `privacy@payweek.app` to your inbox.
-  Cloudflare Email Routing does this, but the domain's DNS would have to move
-  to Cloudflare — it is on Vercel now.
+Nothing in the repo needed changing: the policy, the app and the Play
+paperwork have said `privacy@payweek.app` from the start.
 
-✅ Send a test email to whichever address you pick and watch it arrive.
+> One loose end: send a real email to it and open it. DNS proves mail reaches
+> Google; it cannot prove the `privacy@` user exists inside the tenant.
+
+> When adding DNS records at Vercel for `payweek.app` itself, leave the
+> **Name** field empty rather than typing `@`. Vercel saves `@` correctly but
+> then rejects it as "wrong characters" if you reopen the field to edit.
 
 ---
 
