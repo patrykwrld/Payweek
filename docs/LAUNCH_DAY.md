@@ -78,6 +78,10 @@ Start it, then go and do Steps 1–3 while it runs.
 
 ## Step 5 — Build once, immediately, before anything else ⚠️ never compiled
 
+> **Full walkthrough: [BUILD_ANDROID.md](BUILD_ANDROID.md)** — every command,
+> what each error means, and the three device tests that have never been run on
+> real hardware. The summary below is the short version.
+
 The Android toolchain moved and **has not been built by anyone yet**. Play will
 not accept a new app below API 35, so `targetSdk`/`compileSdk` are now 35,
 which forced Android Gradle Plugin 8.7.2 and Gradle 8.9. None of that could be
