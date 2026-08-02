@@ -146,32 +146,76 @@ Use the exact path the SDK Manager showed you in Step 3.
 
 ## Step 7 — The build ⚠️ this is the real test
 
+**First, always, in the `Payweek` folder** — these three make the thing Gradle
+then compiles. Skipping them builds an empty or stale app:
+
 ```sh
-npm run build
-npx cap sync android
-cd android
+npm run build          # builds the web app into dist/
+npx cap sync android   # copies dist/ into the Android project
 ```
 
-Then, on macOS or Linux:
+Now pick either route. They produce the identical APK.
+
+---
+
+### Route A — Android Studio (recommended if you just installed it)
+
+Android Studio ships its own Java 21, so this route cannot hit a Java-version
+problem. From the `Payweek` folder:
 
 ```sh
+npx cap open android
+```
+
+That launches Android Studio **on the `android` folder**, which is the part
+that matters.
+
+> ⚠️ Do not use *File → Open* on the `Payweek` folder. The Android project is
+> `Payweek/android`. Opening the parent gives you a project Android Studio
+> cannot build, and it is the single most common way to lose an hour here.
+
+Then:
+
+1. Wait for **Gradle sync** — a progress bar bottom-right, several minutes the
+   first time while it downloads Gradle 8.9 and the Android plugin. Let it
+   finish. Errors before it completes are usually just "not finished yet".
+2. Menu → **Build → Build Bundle(s) / APK(s) → Build APK(s)**
+3. Wait for the notification **"APK(s) generated successfully"**, then click
+   **locate** in it to open the folder.
+
+✅ You get `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+If the sync fails, Android Studio shows the error in a **Build** panel at the
+bottom with a clickable link. Copy that text — it is exactly what I need.
+
+---
+
+### Route B — Terminal
+
+macOS / Linux:
+
+```sh
+cd android
 ./gradlew assembleDebug
 ```
 
-On Windows:
+Windows (PowerShell):
 
 ```powershell
+cd android
 .\gradlew.bat assembleDebug
 ```
 
 The first run downloads Gradle 8.9 and the Android plugin — several minutes,
-and it will look stuck. Let it be.
+and it will look frozen. Leave it.
 
-✅ **`BUILD SUCCESSFUL`**, and a file appears at
+✅ **`BUILD SUCCESSFUL`**, and the same
 `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-That is the whole point of this step. If you see it, the SDK-35 toolchain
-works and nothing else in the launch plan is at risk.
+---
+
+That APK existing is the whole point of this step: it proves the SDK-35
+toolchain works and nothing else in the launch plan is at risk.
 
 ### If it fails
 
