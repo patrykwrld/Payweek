@@ -83,46 +83,34 @@ Start it, then go and do Steps 1–3 while it runs.
 
 ---
 
-## Step 5 — Build once, immediately, before anything else ⚠️ never compiled
+## ~~Step 5 — Build the Android app~~ ✅ DONE — it compiles
 
-> **Full walkthrough: [BUILD_ANDROID.md](BUILD_ANDROID.md)** — every command,
-> what each error means, and the three device tests that have never been run on
-> real hardware. The summary below is the short version.
+Verified 2 August 2026 on Windows 11: **`BUILD SUCCESSFUL`**, a 4.8 MB debug
+APK, 193 tasks. Gradle 8.9 · AGP 8.7.2 · compileSdk 35 · JDK 21 · Capacitor 6.
 
-The Android toolchain moved and **has not been built by anyone yet**. Play will
-not accept a new app below API 35, so `targetSdk`/`compileSdk` are now 35,
-which forced Android Gradle Plugin 8.7.2 and Gradle 8.9. None of that could be
-compiled in my environment — `dl.google.com` is blocked there.
+**No Capacitor 7 migration was needed** — the fallback in the old plan can be
+ignored. The toolchain raised to meet Play's API 35 floor is now proven rather
+than assumed, which was the single largest unknown left in this project.
 
-Find out now, not after you have done the store listing:
+Three things cost time, all machine setup rather than the app. They are
+written up with fixes in [BUILD_ANDROID.md](BUILD_ANDROID.md):
 
-```sh
-git clone https://github.com/patrykwrld/Payweek.git
-cd Payweek
-git checkout claude/payweek-app-zk4tcb
-npm install
-```
+1. **Java version.** Gradle 8.9 + AGP 8.7.2 need Java **17–21**. A Java 8 on
+   PATH fails one way, a Java 25 fails another. Pin JDK 21 via
+   `org.gradle.java.home` in `%USERPROFILE%\.gradle\gradle.properties`.
+2. **`SDK location not found`** — write `sdk.dir` into `android/local.properties`.
+3. **Wrong platform.** Android Studio's wizard installs the newest SDK
+   (`android-37.0`), not 35. Add API 35 and Build-Tools 35 in the SDK Manager.
 
-Create a file called `.env` in the `Payweek` folder:
+To rebuild after any code change:
 
-```
-VITE_SUPABASE_URL=https://jcwxxtimhrlzaojadmhx.supabase.co
-VITE_SUPABASE_ANON_KEY=sb_publishable_PXDZo1oea43av5x4lIj3lg_1vGP_8AI
-VITE_PRIVACY_URL=https://payweek.app/privacy.html
-```
-
-Then:
-
-```sh
+```powershell
+cd C:\dev\Payweek
 npm run build
 npx cap sync android
-cd android && ./gradlew assembleDebug
+cd android
+.\gradlew.bat assembleDebug
 ```
-
-✅ It compiles.
-❌ If Gradle complains about the Capacitor modules or the SDK, run
-`npx @capacitor/cli@7 migrate` — Capacitor 7 targets SDK 35 natively — then
-build again. If it still fails, send me the error text.
 
 ---
 

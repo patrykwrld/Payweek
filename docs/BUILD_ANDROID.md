@@ -3,10 +3,11 @@
 Written for someone who has never built an Android app. Every command is
 copy-paste, and every step says how you know it worked.
 
-**Do this before the Play listing, not after.** The Android toolchain was
-raised to meet Play's API 35 floor and has never been compiled — `dl.google.com`
-is blocked in the environment where the code was written, so this is the first
-time anyone runs it. If something is wrong, you want to find out now.
+> ✅ **Verified 2 August 2026** on Windows 11 — `BUILD SUCCESSFUL`, a 4.8 MB
+> debug APK, 193 tasks. Gradle 8.9 · AGP 8.7.2 · compileSdk 35 · JDK 21 ·
+> Capacitor 6. **No Capacitor 7 migration was needed.** Everything below is
+> known to work; the three traps in *Java version* and *SDK platform* are the
+> ones that actually cost time.
 
 **Time:** ~30 minutes of your attention, plus 1–2 hours of downloading you can
 walk away from.
@@ -219,16 +220,55 @@ toolchain works and nothing else in the launch plan is at risk.
 
 ### If it fails
 
-| Error contains | What to do |
-| --- | --- |
-| `SDK location not found` | Step 6 |
-| `Failed to install the following SDK components` / `licences` | `sdkmanager --licenses` and accept all, or re-open SDK Manager and Apply |
-| `Unsupported class file major version` / `Java version` | Android Studio → Settings → Build Tools → Gradle → **Gradle JDK** → pick the bundled **jbr-21** |
-| `compileSdk 35 requires Android Gradle Plugin 8.6.0 or higher` | Shouldn't happen — the repo pins 8.7.2. Send me the full text |
-| Anything naming `capacitor-android` or `capacitor-cordova` | Run the Capacitor 7 upgrade below |
-| Anything else | Copy the whole error and send it to me |
+These three are what actually happened on the first real machine, in order.
 
-**The Capacitor 7 upgrade**, only if the errors name Capacitor modules:
+**1. Java version — the most likely failure by far.**
+
+Gradle 8.9 and AGP 8.7.2 need Java **17–21**. Anything older *or newer* fails,
+with two different and unhelpful messages:
+
+| Message | Means |
+| --- | --- |
+| `Dependency requires at least JVM runtime version 11. This build uses a Java 8 JVM` | An old Java is first on PATH |
+| `Unsupported class file major version 69` | A Java **25** is first on PATH (69 = Java 25; 65 = 21, 61 = 17) |
+
+Pin Gradle to a JDK 21 in your **user profile**, so it applies everywhere and
+never lands in the repo:
+
+```powershell
+winget install --id EclipseAdoptium.Temurin.21.JDK -e --accept-package-agreements --accept-source-agreements
+$jdk = (Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory | Where-Object Name -like "jdk-21*" | Select-Object -First 1).FullName
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.gradle" | Out-Null
+Set-Content -Path "$env:USERPROFILE\.gradle\gradle.properties" -Encoding ascii -Value ("org.gradle.java.home=" + ($jdk -replace '\\','/'))
+```
+
+Then `.\gradlew.bat --stop` before rebuilding — the running daemon is on the
+wrong Java and would be reused.
+
+**2. `SDK location not found`.**
+
+```powershell
+$sdk = "$env:LOCALAPPDATA\Android\Sdk"
+Set-Content -Path "C:\dev\Payweek\android\local.properties" -Encoding ascii -Value ("sdk.dir=" + ($sdk -replace '\\','/'))
+```
+
+**3. The SDK has the wrong platform.**
+
+Android Studio's setup wizard installs whatever is *latest* — on the first real
+run that was `android-37.0`, and the project needs **35**. `sdkmanager` is also
+not installed by default, so use the GUI:
+
+SDK Manager → **SDK Platforms** → tick *Show Package Details* → tick **API
+Level 35**. Then **SDK Tools** → **Build-Tools 35.0.0** and **Command-line
+Tools (latest)**, which spares you the GUI next time.
+
+**Anything else** — copy the whole error and send it to me.
+
+> A warning about a *corrupted `package.xml` in `emulator/`* is harmless. That
+> is the emulator's own metadata; the build never reads it.
+
+**The Capacitor 7 upgrade** — *not needed as of the verified build above, and
+only relevant if a future AGP bump breaks the Capacitor 6 modules:*
 
 ```sh
 cd ..                 # back to the Payweek folder
