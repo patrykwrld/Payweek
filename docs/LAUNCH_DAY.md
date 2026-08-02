@@ -83,23 +83,60 @@ Supabase's half is the one that will bite. Two things to look at:
 **1. Custom SMTP — do this before Step 10.** Supabase's built-in email service
 is a shared, heavily-capped convenience for development, not a mailer. Twelve
 testers all signing in on the day you send the opt-in link will exhaust it,
-and the failures look like the app is broken. Set up your own sender:
+and the failures look like the app is broken.
 
-Supabase → **Project Settings → Authentication → SMTP Settings** → enable
-custom SMTP. Resend, Postmark and Brevo all have free tiers that comfortably
-cover a closed test. Use `noreply@payweek.app` as the sender — the domain is
-already verified with Google, so adding a second sending service is a matter
-of a couple more DNS records at Vercel.
+You already pay for a mail provider: **Google Workspace**. Using it means no
+new account and no new DNS records.
 
-> Same trap as before: when adding those DNS records at Vercel for
-> `payweek.app` itself, leave the **Name** field empty rather than typing `@`.
+Supabase → **Authentication → Emails → SMTP Settings** → **Enable custom
+SMTP**, then:
 
-**2. The rate limits themselves.** Supabase → **Authentication → Rate Limits**.
-Check the per-hour cap on emails is above what 12 testers will use. Once
-custom SMTP is on, this can be raised.
+| Field | Value |
+| --- | --- |
+| Sender email address | `privacy@payweek.app` |
+| Sender name | `Payweek` |
+| Host | `smtp.gmail.com` |
+| Port number | `465` (already correct) |
+| Minimum interval per user | `60` (already correct — it matches the app) |
+| Username | `privacy@payweek.app` |
+| Password | a Google **App Password**, not the account password |
 
-✅ Send yourself a sign-in link and confirm the email comes from your own
-sender rather than Supabase's.
+> ⚠️ **Username must be an address you can sign into Gmail with** — a real
+> user, not an alias. If `privacy@` is an alias on the main account, use the
+> main Workspace address in *both* Username and Sender email address. Google
+> rewrites the From header to whoever authenticated, so if the two disagree
+> the sender field is simply ignored.
+
+Getting the App Password — the normal password is blocked for SMTP:
+
+1. Sign into Google as that address
+2. <https://myaccount.google.com/security> → turn on **2-Step Verification**.
+   App Passwords do not exist without it
+3. <https://myaccount.google.com/apppasswords> → name it `Payweek Supabase`
+   → **Create**
+4. **Strip the spaces** when pasting. Google shows `abcd efgh ijkl mnop`;
+   Supabase wants `abcdefghijklmnop`
+
+> If the App Passwords page says it isn't available, it's off at the tenant
+> level: Admin console → **Security → Authentication → 2-step verification**
+> → tick **Allow users to turn on App Passwords**.
+
+**2. The rate limits themselves.** Saving the above raises the cap to 30
+emails an hour, which is tight for 12 testers retrying. Supabase →
+**Authentication → Rate Limits** → set the hourly email limit to **100**.
+Google's own ceiling is 2,000 a day, so nothing in closed testing gets near
+it.
+
+✅ Sign in at payweek.app and check the sender. `privacy@payweek.app` rather
+than `noreply@mail.app.supabase.io` means it's done.
+
+**If App Passwords turn out to be blocked**, use Resend instead — free, 3,000
+emails a month. Sign up, add `payweek.app`, paste its three DNS records into
+Vercel, then: Host `smtp.resend.com`, Port `465`, Username literally
+`resend`, Password the `re_…` API key, Sender `noreply@payweek.app`.
+
+> Same trap as before: when adding DNS records at Vercel for `payweek.app`
+> itself, leave the **Name** field empty rather than typing `@`.
 
 ---
 
