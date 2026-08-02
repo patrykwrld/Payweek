@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useIsOnline } from '../lib/offline'
 
 /** Grey blocks standing in for content while it loads — steadier than a
  * spinner because the layout doesn't jump when data lands. */
@@ -9,6 +10,14 @@ export function Skeleton({ className = '' }: { className?: string }) {
 }
 
 export function ScreenSkeleton({ rows = 3 }: { rows?: number }) {
+  const online = useIsOnline()
+  // A skeleton is a promise that data is on its way. With no signal and
+  // nothing cached on this device the query is paused, not loading, so that
+  // promise is never kept — the blocks would pulse until the app is closed.
+  // Every screen already shows this component in exactly that situation, so
+  // saying so here fixes all of them at once.
+  if (!online) return <NothingCachedYet />
+
   return (
     <div aria-busy="true" aria-label="Loading">
       <Skeleton className="mb-6 h-8 w-40" />
@@ -17,6 +26,24 @@ export function ScreenSkeleton({ rows = 3 }: { rows?: number }) {
           <Skeleton key={i} className="h-20 w-full" />
         ))}
       </div>
+    </div>
+  )
+}
+
+/**
+ * Offline, and this device has never held a copy — a first launch on the
+ * Underground, or the first open after the cache was cleared. There is
+ * genuinely nothing to show, so it must not promise "what was saved".
+ */
+function NothingCachedYet() {
+  return (
+    <div className="card-raised rounded-2xl border border-edge bg-surface p-6 text-center">
+      <p className="font-semibold">No connection</p>
+      <p className="mx-auto mt-1 max-w-[34ch] text-sm text-muted">
+        Payweek needs signal the first time it opens on a phone. After that it
+        works without — log your shifts anywhere and they&rsquo;ll sync when
+        you&rsquo;re back.
+      </p>
     </div>
   )
 }

@@ -72,6 +72,37 @@ Keep the existing `vercel.app` entries; extras are harmless.
 
 ---
 
+## Step 3b — Email sending, before you invite 12 testers ⚠️ blocks Step 10
+
+The app now allows **3 sign-in links per email address every 10 minutes**, with
+a live countdown, so nobody hammers the button into a rate limit and nobody
+gets locked out by a link that landed in spam. That is the app's half.
+
+Supabase's half is the one that will bite. Two things to look at:
+
+**1. Custom SMTP — do this before Step 10.** Supabase's built-in email service
+is a shared, heavily-capped convenience for development, not a mailer. Twelve
+testers all signing in on the day you send the opt-in link will exhaust it,
+and the failures look like the app is broken. Set up your own sender:
+
+Supabase → **Project Settings → Authentication → SMTP Settings** → enable
+custom SMTP. Resend, Postmark and Brevo all have free tiers that comfortably
+cover a closed test. Use `noreply@payweek.app` as the sender — the domain is
+already verified with Google, so adding a second sending service is a matter
+of a couple more DNS records at Vercel.
+
+> Same trap as before: when adding those DNS records at Vercel for
+> `payweek.app` itself, leave the **Name** field empty rather than typing `@`.
+
+**2. The rate limits themselves.** Supabase → **Authentication → Rate Limits**.
+Check the per-hour cap on emails is above what 12 testers will use. Once
+custom SMTP is on, this can be raised.
+
+✅ Send yourself a sign-in link and confirm the email comes from your own
+sender rather than Supabase's.
+
+---
+
 ## Step 4 — Install Android Studio (10 min of work, 1 hour+ of downloading)
 
 Start it, then go and do Steps 1–3 while it runs.
@@ -221,6 +252,9 @@ Personal developer accounts cannot publish straight to production. Google
 requires a sustained closed test first — currently **12 testers opted in for
 14 continuous days**. Organisation accounts are exempt; yours is personal.
 
+> ⚠️ **Do Step 3b first.** Twelve people signing in on the same afternoon is
+> exactly what exhausts Supabase's built-in email service.
+
 1. **Testing → Closed testing → Create track** (the default "Alpha" is fine)
 2. **Testers** → create an email list and add **12 Gmail addresses**
 3. Upload `app-release.aab` → **Review release** → **Start rollout**
@@ -306,6 +340,8 @@ reaches a fraction of users while you fix it.
 | `command not found` | Close the terminal, open a new one |
 | "Missing VITE_SUPABASE_URL" | `.env` is missing or in the wrong folder |
 | "requested path is invalid" on sign-in | Step 3 |
+| "Try again in 7 minutes" on the sign-in button | Normal. Three links per address per 10 minutes; the link is already in an inbox or a spam folder |
+| A tester says no email ever arrived | Step 3b — the built-in sender has run out |
 | Gradle complains about Capacitor or SDK 35 | Step 5's fallback: `npx @capacitor/cli@7 migrate` |
 | `SDK location not found` | Android Studio hasn't finished its first-run setup |
 | Sign-in link does nothing on the phone | You opened the email on a different device |

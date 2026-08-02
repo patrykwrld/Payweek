@@ -15,7 +15,7 @@ import {
 } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { replayIntro } from '../lib/intro'
-import { useIsOnline } from '../lib/offline'
+import { useIsOnline, useQueuedWriteCount } from '../lib/offline'
 import { buildShiftsCsv } from '../lib/csv'
 import { saveTextFile } from '../lib/download'
 import { DAY_NAMES } from '../lib/days'
@@ -170,7 +170,9 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
   const [savedTick, setSavedTick] = useState(false)
   const [validation, setValidation] = useState<string | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
+  const [confirmSignOut, setConfirmSignOut] = useState(false)
   const online = useIsOnline()
+  const queued = useQueuedWriteCount()
 
   function save(event: FormEvent) {
     event.preventDefault()
@@ -306,18 +308,27 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
         <GhostButton onClick={openPrivacyPolicy}>Privacy policy</GhostButton>
       </div>
 
-      <div className="mt-10 space-y-4 text-center">
-        <p className="text-xs text-muted">
-          Signed in as{' '}
-          <span className="font-mono">{session?.user.email}</span>
+      {/* Sign out is a real button, not a grey underline below the fold. The
+          first person to look for it on a phone couldn't find it. */}
+      <div className="mt-8">
+        <p className="mb-2 text-center text-sm text-muted">
+          Signed in as <span className="font-mono">{session?.user.email}</span>
         </p>
-        <button
-          type="button"
-          onClick={() => void supabase.auth.signOut()}
-          className="text-sm text-muted underline underline-offset-4 hover:text-ink"
+        <GhostButton
+          onClick={() => {
+            // Shifts logged with no signal live only on this device until they
+            // sync. Signing out and reopening would take them with it.
+            if (queued > 0 && !confirmSignOut) {
+              setConfirmSignOut(true)
+              return
+            }
+            void supabase.auth.signOut()
+          }}
         >
-          Sign out
-        </button>
+          {queued > 0 && confirmSignOut
+            ? `Tap again — ${queued} ${queued === 1 ? 'shift hasn’t' : 'shifts haven’t'} synced yet`
+            : 'Sign out'}
+        </GhostButton>
       </div>
 
       <DeleteAccount online={online} onExport={() => void exportCsv()} />

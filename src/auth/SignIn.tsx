@@ -1,7 +1,14 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { Browser } from '@capacitor/browser'
 import { supabase } from '../lib/supabase'
+import {
+  MAX_PER_WINDOW,
+  attemptsLeft,
+  formatWait,
+  gateSend,
+  recordSend,
+} from '../lib/signInThrottle'
 import { authRedirectUrl } from './redirects'
 
 type Status =
@@ -18,28 +25,65 @@ function readable(message: string): string {
   if (/failed to fetch|network|offline/i.test(message)) {
     return 'No connection. Sign-in needs signal — try again when you have some.'
   }
-  if (/rate limit/i.test(message)) {
-    return 'Too many sign-in emails for now. Wait a few minutes and try again.'
+  if (/rate limit|too many|429/i.test(message)) {
+    return 'That was one link too many. Give it a couple of minutes and try again.'
   }
   return message
+}
+
+/**
+ * A clock that only ticks while something on screen is counting down. The
+ * sign-in screen is otherwise completely still, and a re-render every second
+ * for no reason is exactly the sort of thing that makes a cheap phone warm.
+ */
+function useSecondsTick(active: boolean): number {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!active) return
+    setNow(Date.now())
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [active])
+  return now
 }
 
 export function SignIn() {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
+  // Cheap enough to recompute on every render, and it has to be: the answer
+  // changes with the clock as well as with what's in the box.
+  const [tickOn, setTickOn] = useState(false)
+  const now = useSecondsTick(tickOn)
+  const gate = gateSend(email, now)
+  const left = attemptsLeft(email, now)
 
-  async function sendMagicLink(event: FormEvent) {
-    event.preventDefault()
+  useEffect(() => {
+    setTickOn(!gate.allowed)
+  }, [gate.allowed])
+
+  const waitText = gate.allowed ? null : formatWait(gate.waitMs)
+
+  async function send() {
+    if (!gate.allowed) return
     setStatus({ kind: 'sending' })
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: authRedirectUrl() },
     })
-    setStatus(
-      error
-        ? { kind: 'error', message: readable(error.message) }
-        : { kind: 'sent' },
-    )
+    if (error) {
+      // A request that died on a flat signal sent no email, so it must not
+      // cost anybody one of their three.
+      setStatus({ kind: 'error', message: readable(error.message) })
+      return
+    }
+    recordSend(email)
+    setTickOn(true)
+    setStatus({ kind: 'sent' })
+  }
+
+  function onSubmit(event: FormEvent) {
+    event.preventDefault()
+    void send()
   }
 
   async function signInWithGoogle() {
@@ -97,6 +141,27 @@ export function SignIn() {
             <span className="font-mono text-ink">{email}</span>. Open it on this
             device to finish signing in.
           </p>
+          <p className="text-sm text-muted">
+            Nothing there after a minute? Check your spam folder.
+          </p>
+
+          {/* The link goes missing often enough that "send another" has to be
+              here rather than behind going back and retyping the address. */}
+          <button
+            type="button"
+            disabled={!gate.allowed}
+            onClick={() => void send()}
+            className="press w-full rounded-lg border border-edge bg-void px-4 py-3 text-base font-semibold transition-colors hover:border-accent disabled:opacity-50 disabled:hover:border-edge"
+          >
+            {gate.allowed ? 'Send another link' : `Send another in ${waitText}`}
+          </button>
+
+          <p aria-live="polite" className="text-xs text-muted">
+            {left > 0
+              ? `${left} more ${left === 1 ? 'link' : 'links'} available in the next 10 minutes.`
+              : `That’s ${MAX_PER_WINDOW} links in 10 minutes. The next one is available in ${waitText}.`}
+          </p>
+
           <button
             type="button"
             className="text-sm text-accent underline underline-offset-4"
@@ -106,7 +171,7 @@ export function SignIn() {
           </button>
         </div>
       ) : (
-        <form onSubmit={sendMagicLink} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4">
           <label className="block space-y-2">
             <span className="text-sm text-muted">Email</span>
             <input
@@ -123,11 +188,25 @@ export function SignIn() {
 
           <button
             type="submit"
-            disabled={status.kind === 'sending'}
+            disabled={status.kind === 'sending' || !gate.allowed}
             className="w-full rounded-lg bg-accent px-4 py-3 text-base font-semibold text-void transition-opacity disabled:opacity-50"
           >
-            {status.kind === 'sending' ? 'Sending…' : 'Email me a sign-in link'}
+            {status.kind === 'sending'
+              ? 'Sending…'
+              : gate.allowed
+                ? 'Email me a sign-in link'
+                : `Try again in ${waitText}`}
           </button>
+
+          {/* Say why the button is dead. A disabled button with no reason is
+              the single most common way an app looks broken. */}
+          {!gate.allowed && (
+            <p aria-live="polite" className="text-sm text-muted">
+              {gate.reason === 'spacing'
+                ? `A link is already on its way to that address. You can ask for another in ${waitText}.`
+                : `That address has had ${MAX_PER_WINDOW} links in the last 10 minutes. The next one is available in ${waitText} — check your spam folder in the meantime.`}
+            </p>
+          )}
 
           {status.kind === 'error' && (
             <p className="text-sm text-negative">{status.message}</p>
