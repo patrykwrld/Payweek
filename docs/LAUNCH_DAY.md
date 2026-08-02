@@ -229,14 +229,85 @@ in [STORE_LISTING.md](STORE_LISTING.md).
 
 ## Step 10 — Closed testing (15 minutes, then a 14-day wait)
 
-1. **Testing → Closed testing → Create track**
-2. **Testers** → add your 12 testers' Gmail addresses
-3. Upload `app-release.aab` → **Review release** → **Start rollout**
-4. Copy the opt-in link from the **Testers** tab and send it to all 12 — **they
-   must click it and accept before they can install**
+Personal developer accounts cannot publish straight to production. Google
+requires a sustained closed test first — currently **12 testers opted in for
+14 continuous days**. Organisation accounts are exempt; yours is personal.
 
-⏱️ First review usually takes a few days. The 14-day clock only counts days on
-which 12 testers are opted in, so chase anyone who hasn't accepted.
+1. **Testing → Closed testing → Create track** (the default "Alpha" is fine)
+2. **Testers** → create an email list and add **12 Gmail addresses**
+3. Upload `app-release.aab` → **Review release** → **Start rollout**
+4. Copy the opt-in link from the **Testers** tab and send it to all 12
+
+⚠️ **The count is opt-ins, not invitations.** A tester who never clicks the
+link does not count, and the 14-day clock only advances on days when 12 are
+opted in. If someone drops out on day 9, the clock does not simply pause —
+chase them the same day.
+
+⏱️ First review of a new app usually takes a few days. Updates to a closed
+track after that are typically faster.
+
+✅ **Testing → Closed testing** shows 12 testers and a running day count.
+
+---
+
+## Step 11 — While the 14 days run
+
+Nothing here is urgent, but this is the only quiet window you will get.
+
+- **Actually use it.** Log your own real shifts for two weeks. This is a
+  better test than anything I can automate, because you will notice a wrong
+  figure in a way a test never will.
+- **Collect what testers say.** They will find the thing that is obvious to
+  everyone but you — that is exactly what happened with the night rate.
+- **Fix and re-upload freely.** Each new build needs `versionCode` bumped in
+  `android/app/build.gradle` (1 → 2 → 3 …) and does not restart the 14 days.
+- **Watch for crashes.** Play Console → **Quality → Android vitals**. There is
+  no crash-reporting SDK in the app by design, so Vitals is your only view.
+
+---
+
+## Step 12 — Apply for production access
+
+Once the 14 days are complete, Play Console shows a prompt to apply.
+
+You will be asked, in writing, about:
+
+- how you recruited testers and what feedback you got
+- what you changed as a result
+- who the app is for and why it is ready
+
+Answer it properly — a thin answer gets bounced and costs you days. If you
+kept notes in Step 11, this is twenty minutes.
+
+⏱️ Google reviews the application. Expect days, not hours.
+
+---
+
+## Step 13 — Production rollout
+
+1. **Production → Create new release**
+2. Upload the AAB (bump `versionCode` again if you have rebuilt since)
+3. **Countries / regions** — United Kingdom at minimum; the app is built
+   around UK pay, holiday accrual at 12.07% and £ only
+4. Release notes — plain English, what it does
+5. **Review release → Start rollout to production**
+
+Consider a **staged rollout** (20%) for the first release, so a serious bug
+reaches a fraction of users while you fix it.
+
+✅ Payweek is on Google Play.
+
+---
+
+## Step 14 — After it is live
+
+| When | What |
+| --- | --- |
+| Day 1 | Install it from Play yourself, on a phone that never had the debug build |
+| Weekly | Check **Android vitals** for crashes and ANRs |
+| Every update | Bump `versionCode`, and keep the Data safety form true — see [DATA_SAFETY.md](DATA_SAFETY.md) |
+| If you ever add analytics or crash reporting | You **must** update the Data safety declaration first. Shipping without is a policy violation |
+| Annually | Google re-confirms developer identity; keep the account details current |
 
 ---
 
