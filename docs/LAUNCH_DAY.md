@@ -1,13 +1,36 @@
 # What's left, in order
 
-Everything already done is at the bottom. This is only what still needs you,
-ordered so nothing waits on anything above it.
+Ordered so nothing waits on anything above it. **Step 10** has a 14-day wait
+built into it, so the whole plan is really "get to Step 10 quickly".
 
-**Step 10** has a 14-day wait built in. Everything before it is work you
-control, so the whole plan is really "get to Step 10 quickly".
+## Where you are
 
-Next up: **Step 3c** — rebuild the APK, because the sign-in path has changed
-since the one on your phone was built.
+| | Step | State |
+| --- | --- | --- |
+| 1 | Privacy contact address | ✅ `privacy@payweek.app` live on Workspace |
+| 2 | **Check the maths against a real payslip** | ⬜ **not done — the one that matters** |
+| 3 | Supabase redirect URLs | ✅ `payweek://auth-callback` in place |
+| 3b | Custom SMTP for auth email | ✅ Google Workspace, `privacy@payweek.app` |
+| 3c | **Rebuild the APK** | ⬜ **next — the phone build predates sign-out, the link limit and Keep me signed in** |
+| 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
+| 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
+| 6 | Export + Delete account on real hardware | ⬜ never run outside a stub; Play requires deletion to work |
+| 7 | Signing key | ⬜ 5 minutes, once ever |
+| 8 | Build the `.aab` you upload | ⬜ test the release APK first |
+| 9 | Screenshots + store listing | ⬜ copy is already written for you |
+| 10 | Closed testing — 12 testers, 14 days | ⬜ the long pole |
+| 11 | Use it and collect feedback | ⬜ runs during the 14 days |
+| 12 | Apply for production access | ⬜ |
+| 13 | Production rollout | ⬜ |
+| 14 | After it's live | ⬜ |
+
+**Three of those need you and nothing else: Step 2, Step 3c and Step 6.** They
+are about 60 minutes together, they can all be done in one sitting with your
+phone in your hand, and they are the last things standing between you and a
+signed upload.
+
+Everything on the app side is finished — the rate engine, offline, the intro,
+account deletion, the website, the Play paperwork. That list is at the bottom.
 
 ---
 
@@ -434,9 +457,21 @@ reaches a fraction of users while you fix it.
 | Website | payweek.app over HTTPS, redeploys on every push, proper desktop layout |
 | Privacy policy | Written, live, and matching the app's design |
 | Account deletion | In-app, backed by the `delete-account` Edge Function (deployed, ACTIVE) |
-| Rate engine | 79 tests — night, weekend, midnight-crossing shifts, breaks priced in the band they actually fall in |
+| Rate engine | Night, weekend, midnight-crossing shifts, breaks priced in the band they actually fall in |
 | Offline | Shifts log with no signal and sync on reconnect (verified) |
 | Play blockers in code | targetSdk 35, backups disabled, in-app deletion — all handled |
 | App icon & splash | Generated for every Android density |
 | Signing config | Wired — Step 7 only supplies the key |
 | Play paperwork | Data safety answers and listing copy written |
+| Tests | 106, all passing |
+
+### Added since the APK on your phone was built
+
+This is what Step 3c picks up. All of it came from someone actually using it.
+
+| | |
+| --- | --- |
+| **Sign out** | Was a grey underline below the fold that the first person to look for it couldn't find. Now a button under your email address, and it asks twice if shifts are still queued to sync |
+| **3 sign-in links per address per 10 minutes** | Live countdown on the form and on the "check your inbox" panel, plus a resend button so a lost link doesn't mean retyping your address. A send that failed on a flat signal costs nobody an attempt |
+| **Keep me signed in** | Ticked by default. Unticked, the session dies when Payweek closes — for a shared or work computer |
+| **Offline first-run** | Opening with no signal and nothing cached used to pulse grey blocks forever. It now says what has happened |
