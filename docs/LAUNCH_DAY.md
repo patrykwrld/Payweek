@@ -3,8 +3,11 @@
 Everything already done is at the bottom. This is only what still needs you,
 ordered so nothing waits on anything above it.
 
-Two steps have waiting built in — **Step 4** and **Step 10**. Start those early
-and do the others while they run.
+**Step 10** has a 14-day wait built in. Everything before it is work you
+control, so the whole plan is really "get to Step 10 quickly".
+
+Next up: **Step 3c** — rebuild the APK, because the sign-in path has changed
+since the one on your phone was built.
 
 ---
 
@@ -54,100 +57,102 @@ If sign-in fails with *"requested path is invalid"*, do Step 3 first.
 
 ---
 
-## Step 3 — Confirm the Supabase redirect URLs (10 minutes)
+## ~~Step 3 — Confirm the Supabase redirect URLs~~ ✅ DONE
 
-This has never been verified — there is no API to read it, so it needs a human
-looking at the dashboard. **Sign-in fails without it.**
-
-Supabase → project `payweek` → **Authentication → URL Configuration**:
-
-- Site URL → `https://payweek.app`
-- Redirect URLs → must include `https://payweek.app/**` **and**
-  `payweek://auth-callback` (the second is what returns you to the Android app)
-
-Keep the existing `vercel.app` entries; extras are harmless.
-
-✅ If Step 2 signed in fine, the web half is already right. The
-`payweek://auth-callback` entry still needs checking before Step 6.
+**Authentication → URL Configuration** carries `payweek://auth-callback`,
+confirmed 2 August 2026. That is the entry that returns you to the Android app
+after a magic link, and there is no API to read it — it needed a human looking
+at the dashboard.
 
 ---
 
-## Step 3b — Email sending, before you invite 12 testers ⚠️ blocks Step 10
+## ~~Step 3b — Email sending~~ ✅ DONE — custom SMTP is on
 
-The app now allows **3 sign-in links per email address every 10 minutes**, with
-a live countdown, so nobody hammers the button into a rate limit and nobody
-gets locked out by a link that landed in spam. That is the app's half.
+Auth emails now go out through Google Workspace as `privacy@payweek.app`,
+name `Payweek`, via `smtp.gmail.com:465` with an App Password. Google allows
+2,000 messages a day, so 12 testers signing in is not close to a limit.
 
-Supabase's half is the one that will bite. Two things to look at:
+Supabase warns that Gmail is a personal rather than transactional mailer.
+That is about deliverability at volume and is fine for a closed test; if
+Payweek gets real traction, move to Resend (Host `smtp.resend.com`, Port
+`465`, Username literally `resend`, Password the `re_…` API key) and send as
+`noreply@payweek.app`.
 
-**1. Custom SMTP — do this before Step 10.** Supabase's built-in email service
-is a shared, heavily-capped convenience for development, not a mailer. Twelve
-testers all signing in on the day you send the opt-in link will exhaust it,
-and the failures look like the app is broken.
+The **Minimum interval per user** was left at 60 seconds deliberately — it is
+the same number the sign-in screen counts down against, so the two agree
+rather than the app promising something the server then refuses.
 
-You already pay for a mail provider: **Google Workspace**. Using it means no
-new account and no new DNS records.
+<details>
+<summary>The original setup instructions, kept in case it ever needs redoing</summary>
 
 Supabase → **Authentication → Emails → SMTP Settings** → **Enable custom
-SMTP**, then:
+SMTP**:
 
 | Field | Value |
 | --- | --- |
 | Sender email address | `privacy@payweek.app` |
 | Sender name | `Payweek` |
 | Host | `smtp.gmail.com` |
-| Port number | `465` (already correct) |
-| Minimum interval per user | `60` (already correct — it matches the app) |
+| Port number | `465` |
+| Minimum interval per user | `60` |
 | Username | `privacy@payweek.app` |
 | Password | a Google **App Password**, not the account password |
 
 > ⚠️ **Username must be an address you can sign into Gmail with** — a real
-> user, not an alias. If `privacy@` is an alias on the main account, use the
-> main Workspace address in *both* Username and Sender email address. Google
-> rewrites the From header to whoever authenticated, so if the two disagree
-> the sender field is simply ignored.
+> user, not an alias. Google rewrites the From header to whoever
+> authenticated, so if Username and Sender disagree, Sender is ignored.
 
-Getting the App Password — the normal password is blocked for SMTP:
+The App Password: sign into Google as that address →
+<https://myaccount.google.com/security> → turn on **2-Step Verification** (App
+Passwords don't exist without it) → <https://myaccount.google.com/apppasswords>
+→ create one → **strip the spaces** when pasting.
 
-1. Sign into Google as that address
-2. <https://myaccount.google.com/security> → turn on **2-Step Verification**.
-   App Passwords do not exist without it
-3. <https://myaccount.google.com/apppasswords> → name it `Payweek Supabase`
-   → **Create**
-4. **Strip the spaces** when pasting. Google shows `abcd efgh ijkl mnop`;
-   Supabase wants `abcdefghijklmnop`
+Then Supabase → **Authentication → Rate Limits** → hourly email limit to
+**100**. Enabling custom SMTP only raises it to 30 on its own.
 
-> If the App Passwords page says it isn't available, it's off at the tenant
-> level: Admin console → **Security → Authentication → 2-step verification**
-> → tick **Allow users to turn on App Passwords**.
-
-**2. The rate limits themselves.** Saving the above raises the cap to 30
-emails an hour, which is tight for 12 testers retrying. Supabase →
-**Authentication → Rate Limits** → set the hourly email limit to **100**.
-Google's own ceiling is 2,000 a day, so nothing in closed testing gets near
-it.
-
-✅ Sign in at payweek.app and check the sender. `privacy@payweek.app` rather
-than `noreply@mail.app.supabase.io` means it's done.
-
-**If App Passwords turn out to be blocked**, use Resend instead — free, 3,000
-emails a month. Sign up, add `payweek.app`, paste its three DNS records into
-Vercel, then: Host `smtp.resend.com`, Port `465`, Username literally
-`resend`, Password the `re_…` API key, Sender `noreply@payweek.app`.
-
-> Same trap as before: when adding DNS records at Vercel for `payweek.app`
-> itself, leave the **Name** field empty rather than typing `@`.
+</details>
 
 ---
 
-## Step 4 — Install Android Studio (10 min of work, 1 hour+ of downloading)
+## Step 3c — Rebuild before you sign anything ⚠️ do this first (15 minutes)
 
-Start it, then go and do Steps 1–3 while it runs.
+Your working APK was built on 2 August. Everything since then has touched the
+**sign-in path**, which is the one thing that must not be broken in the file
+you upload to Google:
 
-1. <https://developer.android.com/studio> → download → install
-2. Launch it, accept the **default** setup wizard, let it finish completely
+- a real **Sign out** button in Settings
+- **3 sign-in links per address every 10 minutes**, with a live countdown
+- **Keep me signed in**, which moves where the session token is stored
 
-✅ Opens to a Welcome window with nothing pending.
+```powershell
+cd C:\dev\Payweek
+git pull origin claude/payweek-app-zk4tcb
+npm install
+npm run build
+npx cap sync android
+cd android
+.\gradlew.bat assembleDebug
+```
+
+Install `android\app\build\outputs\apk\debug\app-debug.apk` on your phone the
+same way you did last time, then check three things:
+
+1. **Sign in still works.** Open the magic-link email on the phone. It should
+   now arrive from `privacy@payweek.app` rather than Supabase — that proves
+   Step 3b at the same time.
+2. **Settings → Sign out.** It's a proper button now, under your email address.
+3. **Sign back in with "Keep me signed in" ticked**, then close Payweek
+   completely and reopen it. You should still be signed in.
+
+❌ **Stop if sign-in fails.** Send me what the screen says. Do not build a
+release from a build you haven't signed into.
+
+---
+
+## ~~Step 4 — Install Android Studio~~ ✅ DONE
+
+Installed on Windows 11 with SDK Platform 35, Build-Tools 35 and JDK 21
+pinned. Step 5 proved it works.
 
 ---
 
@@ -182,31 +187,43 @@ cd android
 
 ---
 
-## Step 6 — On your phone, and the two buttons never run for real (25 minutes)
+## Step 6 — The two buttons that have never run for real (25 minutes)
 
-On the phone: **Settings → About phone** → tap **Build number** seven times →
-**Developer options** → turn on **USB debugging** → plug into the laptop → tap
-**Allow**.
+The app itself is installed and working on your phone. These two have only
+ever been exercised against a local stand-in, and **Play requires the second
+one to work** — a reviewer will try it.
 
-```sh
-npx cap run android
-```
+- **Export.** Settings → *Export my shifts as a spreadsheet*. The Android
+  share sheet should open with a CSV file. (Log a shift first; it refuses to
+  export nothing.)
+- **Delete my account.** ⚠️ Sign in with a **throwaway Gmail**, not your real
+  account. Add one agency, then Settings → **Delete my account** → type
+  `DELETE`. It should sign you out, and signing back in should give an empty
+  account. **This is irreversible.**
 
-✅ Payweek installs and opens. Sign in — open the magic-link email **on the
-phone this time**. Your data from Step 2 is already there.
-
-Then test the two things that have only ever been tested against a stub:
-
-- **Export.** Settings → *Export my shifts as a spreadsheet*. The Android share
-  sheet should appear with a CSV file.
-- **Delete my account.** Sign in with a **throwaway Gmail**, add one agency,
-  then Settings → **Delete my account** → type DELETE. It should sign you out
-  and the account should be gone. **Throwaway only — this is irreversible.**
-  Play requires this path to work.
+Keep that throwaway address — it becomes the reviewer login in Step 9.
 
 ---
 
 ## Step 7 — Create your signing key (5 minutes, once ever)
+
+Windows (PowerShell). `keytool` ships with the JDK 21 you pinned in Step 5,
+so this finds it rather than relying on PATH:
+
+```powershell
+$jdk = (Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory | Where-Object Name -like "jdk-21*" | Select-Object -First 1).FullName
+& "$jdk\bin\keytool.exe" -genkeypair -v `
+  -keystore C:\dev\Payweek\android\payweek-upload.jks `
+  -alias payweek-upload `
+  -keyalg RSA -keysize 4096 -validity 10000 `
+  -dname "CN=Payweek, O=Payweek, C=GB"
+```
+
+It asks for a password, twice. Choose one and write it down before you type
+it. If it then asks for a *key* password as well, press Enter to reuse the
+same one — that is what the config below expects.
+
+macOS / Linux:
 
 ```sh
 keytool -genkeypair -v \
@@ -233,15 +250,37 @@ Neither file goes into Git; that is already set up.
 
 ## Step 8 — Build the file you upload (10 minutes)
 
-```sh
+```powershell
+cd C:\dev\Payweek
 npm run build
 npx cap sync android
-cd android && ./gradlew bundleRelease
+cd android
+.\gradlew.bat bundleRelease
 ```
 
-(Windows: `gradlew bundleRelease`, no `./`)
+(macOS / Linux: `./gradlew bundleRelease`)
 
 ✅ Creates `android/app/build/outputs/bundle/release/app-release.aab`.
+
+> If it produces an **unsigned** bundle, `keystore.properties` wasn't found.
+> It has to sit in `android/`, next to `gradlew.bat` — not in the project root.
+
+⚠️ **Test the release build before you upload it.** Release runs ProGuard and
+resource shrinking; debug doesn't. That is the one way a build can be fine on
+your phone and broken in the store. An `.aab` can't be installed directly, so
+build the equivalent APK — same signing, same shrinking — and put that on your
+phone:
+
+```powershell
+.\gradlew.bat assembleRelease
+```
+
+→ `android\app\build\outputs\apk\release\app-release.apk`. Install it, sign
+in, log a shift, export. If all three work, the bundle is good.
+
+> Capacitor ships its own ProGuard rules that keep the plugin classes, so
+> this is expected to pass. Check it anyway — the failure mode is a button
+> that silently does nothing, and a reviewer would find it before you did.
 
 ---
 
