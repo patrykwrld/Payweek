@@ -16,36 +16,10 @@
  *    launch-time check is where the handover case is caught instead.
  */
 
+import { storedSessionUserId } from './authStorage'
+
 export const CACHE_KEY = 'payweek-cache'
 const LAST_USER_KEY = 'payweek-last-user'
-
-/** Where supabase-js keeps the session: sb-<project ref>-auth-token. */
-function authStorageKey(): string | null {
-  const url = import.meta.env.VITE_SUPABASE_URL
-  if (!url) return null
-  try {
-    const ref = new URL(url).hostname.split('.')[0]
-    return ref ? `sb-${ref}-auth-token` : null
-  } catch {
-    return null
-  }
-}
-
-/** The signed-in user id according to storage, without waiting on the client. */
-function storedUserId(): string | null {
-  const key = authStorageKey()
-  if (!key) return null
-  const raw = localStorage.getItem(key)
-  if (!raw) return null
-  try {
-    const parsed: unknown = JSON.parse(raw)
-    const user = (parsed as { user?: { id?: unknown } } | null)?.user
-    return typeof user?.id === 'string' ? user.id : null
-  } catch {
-    // A half-written or hand-edited token is not a session.
-    return null
-  }
-}
 
 function drop() {
   localStorage.removeItem(CACHE_KEY)
@@ -59,7 +33,11 @@ function drop() {
  * Returns the user id it settled on, so callers can track changes at runtime.
  */
 export function purgeCacheIfAccountChanged(): string | null {
-  const userId = storedUserId()
+  // Via authStorage, so it looks wherever this device's session actually is.
+  // Reading localStorage directly would see nothing for someone who unticked
+  // "keep me signed in", call it a handover, and bin shifts still queued to
+  // sync — the one thing this app must never do.
+  const userId = storedSessionUserId()
   // Kept only while a session is present and belongs to the same account.
   // No session means no cache: it would be unreadable anyway (every query
   // needs auth), and leaving it is exactly the handed-on-phone case.

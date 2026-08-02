@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { Browser } from '@capacitor/browser'
 import { supabase } from '../lib/supabase'
+import { keepSignedIn, setKeepSignedIn } from '../lib/authStorage'
 import {
   MAX_PER_WINDOW,
   attemptsLeft,
@@ -50,6 +51,7 @@ function useSecondsTick(active: boolean): number {
 export function SignIn() {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
+  const [keep, setKeep] = useState(() => keepSignedIn())
   // Cheap enough to recompute on every render, and it has to be: the answer
   // changes with the clock as well as with what's in the box.
   const [tickOn, setTickOn] = useState(false)
@@ -184,6 +186,32 @@ export function SignIn() {
               placeholder="you@example.com"
               className="w-full rounded-lg border border-edge bg-surface px-4 py-3 font-mono text-base outline-none placeholder:text-muted/50 focus:border-accent"
             />
+          </label>
+
+          {/* Ticked by default. Almost everyone is on their own phone, and
+              being signed out of a pay tracker every time you close it is the
+              fastest way to lose someone who logs a shift on their break. */}
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={keep}
+              onChange={(e) => {
+                setKeep(e.target.checked)
+                // Written now rather than on submit, because the emailed link
+                // may well come back in a different tab.
+                setKeepSignedIn(e.target.checked)
+              }}
+              className="mt-0.5 size-4 shrink-0 accent-(--color-accent)"
+            />
+            <span className="min-w-0">
+              Keep me signed in
+              {!keep && (
+                <span className="block text-xs text-muted">
+                  You&rsquo;ll be signed out when you close Payweek. Use this on
+                  a shared or work computer.
+                </span>
+              )}
+            </span>
           </label>
 
           <button

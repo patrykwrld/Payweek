@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { authStorage } from './authStorage'
 import type { Database } from './database.types'
 
 const url = import.meta.env.VITE_SUPABASE_URL
@@ -13,6 +14,9 @@ if (!url || !anonKey) {
 export const supabase = createClient<Database>(url, anonKey, {
   auth: {
     flowType: 'pkce',
+    // Routes the token to localStorage or sessionStorage depending on whether
+    // "Keep me signed in" was ticked. See authStorage.ts.
+    storage: authStorage,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
