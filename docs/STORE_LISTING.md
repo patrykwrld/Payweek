@@ -63,11 +63,12 @@ payslip or advice from your agency.
 | --- | --- | --- |
 | App icon | 512×512 PNG, no transparency | ✅ `assets/play/icon-512.png` — ready |
 | Feature graphic | 1024×500 PNG | ✅ `assets/play/feature-graphic.png` — ready |
-| Phone screenshots (2–8) | min 320px, 16:9 or 9:16 | capture Quick Add, Shifts, a shift breakdown, the rule builder, Payslip check |
+| Phone screenshots (2–8) | 1080×1920 (9:16) | ✅ `assets/play/screenshots/` — six, ready, in upload order |
 
-Screenshots must be of the real app. The ones in the repo's development history
-were taken at 390×844 — recapture on a device or emulator at the release build
-so the status bar and rendering are genuine.
+Screenshots must be of the real app, and these are: real screens captured from
+the running app and composed onto a 1080×1920 canvas with a caption. See
+[assets/play/README.md](../assets/play/README.md) for what each one shows and
+why they sit in that order.
 
 ## Category and contact
 
@@ -75,5 +76,6 @@ so the status bar and rendering are genuine.
   rather than managing money — Productivity fits the "one job, done fast"
   positioning better)
 - Tags: time tracking, timesheet, payroll, shift work
-- Contact email: a monitored inbox — the same one used in the privacy policy
+- Contact email: `privacy@payweek.app` — the same monitored inbox as the
+  privacy policy, and it is live on Google Workspace
 - Website: `https://payweek.app`
