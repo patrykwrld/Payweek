@@ -11,7 +11,8 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 2 | Check the maths against a real payslip | ✅ **matched to the penny** |
 | 3 | Supabase redirect URLs | ✅ `payweek://auth-callback` in place |
 | 3b | Custom SMTP for auth email | ✅ Google Workspace, `privacy@payweek.app` |
-| 3c | **Rebuild the APK** | ⬜ **next — the phone build predates sign-out, the link limit and Keep me signed in** |
+| 3d | **Auth settings in Supabase** | ⬜ **next** — four toggles, five minutes |
+| 3c | **Rebuild the APK** | ⬜ the phone build predates usernames, passwords, sign-out and the link limit |
 | 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
 | 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
 | 6 | Export + Delete account on real hardware | 🟡 **deletion works** (verified 3 Aug on a phone). Export still needs a tick |
@@ -24,9 +25,10 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 13 | Production rollout | ⬜ |
 | 14 | After it's live | ⬜ |
 
-**Two of those need you and nothing else: Step 3c and Step 6.** About 40
-minutes together, both doable in one sitting with your phone in your hand,
-and they are the last things standing between you and a signed upload.
+**Three of those need you and nothing else: Step 3d, Step 3c and Step 6** —
+in that order. About 45 minutes together, all doable in one sitting with your
+phone in your hand, and they are the last things standing between you and a
+signed upload.
 
 The big one is behind you: **the pay maths matches a real payslip exactly.**
 
@@ -145,6 +147,34 @@ Then Supabase → **Authentication → Rate Limits** → hourly email limit to
 
 ---
 
+## Step 3d — Four auth settings in Supabase (5 minutes) ⚠️ before 3c
+
+Payweek now has usernames and passwords. Four things in the dashboard have to
+match, and one of them is a real security feature that only became relevant
+the moment passwords existed.
+
+**Authentication → Sign In / Providers → Email:**
+
+| Setting | Set it to | Why |
+| --- | --- | --- |
+| **Confirm email** | **Off** | With it on, a new account can't sign in until a link is opened — which puts you back to needing an inbox, and means a Play reviewer can't get in. The announcement screen adapts either way, but off is what makes username-and-password actually useful |
+| **Minimum password length** | **8** | The app refuses anything shorter, so a lower setting is a promise the app doesn't keep, and a higher one refuses passwords the app accepted |
+| **Leaked password protection** | **On** | Checks new passwords against HaveIBeenPwned. Free, and it is the single highest-value setting on this page now that there are passwords at all. The database linter is flagging it as off |
+| **Enable email provider** | **On** | Already on — this is what magic links and password sign-in both use |
+
+✅ Check: Supabase → **Advisors → Security** should stop reporting *Leaked
+Password Protection Disabled*.
+
+> Two other warnings there are expected and can be left alone. They say
+> `public.username_available` is a `SECURITY DEFINER` function that anyone can
+> call. It is, deliberately — a sign-up form has to answer "is this username
+> taken?" before there is any session to ask with. It returns a boolean and
+> nothing else, so the most it reveals is whether a handle is in use, which is
+> inherent to having usernames. Turning a username into an email address needs
+> the service role and happens only inside the `username-signin` function.
+
+---
+
 ## Step 3c — Rebuild the app on your phone (15 minutes)
 
 ### What this is, and why it exists
@@ -172,6 +202,12 @@ changes are in it.
 Everything since 2 August has touched the **sign-in path**, which is the one
 thing that must not be broken in the file you send to Google:
 
+- **Usernames and passwords.** Creating an account asks for a username, an
+  email and a password, and finishes on a screen that shows the username back
+  with a **Sign in** button. Signing in takes either the username or the email
+- **Forgotten your password**, with a reset link and a screen to set a new one
+- **Settings → Signing in**, so your existing magic-link account can claim a
+  username and a password
 - a real **Sign out** button in Settings — your tester couldn't find the old one
 - **3 sign-in links per address every 10 minutes**, with a live countdown
 - **Keep me signed in**, which changes where the session token is stored
@@ -195,15 +231,21 @@ Install `android\app\build\outputs\apk\debug\app-debug.apk` the same way you
 did last time — Android will offer to update the existing app, and your data
 stays. Then check three things:
 
-1. **Sign in still works.** Open the magic-link email on the phone. It should
-   now arrive from `privacy@payweek.app` rather than Supabase — that confirms
+1. **Create an account** with a username and password. You should land on
+   *Your account is ready* showing the username you chose.
+2. **Sign in** from that screen, then **Settings → Sign out**, then sign back
+   in with the username and password. This is the path every tester and the
+   Play reviewer will take.
+3. **Settings → Signing in** on your own older account — claim a username and
+   set a password, then sign out and back in with them.
+4. **Magic link still works.** *Email me a sign-in link* → the email should
+   arrive from `privacy@payweek.app` rather than Supabase, which confirms
    Step 3b in the same action.
-2. **Settings → Sign out.** A proper button now, under your email address.
-3. **Sign back in with "Keep me signed in" ticked**, close Payweek completely,
-   reopen. You should still be signed in.
+5. **Keep me signed in** ticked, close Payweek completely, reopen — still in.
 
-✅ Quickest proof the rebuild took: Settings has a **Sign out** button. If it's
-still a small grey underline, the old assets are still in there.
+✅ Quickest proof the rebuild took: the sign-in screen asks for **Username or
+email** and a password. If it only asks for an email, the old assets are still
+in there.
 
 ❌ **Stop if sign-in fails.** Send me what the screen says. Never build a
 release from a build you haven't signed into yourself.
@@ -384,44 +426,33 @@ App, Free. Work through **App content** — every item needs a green tick:
 | Financial features | **No** |
 | Government apps | No |
 
-### ⚠️ App access — read this properly, it is the likeliest rejection
+### App access — a reviewer needs a way in
 
-Payweek shows nothing at all without a login, so Play requires you to hand the
-reviewer a working way in. **Giving them an email address does not work.** The
-sign-in link goes to an inbox they cannot open, so they get as far as the
-sign-in screen and no further, and the app is rejected for "unable to access".
+Payweek shows nothing without a login, so Play requires you to hand the
+reviewer working credentials. Since Step 3d this is straightforward: **make
+them an account with a username and a password.**
 
-An earlier version of this document said to do exactly that. It was wrong.
+> An earlier version of this document said to give Play an email address and
+> tell the reviewer to open the emailed link. That would have been rejected —
+> the reviewer cannot open your inbox. Usernames exist partly to remove that
+> problem, and a Google account with 2FA turned off is no longer needed either.
 
-**Use Google sign-in.** The app already has a *Continue with Google* button,
-and a reviewer can sign into a Google account because the credentials are a
-password rather than a link to an inbox.
+1. On the phone or at payweek.app, **Create an account**:
+   username `payweek_review`, any email you control, a password you don't use
+   anywhere else
+2. Add one agency and log two or three shifts, so the reviewer sees a working
+   app rather than an empty state and can find the deletion path
+3. In **App access** → *All or some functionality is restricted* → add:
 
-1. Create a **fresh Gmail** purely for this — `payweek.review@gmail.com` or
-   similar. Not your own, and not the one you deleted in Step 6.
-2. **Leave 2-Step Verification off on it.** With 2FA on, Google challenges the
-   sign-in from Google's review infrastructure and the reviewer is stuck
-   again. This account holds nothing, so that is an acceptable trade.
-3. Sign into Payweek with it once yourself, on the phone, via *Continue with
-   Google*. Add one agency and log two or three shifts, so the reviewer sees a
-   working app rather than an empty state and can find the deletion path.
-4. In **App access** → *All or some functionality is restricted* → add an
-   instruction:
-
-   > Username: payweek.review@gmail.com
-   > Password: (the Google password)
+   > Username: payweek_review
+   > Password: (the password)
    >
-   > On the sign-in screen tap **Continue with Google** and sign in with the
-   > details above. Do not use "Email me a sign-in link" — that sends a link
-   > to an inbox you cannot open.
+   > Enter these on the sign-in screen and tap **Sign in**. No email or
+   > confirmation step is needed.
 
-5. Check it yourself from a phone that has never signed into that account.
-   That is the only way to know a reviewer can.
-
-> If Google keeps challenging the sign-in, the fallback is to add email and
-> password authentication for that one account. That needs a change to the
-> app, so tell me and I'll do it — but try the Google route first, it is
-> ordinary and usually enough.
+4. Sign out and sign back in with those exact details, on a device that has
+   never held that session, before you submit. That is the only way to know a
+   reviewer can
 
 Listing copy — title, short description, full description — is written for you
 in [STORE_LISTING.md](STORE_LISTING.md).
@@ -539,6 +570,7 @@ reaches a fraction of users while you fix it.
 | Database | Live in London, 5 tables, RLS on every one, advisors clean |
 | Website | payweek.app over HTTPS, redeploys on every push, proper desktop layout |
 | Privacy policy | Written, live, and matching the app's design |
+| Sign-in | Username + password, magic link, or Google. Username→email resolution happens in the `username-signin` Edge Function so nobody's address is exposed |
 | Account deletion | In-app, backed by the `delete-account` Edge Function (ACTIVE, v3). **Read the comment at the top of the function before redeploying it** — the CORS header echo and `verify_jwt = false` are both load-bearing and both look optional |
 | Rate engine | Night, weekend, midnight-crossing shifts, breaks priced in the band they actually fall in |
 | Offline | Shifts log with no signal and sync on reconnect (verified) |
@@ -546,7 +578,7 @@ reaches a fraction of users while you fix it.
 | App icon & splash | Generated for every Android density |
 | Signing config | Wired — Step 7 only supplies the key |
 | Play paperwork | Data safety answers and listing copy written |
-| Tests | 106, all passing |
+| Tests | 133, all passing |
 
 ### Added since the APK on your phone was built
 
@@ -559,3 +591,6 @@ This is what Step 3c picks up. All of it came from someone actually using it.
 | **Keep me signed in** | Ticked by default. Unticked, the session dies when Payweek closes — for a shared or work computer |
 | **Offline first-run** | Opening with no signal and nothing cached used to pulse grey blocks forever. It now says what has happened |
 | **Money fields** | Accepted any number of digits, and a third decimal place made the payslip verdict vanish with no explanation. They now hold only what a money amount can be |
+| **Usernames and passwords** | Creating an account asks for a username, an email and a password, and ends on a screen that shows the username back with a Sign in button. Signing in takes either the username or the email |
+| **Password resets** | A forgotten password can't mean losing months of shifts. Reset link, and a screen to set a new one — including on Android, where the link arrives as an ordinary sign-in and needs telling apart |
+| **Settings → Signing in** | Everyone so far signed up with a magic link and has neither a username nor a password. This is where they claim both |
