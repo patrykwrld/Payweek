@@ -14,7 +14,7 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 3c | **Rebuild the APK** | ⬜ **next — the phone build predates sign-out, the link limit and Keep me signed in** |
 | 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
 | 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
-| 6 | Export + Delete account on real hardware | ⬜ deletion was broken by a missing CORS header; fixed 3 Aug (v3), needs retrying |
+| 6 | Export + Delete account on real hardware | 🟡 **deletion works** (verified 3 Aug on a phone). Export still needs a tick |
 | 7 | Signing key | ⬜ 5 minutes, once ever |
 | 8 | Build the `.aab` you upload | ⬜ test the release APK first |
 | 9 | Screenshots + store listing | ⬜ copy is already written for you |
@@ -250,19 +250,31 @@ cd android
 
 ## Step 6 — The two buttons that have never run for real (25 minutes)
 
-The app itself is installed and working on your phone. These two have only
-ever been exercised against a local stand-in, and **Play requires the second
-one to work** — a reviewer will try it.
+### ~~Delete my account~~ ✅ WORKS — verified 3 August on a phone
 
-- **Export.** Settings → *Export my shifts as a spreadsheet*. The Android
-  share sheet should open with a CSV file. (Log a shift first; it refuses to
-  export nothing.)
-- **Delete my account.** ⚠️ Sign in with a **throwaway Gmail**, not your real
-  account. Add one agency, then Settings → **Delete my account** → type
-  `DELETE`. It should sign you out, and signing back in should give an empty
-  account. **This is irreversible.**
+It signed the account out and removed it. Play actively tests this path, so
+this was a real blocker rather than a nice-to-have.
 
-Keep that throwaway address — it becomes the reviewer login in Step 9.
+It failed twice first, and the reason is worth keeping because it will look
+like a network fault if it ever comes back:
+
+> supabase-js sends an `X-Client-Info` header on every request. The function's
+> `Access-Control-Allow-Headers` didn't list it, so the browser's preflight
+> **passed on the server and failed on the client** — the function logged a
+> clean `OPTIONS | 200` and the POST was never sent. The app faithfully
+> reported a network failure for a server that had answered perfectly.
+>
+> Fixed in v3 by echoing `Access-Control-Request-Headers` back rather than
+> listing them, so it cannot recur when supabase-js next adds a header.
+
+Deleting the account also removed the shifts behind the Step 2 payslip check.
+That's fine — the figures are written into Step 2 above — but signing back in
+gives an empty account, so the agency and rates need adding again.
+
+### Export — still to tick
+
+Settings → *Export my shifts as a spreadsheet*. The Android share sheet should
+open with a CSV file. Log a shift first; it refuses to export nothing.
 
 ---
 
@@ -365,18 +377,51 @@ App, Free. Work through **App content** — every item needs a green tick:
 | --- | --- |
 | Privacy policy | `https://payweek.app/privacy.html` |
 | Ads | No |
-| App access | ⚠️ see below |
+| App access | ⚠️ **see below — likeliest cause of rejection** |
 | Content rating | Fill in the questionnaire → expect Everyone / PEGI 3 |
 | Target audience | 18+ |
 | Data safety | Copy from [DATA_SAFETY.md](DATA_SAFETY.md) — every answer is written out |
 | Financial features | **No** |
 | Government apps | No |
 
-> ⚠️ **App access** is what trips people up. Payweek needs a login and the
-> reviewer **cannot receive your magic-link emails**. Use the throwaway Gmail
-> from Step 6: give Play that address plus the instruction *"Enter this email
-> on the sign-in screen and open the emailed link."* If the reviewer can't get
-> in, they reject the app.
+### ⚠️ App access — read this properly, it is the likeliest rejection
+
+Payweek shows nothing at all without a login, so Play requires you to hand the
+reviewer a working way in. **Giving them an email address does not work.** The
+sign-in link goes to an inbox they cannot open, so they get as far as the
+sign-in screen and no further, and the app is rejected for "unable to access".
+
+An earlier version of this document said to do exactly that. It was wrong.
+
+**Use Google sign-in.** The app already has a *Continue with Google* button,
+and a reviewer can sign into a Google account because the credentials are a
+password rather than a link to an inbox.
+
+1. Create a **fresh Gmail** purely for this — `payweek.review@gmail.com` or
+   similar. Not your own, and not the one you deleted in Step 6.
+2. **Leave 2-Step Verification off on it.** With 2FA on, Google challenges the
+   sign-in from Google's review infrastructure and the reviewer is stuck
+   again. This account holds nothing, so that is an acceptable trade.
+3. Sign into Payweek with it once yourself, on the phone, via *Continue with
+   Google*. Add one agency and log two or three shifts, so the reviewer sees a
+   working app rather than an empty state and can find the deletion path.
+4. In **App access** → *All or some functionality is restricted* → add an
+   instruction:
+
+   > Username: payweek.review@gmail.com
+   > Password: (the Google password)
+   >
+   > On the sign-in screen tap **Continue with Google** and sign in with the
+   > details above. Do not use "Email me a sign-in link" — that sends a link
+   > to an inbox you cannot open.
+
+5. Check it yourself from a phone that has never signed into that account.
+   That is the only way to know a reviewer can.
+
+> If Google keeps challenging the sign-in, the fallback is to add email and
+> password authentication for that one account. That needs a change to the
+> app, so tell me and I'll do it — but try the Google route first, it is
+> ordinary and usually enough.
 
 Listing copy — title, short description, full description — is written for you
 in [STORE_LISTING.md](STORE_LISTING.md).
