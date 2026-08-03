@@ -12,12 +12,12 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 3 | Supabase redirect URLs | ✅ `payweek://auth-callback` in place |
 | 3b | Custom SMTP for auth email | ✅ Google Workspace, `privacy@payweek.app` |
 | 3d | Auth settings in Supabase | ✅ Confirm email on, min length 8, rate limit 100 |
-| 3c | **Rebuild the APK** | ⬜ **next** — the phone build predates usernames, passwords and the welcome |
+| 3c | Rebuild the APK | 🟡 rebuilt 3 Aug — **but no registration has reached the database yet** |
 | 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
 | 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
 | 6 | Export + Delete account on real hardware | ✅ both verified on a phone, 3 Aug |
 | 7 | Signing key | 🟡 **key created and verified**; back it up and check `git status` |
-| 8 | Build the `.aab` you upload | ⬜ test the release APK first |
+| 8 | **Build the `.aab` you upload** | ⬜ **next** — builds the bundle *and* a testable APK |
 | 9 | Screenshots + store listing | ⬜ copy is already written for you |
 | 10 | Closed testing — 12 testers, 14 days | ⬜ the long pole |
 | 11 | Use it and collect feedback | ⬜ runs during the 14 days |
@@ -25,9 +25,15 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 13 | Production rollout | ⬜ |
 | 14 | After it's live | ⬜ |
 
-**Step 3c is the last thing standing between you and a signed upload.** The
-signing key exists and is verified; Step 3c needs the phone and takes about
-twenty minutes.
+**Step 8 is next**, and it produces the file you send Google. The signing key
+exists and is verified.
+
+⏳ One loose end from Step 3c: **no account has yet been registered through
+the new form.** Every row in `auth.users` predates it — none carries a
+username. Until one does, the registration flow, the confirmation email and
+the welcome have only ever been proven against a local stand-in, and *Confirm
+email* is still unverified. It is a two-minute check and Step 8 repeats it on
+the release build anyway.
 
 The big one is behind you: **the pay maths matches a real payslip exactly.**
 
@@ -588,41 +594,116 @@ opens it with your password, `git status` is clean, and the backup is done.
 
 </details>
 
-## Step 8 — Build the file you upload (10 minutes)
+## Step 8 — Build the file you upload (20 minutes)
+
+### What you are making, and why there are two files
+
+Play does not take an APK any more. It takes an **Android App Bundle**
+(`.aab`) — a package Google opens up and re-cuts into a smaller APK for each
+individual phone. You cannot install an `.aab` yourself, which is exactly the
+problem: the thing you send Google is the one thing you cannot test.
+
+So this step builds **two** files from identical settings:
+
+| File | Purpose |
+| --- | --- |
+| `app-release.aab` | What you upload to Play |
+| `app-release.apk` | The same build as an installable file, so you can prove it works |
+
+Both are signed with your upload key and both run ProGuard. If the APK works,
+the bundle works.
+
+> ⚠️ **This is where a release can break when every debug build was fine.**
+> Release turns on `minifyEnabled` and `shrinkResources` — ProGuard renames
+> and deletes code it believes is unused. Capacitor ships rules that protect
+> its plugins, so this is expected to pass, but the failure mode is a button
+> that silently does nothing. That is why the APK exists.
+
+---
+
+### 1. Build both
 
 ```powershell
 cd C:\dev\Payweek
+git pull origin claude/payweek-app-zk4tcb
+npm install
 npm run build
 npx cap sync android
 cd android
+.\gradlew.bat clean
 .\gradlew.bat bundleRelease
-```
-
-(macOS / Linux: `./gradlew bundleRelease`)
-
-✅ Creates `android/app/build/outputs/bundle/release/app-release.aab`.
-
-> If it produces an **unsigned** bundle, `keystore.properties` wasn't found.
-> It has to sit in `android/`, next to `gradlew.bat` — not in the project root.
-
-⚠️ **Test the release build before you upload it.** Release runs ProGuard and
-resource shrinking; debug doesn't. That is the one way a build can be fine on
-your phone and broken in the store. An `.aab` can't be installed directly, so
-build the equivalent APK — same signing, same shrinking — and put that on your
-phone:
-
-```powershell
 .\gradlew.bat assembleRelease
 ```
 
-→ `android\app\build\outputs\apk\release\app-release.apk`. Install it, sign
-in, log a shift, export. If all three work, the bundle is good.
+`clean` is worth the extra two minutes here, once — it removes any stale
+artefact from the debug builds so what you upload is built from nothing but
+today's source.
 
-> Capacitor ships its own ProGuard rules that keep the plugin classes, so
-> this is expected to pass. Check it anyway — the failure mode is a button
-> that silently does nothing, and a reviewer would find it before you did.
+✅ **`BUILD SUCCESSFUL`** twice, and two files exist:
 
----
+```
+android\app\build\outputs\bundle\release\app-release.aab
+android\app\build\outputs\apk\release\app-release.apk
+```
+
+❌ `Keystore was tampered with, or password was incorrect`
+→ the password in `android\keystore.properties` doesn't match the key. Rewrite
+that file (Step 7, part 4), then rerun.
+
+❌ A file called `app-release-unsigned.apk`, or no `keystore.properties` found
+→ the file is in the wrong folder. It goes in `C:\dev\Payweek\android\`, beside
+`gradlew.bat` — **not** in the project root and **not** in `android\app\`.
+
+### 2. Prove it was signed with *your* key
+
+```powershell
+$sdk = "$env:LOCALAPPDATA\Android\Sdk"
+& "$sdk\build-tools\35.0.0\apksigner.bat" verify --print-certs "C:\dev\Payweek\android\app\build\outputs\apk\release\app-release.apk"
+```
+
+✅ Prints a **SHA-256 digest** that matches the key from Step 7:
+
+```
+bec563ee3786ec385a24d86dde14fb06364fcc750786d775868f6fe04372c15f
+```
+
+`apksigner` prints it lowercase with no colons; Step 7's `keytool` printed the
+same bytes uppercase with colons. Same key.
+
+❌ `DOES NOT VERIFY` → the build did not sign. Go back to step 1's error notes.
+❌ `apksigner.bat` not found → look in `$sdk\build-tools\` and use whichever
+version folder is actually there.
+
+### 3. Install the release APK and use it ⚠️ do not skip
+
+The debug build already on your phone is signed with a **different key**, so
+Android will refuse to install over it.
+
+1. **Open Payweek with signal first** so everything syncs — uninstalling takes
+   the local copy with it
+2. Uninstall Payweek from the phone
+3. Put `app-release.apk` on the phone the same way as before (Drive is easiest)
+4. Install it
+
+Then do all five of these. Each one exercises code ProGuard could have broken:
+
+| Check | What it proves |
+| --- | --- |
+| **Register** a new account | Sign-up, the username check, the email |
+| **Open the email, land in the app** | The deep link and the welcome |
+| **Sign out, sign back in** with username and password | The `username-signin` function |
+| **Log a shift** | The rate engine and the database |
+| **Settings → Export** | The Filesystem and Share plugins, the likeliest ProGuard casualties |
+
+✅ All five work → the bundle is good and Step 8 is done.
+❌ Anything silently does nothing → that is ProGuard. Send me which one and I
+will add a keep rule.
+
+### 4. About `versionCode`
+
+`android/app/build.gradle` has `versionCode 1`. That is correct for a first
+upload. **Every later upload to Play must have a higher number** — 2, then 3,
+and so on — or Play rejects the file. Nothing to change today.
 
 ## Step 9 — Screenshots and the listing (45 minutes)
 
