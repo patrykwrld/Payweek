@@ -59,6 +59,14 @@ purpose **App functionality** only.
 > Passwords are not a Data safety data type and are not declared. They are
 > never stored by Payweek — Supabase Auth holds a bcrypt hash, and the app
 > only ever passes a password straight to it.
+>
+> **The Have I Been Pwned check is not data sharing and must not be declared
+> as such.** When a password is chosen, `src/lib/pwnedPassword.ts` sends the
+> first five characters of its SHA-1 hash to `api.pwnedpasswords.com` and
+> compares the reply locally. No password, no full hash, no email, no username
+> and no identifier of any kind leaves the device, so there is no user data to
+> declare. It is described in the privacy policy anyway, because an outbound
+> request is an outbound request and people are entitled to know about it.
 
 ### 3. Personal info → Name
 - Only if you keep the optional display-name field in Settings. It is optional

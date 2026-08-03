@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { looksLikeEmail, normaliseUsername } from '../lib/credentials'
+import { checkPwned, pwnedMessage } from '../lib/pwnedPassword'
 import { authRedirectUrl } from './redirects'
 import {
   clearResetRequest,
@@ -61,6 +62,14 @@ export async function isUsernameFree(username: string): Promise<boolean> {
   return data !== false
 }
 
+/**
+ * Supabase's own leaked-password check is a paid feature, so Payweek does it
+ * against the same source instead. Fails open — see pwnedPassword.ts.
+ */
+async function breachedMessage(password: string): Promise<string | null> {
+  return pwnedMessage(await checkPwned(password))
+}
+
 export async function signUpWithPassword(input: {
   username: string
   email: string
@@ -71,6 +80,9 @@ export async function signUpWithPassword(input: {
   if (!(await isUsernameFree(username))) {
     return { ok: false, message: 'That username is taken. Try another.' }
   }
+
+  const breached = await breachedMessage(input.password)
+  if (breached) return { ok: false, message: breached }
 
   const { data, error } = await supabase.auth.signUp({
     email: input.email.trim(),
@@ -193,6 +205,9 @@ export async function sendPasswordReset(email: string): Promise<AuthOutcome> {
 
 /** Used by the recovery screen, and by Settings to change a password. */
 export async function updatePassword(password: string): Promise<AuthOutcome> {
+  const breached = await breachedMessage(password)
+  if (breached) return { ok: false, message: breached }
+
   const { error } = await supabase.auth.updateUser({ password })
   return error ? { ok: false, message: readable(error.message) } : { ok: true }
 }

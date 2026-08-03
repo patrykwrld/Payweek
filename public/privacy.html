@@ -208,6 +208,32 @@
         encrypts stored data at rest. Supabase acts as our data processor; we
         use no other third-party processors.
       </p>
+
+      <h2>Checking your password against known breaches</h2>
+      <p>
+        When you choose a password, Payweek checks whether it has appeared in a
+        public data breach, using the
+        <a href="https://haveibeenpwned.com/Passwords" rel="noopener noreferrer"
+          >Have I Been Pwned</a
+        >
+        Pwned Passwords service. A password that is already in a breach list is
+        not secret any more, and reusing one is the most common way people lose
+        an account.
+      </p>
+      <p>
+        <strong>Your password is never sent anywhere.</strong> The check works
+        by taking a SHA-1 hash of the password on your device and sending only
+        the <em>first five characters</em> of that hash. The service replies
+        with every breached hash sharing those five characters — several
+        hundred of them — and the comparison happens on your device. The
+        service cannot tell which password was being asked about, and never
+        receives your password, your full hash, your email address or your
+        username.
+      </p>
+      <p>
+        If the service cannot be reached, the check is skipped and your
+        password is accepted. Nothing about this check is stored.
+      </p>
       <p>
         The app also keeps a copy of your data on your device so it works
         without a signal. Shifts you log offline are stored on the device until

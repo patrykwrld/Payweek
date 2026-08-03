@@ -164,7 +164,7 @@ Supabase → **Authentication → Sign In / Providers → Email**:
 | --- | --- | --- |
 | **Confirm email** | ✅ **On** | This is the setting that *makes* the flow. The confirmation email **is** the link that finishes registration and carries the person into the app. With it off, no email is ever sent and the whole welcome never happens |
 | **Minimum password length** | **8** | The app refuses anything shorter. A lower number is a promise the app doesn't keep; a higher one refuses passwords the app just accepted |
-| **Leaked password protection** | ✅ **On** | Checks new passwords against HaveIBeenPwned. Free, and the highest-value setting on the page now that passwords exist. Your **Advisors → Security** is reporting it off right now |
+| ~~Leaked password protection~~ | **Leave it off** | Supabase gates this behind the **Pro plan at $25/month**, and it is **not** a Play requirement. Payweek now does the same check itself, for nothing — see below. The advisor warning about it can be ignored |
 
 > ⚠️ **This reverses what an earlier version of this document said.** It told
 > you to turn *Confirm email* off, which was right when the email link was a
@@ -176,8 +176,28 @@ Supabase → **Authentication → Sign In / Providers → Email**:
 email from `privacy@payweek.app`; opening it should land you inside the app
 with the notes falling.
 
-> Two warnings under **Advisors → Security** are expected and should be left
-> alone. They say `public.username_available` is a `SECURITY DEFINER` function
+### The leaked-password check, without the $25
+
+Supabase only offers it on Pro. Rather than pay for one toggle, Payweek does
+it directly against the same source, in `src/lib/pwnedPassword.ts`:
+
+- When a password is chosen — registering, resetting, or changing it in
+  Settings — the app takes a SHA-1 hash **on the device** and sends only the
+  **first five characters** to Have I Been Pwned's range API.
+- The reply is several hundred breached hashes sharing that prefix. The
+  comparison happens locally. The service never learns the password, the full
+  hash, or who was asking. This is HIBP's documented k-anonymity model.
+- A hit is refused with the count: *"That password has appeared in known data
+  breaches 24,231,000+ times."*
+- It **fails open** on a timeout, an outage or an old WebView. A third party
+  having a bad day must never be why somebody can't register.
+
+Twelve tests cover it, including one asserting that what goes over the wire is
+exactly five characters and nothing else. The privacy policy describes it.
+
+> Three warnings under **Advisors → Security** are expected and should be left
+> alone. One is *Leaked Password Protection Disabled*, which is the Pro
+> feature above, now handled in the app instead. They say `public.username_available` is a `SECURITY DEFINER` function
 > anyone can call. It is, on purpose — a registration form has to answer "is
 > this username taken?" before there is any session to ask with. It returns a
 > boolean and nothing else, so the most it discloses is whether a handle is in
