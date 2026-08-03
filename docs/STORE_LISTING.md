@@ -29,10 +29,11 @@ payslip against what you were actually owed.
 
 WORKS OUT YOUR REAL RATE
 Set up each agency once and Payweek prices every minute you work:
-• Night, weekend or evening rates for specific hours and days
-• Overtime after so many hours in a shift, or in the pay week
+• A night rate between any two times you choose
+• A weekend rate for Saturdays and Sundays
 • A one-off rate for a shift when you have done a special deal
-• Shifts that run past midnight, handled properly
+• Shifts that run past midnight, split across the right rates
+• Unpaid breaks taken out of the band they actually fall in
 
 Tap any shift to see exactly how the figure was reached — every band, every
 rate, every subtotal. No black box.
@@ -69,6 +70,24 @@ Screenshots must be of the real app, and these are: real screens captured from
 the running app and composed onto a 1080×1920 canvas with a caption. See
 [assets/play/README.md](../assets/play/README.md) for what each one shows and
 why they sit in that order.
+
+## Release notes (500 characters per language)
+
+For the first release. Paste **between** the `<en-GB>` tags Play shows you,
+keeping the tags themselves.
+
+```
+First release.
+
+Log agency shifts and see what you're owed as the week goes on. Night and weekend rates, breaks and shifts that run past midnight are all priced properly. Tap any shift to see exactly how the figure was worked out.
+
+Check a payslip against your own hours when it lands, and export everything to a spreadsheet whenever you want.
+
+Works with no signal — shifts save on your phone and sync when you reconnect.
+```
+
+For later releases, say what changed in plain English. "Bug fixes and
+performance improvements" tells nobody anything and reviewers notice.
 
 ## Category and contact
 
