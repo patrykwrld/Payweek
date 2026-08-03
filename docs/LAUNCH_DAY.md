@@ -11,29 +11,30 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 2 | Check the maths against a real payslip | ✅ **matched to the penny** |
 | 3 | Supabase redirect URLs | ✅ `payweek://auth-callback` in place |
 | 3b | Custom SMTP for auth email | ✅ Google Workspace, `privacy@payweek.app` |
-| 3d | Auth settings in Supabase | ✅ Confirm email on, min length 8, rate limit 100 |
-| 3c | Rebuild the APK | 🟡 rebuilt 3 Aug — **but no registration has reached the database yet** |
+| 3d | Auth settings in Supabase | ✅ **proven** — a real registration arrived unconfirmed and confirmed 13s later |
+| 3c | Rebuild the APK | ✅ registered on the phone; username reached `profiles`, welcome played |
 | 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
 | 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
 | 6 | Export + Delete account on real hardware | ✅ both verified on a phone, 3 Aug |
-| 7 | Signing key | 🟡 **key created and verified**; back it up and check `git status` |
-| 8 | **Build the `.aab` you upload** | ⬜ **next** — builds the bundle *and* a testable APK |
-| 9 | Screenshots + store listing | ⬜ copy is already written for you |
+| 7 | Signing key | ✅ created, verified, regenerated after the first password was exposed |
+| 8 | Build the `.aab` you upload | 🟡 both built and signed — confirm the **release** APK is the one you tested |
+| 9 | **Store listing** | ⬜ **next** — screenshots, icon, graphic and copy are all made |
 | 10 | Closed testing — 12 testers, 14 days | ⬜ the long pole |
 | 11 | Use it and collect feedback | ⬜ runs during the 14 days |
 | 12 | Apply for production access | ⬜ |
 | 13 | Production rollout | ⬜ |
 | 14 | After it's live | ⬜ |
 
-**Step 8 is next**, and it produces the file you send Google. The signing key
-exists and is verified.
+**Step 9 is next — the Play Console listing.** Every asset it needs is already
+in the repo: six screenshots at 1080×1920, the icon, the feature graphic, the
+listing copy, the Data safety answers and the reviewer instructions.
 
-⏳ One loose end from Step 3c: **no account has yet been registered through
-the new form.** Every row in `auth.users` predates it — none carries a
-username. Until one does, the registration flow, the confirmation email and
-the welcome have only ever been proven against a local stand-in, and *Confirm
-email* is still unverified. It is a two-minute check and Step 8 repeats it on
-the release build anyway.
+Nothing about the app is unproven any more. The last gap closed on 3 August
+when a real registration went through on the phone: the row arrived
+unconfirmed, confirmed 13 seconds later when the link was opened, and the
+username reached `profiles.username` through the database trigger. Sign-up,
+the confirmation email, the deep link, the welcome and the trigger are all
+verified against the live project rather than a stand-in.
 
 The big one is behind you: **the pay maths matches a real payslip exactly.**
 
