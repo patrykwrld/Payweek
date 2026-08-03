@@ -380,16 +380,19 @@ Verified with `keytool -list -v`. Every field Play cares about passes:
 | Valid beyond 22 October 2033 | **19 December 2053** ✅ |
 | Alias matching `keyAlias` | `payweek-upload` ✅ |
 
-```
-SHA-256  BE:C5:63:EE:37:86:EC:38:5A:24:D8:6D:DE:14:FB:06:
-         36:4F:CC:75:07:86:D7:75:86:8F:6F:E0:43:72:C1:5F
-SHA-1    E9:E1:CB:F0:38:F2:9B:53:CF:14:29:7C:E1:05:92:65:BC:0B:D9:55
-```
-
-Fingerprints are public — Play Console displays them, and they are not
-secret. They are recorded here so that after the first upload you can compare
-the **Upload certificate** shown in Play Console → *Setup → App integrity*
-against these, and know the right key was used.
+> ⚠️ **The key was regenerated on 3 August** after the first password was
+> exposed, so the original fingerprints recorded here were deleted rather than
+> left to mislead. **Record the new ones** from your own machine:
+>
+> ```powershell
+> $jdk = (Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory | Where-Object Name -like "jdk-21*" | Select-Object -First 1).FullName
+> & "$jdk\bin\keytool.exe" -list -v -keystore "C:\dev\Payweek\android\payweek-upload.jks" -alias payweek-upload
+> ```
+>
+> Fingerprints are public and safe to write down — the password is not. Paste
+> them below when you have them. After the first upload, compare them against
+> the **Upload certificate** in Play Console → *Setup → App integrity* to
+> confirm the right key was used.
 
 **Still to do:** the `git status` check, and the backup. Both below.
 

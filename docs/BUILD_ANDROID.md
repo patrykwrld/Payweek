@@ -355,6 +355,24 @@ No cable, no developer options, and it works on any phone.
 4. Android asks to allow installing from Drive — **Allow**, then **Install**
 5. If it says *"App not installed"*, see the signing note above
 
+### Installing a **release** build (Step 8)
+
+Same routine, one extra step at the front, because release and debug are
+signed with different keys and Android will not install one over the other.
+
+1. **Open Payweek on the phone with signal** and let it settle. Uninstalling
+   removes the local copy, including anything logged offline that hasn't
+   synced yet
+2. **Uninstall Payweek** — long-press the icon → *Uninstall*
+3. Upload `android\app\build\outputs\apk\release\app-release.apk` to Drive
+4. Tap it on the phone → **Allow** → **Install**
+
+> The same thing happens once more, later: the build Play serves your testers
+> is re-signed by Google with the *app signing* key, which is different again
+> from your upload key. So when you install from the closed-testing link, you
+> will have to uninstall this sideloaded release first. Expect it; it is not a
+> fault.
+
 ### With a cable, if the phone is already set up for it
 
 ```powershell
