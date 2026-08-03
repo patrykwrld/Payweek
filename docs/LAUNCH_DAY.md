@@ -14,7 +14,7 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 3c | **Rebuild the APK** | ⬜ **next — the phone build predates sign-out, the link limit and Keep me signed in** |
 | 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
 | 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
-| 6 | Export + Delete account on real hardware | ⬜ never run outside a stub; Play requires deletion to work |
+| 6 | Export + Delete account on real hardware | ⬜ deletion was broken by a CORS preflight; fixed 3 Aug, needs retrying |
 | 7 | Signing key | ⬜ 5 minutes, once ever |
 | 8 | Build the `.aab` you upload | ⬜ test the release APK first |
 | 9 | Screenshots + store listing | ⬜ copy is already written for you |
@@ -494,7 +494,7 @@ reaches a fraction of users while you fix it.
 | Database | Live in London, 5 tables, RLS on every one, advisors clean |
 | Website | payweek.app over HTTPS, redeploys on every push, proper desktop layout |
 | Privacy policy | Written, live, and matching the app's design |
-| Account deletion | In-app, backed by the `delete-account` Edge Function (deployed, ACTIVE) |
+| Account deletion | In-app, backed by the `delete-account` Edge Function (ACTIVE, v2, `verify_jwt = false` — see the comment at the top of the function before ever redeploying it) |
 | Rate engine | Night, weekend, midnight-crossing shifts, breaks priced in the band they actually fall in |
 | Offline | Shifts log with no signal and sync on reconnect (verified) |
 | Play blockers in code | targetSdk 35, backups disabled, in-app deletion — all handled |

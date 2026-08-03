@@ -10,6 +10,22 @@
 // Every table hangs off auth.users with `on delete cascade` (rate_rules via
 // its agency), so removing the user removes the profile, agencies, rate
 // rules, shifts and payslips in one statement.
+//
+// ⚠️ DEPLOY THIS WITH `verify_jwt = false`. Not a shortcut — it is the only
+// way this works from a browser or a WebView.
+//
+// `functions.invoke` sends an Authorization header, which makes the request
+// non-simple, so the browser sends a CORS preflight OPTIONS first. A preflight
+// carries no Authorization header, by specification. With gateway JWT
+// verification on, Supabase answers that preflight with a bare 403 and no CORS
+// headers, the browser blocks the whole exchange, and the app reports "Failed
+// to send a request to the Edge Function" — the POST is never sent.
+//
+// Nothing is given away by turning it off. The checks below are the real ones:
+// no Authorization header is a 401, a token that doesn't resolve to a user is
+// a 401, and the id deleted comes from that token rather than from anything
+// the caller sent. The gateway was only ever repeating a check this function
+// already does properly.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const cors = {

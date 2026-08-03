@@ -31,6 +31,19 @@ import { supabase } from '../lib/supabase'
 import { todayISO } from '../lib/weeks'
 
 /**
+ * "Failed to send a request to the Edge Function" is what supabase-js says
+ * when the request never left the device — no signal, or a CORS preflight
+ * refused. It names an implementation detail nobody outside this repo has
+ * heard of, on the one screen where a person is already nervous.
+ */
+function readableDeleteError(message: string): string {
+  if (/failed to send a request|failed to fetch|network/i.test(message)) {
+    return 'Couldn’t reach Payweek. Check your connection and try again — nothing has been removed.'
+  }
+  return `${message} Nothing has been removed.`
+}
+
+/**
  * Play requires an in-app route to account deletion for any app that offers
  * sign-up. The deletion itself needs the service role, so it runs in the
  * `delete-account` Edge Function; this only asks, twice, and signs out.
@@ -57,9 +70,7 @@ function DeleteAccount({
       method: 'POST',
     })
     if (fnError) {
-      setError(
-        `Couldn't delete the account: ${fnError.message}. Nothing has been removed.`,
-      )
+      setError(readableDeleteError(fnError.message))
       setStage('confirming')
       return
     }
