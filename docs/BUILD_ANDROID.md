@@ -332,6 +332,41 @@ This is irreversible and Play requires it to work. Keep that throwaway address
 
 ---
 
+## Putting an updated APK on your phone
+
+You will do this every time you rebuild. Android treats it as an **update**,
+not a fresh install, so **your data stays** — as long as the new APK is signed
+with the same key as the one already on the phone.
+
+> ⚠️ **Debug and release are signed with different keys.** A debug build will
+> refuse to install over a release build and vice versa, with
+> `App not installed` or `signatures do not match`. When you switch between
+> them, uninstall the old one first — and remember that uninstalling takes the
+> local data with it, so sync before you do (just open the app with signal).
+
+### The simplest route — Google Drive
+
+No cable, no developer options, and it works on any phone.
+
+1. On the laptop, open
+   `C:\dev\Payweek\android\app\build\outputs\apk\debug\`
+2. Upload **`app-debug.apk`** to your Google Drive
+3. On the phone, open the Drive app and tap the file
+4. Android asks to allow installing from Drive — **Allow**, then **Install**
+5. If it says *"App not installed"*, see the signing note above
+
+### With a cable, if the phone is already set up for it
+
+```powershell
+cd C:\dev\Payweek
+npx cap run android
+```
+
+Faster when it works, but it needs USB debugging on and the phone authorised.
+If `adb devices` shows nothing, use the Drive route rather than fighting it.
+
+---
+
 ## Step 10 — Report back
 
 Tell me:

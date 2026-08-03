@@ -734,13 +734,48 @@ Personal developer accounts cannot publish straight to production. Google
 requires a sustained closed test first — currently **12 testers opted in for
 14 continuous days**. Organisation accounts are exempt; yours is personal.
 
+> **12 is the number of people. 14 is the number of days.** They are easy to
+> mix up. Recruit **14 or 15** anyway — the requirement is 12 opted in
+> *continuously*, so a couple of spare people is what stops one person
+> uninstalling from stopping the clock.
+
+### ⚠️ Sending mates an APK does not count
+
+This is the single most expensive misunderstanding available here. Google
+counts **opt-ins recorded in Play Console**, and it can only see installs that
+came through Play. An APK you sent someone over Drive or WhatsApp is invisible
+to Google: brilliant for feedback, worth **zero** days of the fourteen.
+
+The same goes for the **Internal testing** track. It is instant and takes up
+to 100 testers, but it does **not** satisfy the requirement — only a *closed*
+test does.
+
+So the clock starts only once Steps 8 and 9 are done and a closed track is
+live. That makes them the most time-critical steps in this document: every day
+they wait is a day added to the end.
+
 > ⚠️ **Do Step 3b first.** Twelve people signing in on the same afternoon is
 > exactly what exhausts Supabase's built-in email service.
 
 1. **Testing → Closed testing → Create track** (the default "Alpha" is fine)
-2. **Testers** → create an email list and add **12 Gmail addresses**
+2. **Testers** → create an email list and add **14–15 Gmail addresses**. It
+   must be the Google account each person actually uses on their phone — a
+   work address that isn't a Google account will not work
 3. Upload `app-release.aab` → **Review release** → **Start rollout**
-4. Copy the opt-in link from the **Testers** tab and send it to all 12
+4. Copy the opt-in link from the **Testers** tab and send it to everyone
+
+**What to send them**, so nobody has to guess:
+
+> I've made an app for tracking agency shifts and what you're owed. Can you
+> try it for a couple of weeks?
+>
+> 1. Tap this link on your phone: *(opt-in link)*
+> 2. Tap **Become a tester**
+> 3. Then tap the Google Play link on that same page to install it
+>
+> It needs the Google account you use on your phone. Please leave it installed
+> for two weeks even if you don't use it much — that part matters more than
+> the testing.
 
 ⚠️ **The count is opt-ins, not invitations.** A tester who never clicks the
 link does not count, and the 14-day clock only advances on days when 12 are
