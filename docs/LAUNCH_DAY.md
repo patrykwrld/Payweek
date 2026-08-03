@@ -11,12 +11,12 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 2 | Check the maths against a real payslip | ✅ **matched to the penny** |
 | 3 | Supabase redirect URLs | ✅ `payweek://auth-callback` in place |
 | 3b | Custom SMTP for auth email | ✅ Google Workspace, `privacy@payweek.app` |
-| 3d | **Auth settings in Supabase** | ⬜ **next** — three toggles, five minutes |
-| 3c | **Rebuild the APK** | ⬜ the phone build predates usernames, passwords, sign-out and the link limit |
+| 3d | Auth settings in Supabase | ✅ Confirm email on, min length 8, rate limit 100 |
+| 3c | **Rebuild the APK** | ⬜ **next** — the phone build predates usernames, passwords and the welcome |
 | 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
 | 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
 | 6 | Export + Delete account on real hardware | ✅ both verified on a phone, 3 Aug |
-| 7 | Signing key | ⬜ 5 minutes, once ever |
+| 7 | **Signing key** | ⬜ 10 minutes, once ever — can be done any time, even now |
 | 8 | Build the `.aab` you upload | ⬜ test the release APK first |
 | 9 | Screenshots + store listing | ⬜ copy is already written for you |
 | 10 | Closed testing — 12 testers, 14 days | ⬜ the long pole |
@@ -25,10 +25,9 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 13 | Production rollout | ⬜ |
 | 14 | After it's live | ⬜ |
 
-**Three of those need you and nothing else: Step 3d, Step 3c and Step 6** —
-in that order. About 45 minutes together, all doable in one sitting with your
-phone in your hand, and they are the last things standing between you and a
-signed upload.
+**Two things stand between you and a signed upload: Step 3c and Step 7.**
+About half an hour together. Step 7 needs only the laptop, so it can be done
+right now; Step 3c needs the phone.
 
 The big one is behind you: **the pay maths matches a real payslip exactly.**
 
@@ -147,7 +146,7 @@ Then Supabase → **Authentication → Rate Limits** → hourly email limit to
 
 ---
 
-## Step 3d — Three auth settings in Supabase (5 minutes) ⚠️ do this first
+## ~~Step 3d — Auth settings in Supabase~~ ✅ DONE
 
 How signing in works now, in one paragraph, because these settings only make
 sense against it:
@@ -157,6 +156,15 @@ sense against it:
 > signed in, with banknotes falling past a "You're in". **After that there are
 > no more emails.** They sign in with their username and password. The email
 > address exists so a forgotten password can be reset — nothing else.
+
+Set on 3 August: **Confirm email on**, **minimum password length 8**, hourly
+email **rate limit 100**.
+
+> ⏳ **Not yet proven.** The only way to know *Confirm email* really took is a
+> fresh registration: the new row in `auth.users` should arrive with
+> `email_confirmed_at` empty and fill in when the link is opened. Every
+> account that exists today predates the change, so it proves nothing.
+> **Step 3c registers a new account — that is the check.**
 
 Supabase → **Authentication → Sign In / Providers → Email**:
 
@@ -346,64 +354,211 @@ Deleting the account also removed the shifts behind the Step 2 payslip check.
 That's fine — the figures are written into Step 2 above — but signing back in
 gives an empty account, so the agency and rates need adding again.
 
-### Export — still to tick
+### ~~Export~~ ✅ WORKS — verified 3 August on a phone
 
-Settings → *Export my shifts as a spreadsheet*. The Android share sheet should
-open with a CSV file. Log a shift first; it refuses to export nothing.
+The Android share sheet opens with a CSV of every shift and what it paid.
+
+Step 6 is closed. Both of the things that had only ever run against a local
+stand-in now work on real hardware.
 
 ---
 
-## Step 7 — Create your signing key (5 minutes, once ever)
+## Step 7 — Create your signing key (10 minutes, once ever)
 
-Windows (PowerShell). `keytool` ships with the JDK 21 you pinned in Step 5,
-so this finds it rather than relying on PATH:
+### What this is, in plain terms
+
+Android will not install an app unless it is **signed** — cryptographically
+stamped, so a phone can tell that an update to Payweek really came from you
+and not from somebody who repackaged it. A signing key is that stamp.
+
+There are two keys involved, and mixing them up is where the fear comes from:
+
+| | Who holds it | What it does |
+| --- | --- | --- |
+| **App signing key** | **Google** | The one phones actually check. Google generates and keeps it under Play App Signing, which is mandatory for new apps. You never touch it |
+| **Upload key** | **You** | Proves to *Google* that an upload is from you. Google checks it, strips it, and re-signs with the app signing key |
+
+**You are making the upload key.** That is the whole of Step 7.
+
+> 🔐 **What losing it really costs.** Because Google holds the app signing key,
+> a lost upload key is recoverable: you ask Google to register a replacement.
+> A support thread and a few days, not a dead listing. And before your first
+> upload it costs nothing at all — delete the file and run the command again.
+> Back it up anyway; the point is to never spend those days.
+
+You do this **once, ever**. Every future update to Payweek, for as long as it
+exists, is signed with this same key.
+
+---
+
+### Before you start
+
+Have ready:
+
+- **A password you will not lose.** Not one you'll "remember" — write it into
+  a password manager *before* you type it. It cannot be recovered or reset.
+- 10 minutes.
+
+You do **not** need the phone, and you do **not** need Steps 3c or 6 done
+first. Step 7 is entirely offline and independent.
+
+---
+
+### 1. Open PowerShell in the project
+
+**PowerShell**, not Command Prompt — the commands below use PowerShell syntax
+and will fail in `cmd`.
+
+```powershell
+cd C:\dev\Payweek
+```
+
+### 2. Find the JDK
+
+`keytool` is the tool that makes keys. It ships inside the JDK 21 you
+installed in Step 5, and this finds it rather than trusting `PATH` — which is
+what caused the Java-version trouble the first time round.
 
 ```powershell
 $jdk = (Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory | Where-Object Name -like "jdk-21*" | Select-Object -First 1).FullName
+echo $jdk
+```
+
+✅ Prints something like `C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspot`.
+
+❌ **Prints nothing / blank.** Your JDK is somewhere else. Find it with:
+
+```powershell
+where.exe keytool
+```
+
+and set `$jdk` to the folder *above* `\bin`, e.g.
+`$jdk = "C:\Program Files\Java\jdk-21"`.
+
+> `$jdk` only exists in the window you set it in. If you close PowerShell and
+> come back, run step 2 again before step 3.
+
+### 3. Create the key
+
+One command. It is long; copy the whole block.
+
+```powershell
 & "$jdk\bin\keytool.exe" -genkeypair -v `
-  -keystore C:\dev\Payweek\android\payweek-upload.jks `
+  -keystore "C:\dev\Payweek\android\payweek-upload.jks" `
   -alias payweek-upload `
   -keyalg RSA -keysize 4096 -validity 10000 `
   -dname "CN=Payweek, O=Payweek, C=GB"
 ```
 
-It asks for a password, twice. Choose one and write it down before you type
-it. If it then asks for a *key* password as well, press Enter to reuse the
-same one — that is what the config below expects.
+What the parts mean, so none of it is magic:
 
-macOS / Linux:
+| Part | Meaning |
+| --- | --- |
+| `-keystore …payweek-upload.jks` | The file to create. It must land in `android\`, because that is where Gradle looks |
+| `-alias payweek-upload` | The key's name inside the file. Must match `keyAlias` in step 4 |
+| `-keyalg RSA -keysize 4096` | The algorithm. Play requires RSA 2048 or better; 4096 is comfortably above |
+| `-validity 10000` | Days — about 27 years. Play requires a key valid past 2033 |
+| `-dname "CN=Payweek, …"` | The name on the certificate. Nobody sees it. Supplying it here skips six interactive questions |
 
-```sh
-keytool -genkeypair -v \
-  -keystore android/payweek-upload.jks \
-  -alias payweek-upload \
-  -keyalg RSA -keysize 4096 -validity 10000 \
-  -dname "CN=Payweek, O=Payweek, C=GB"
+**It will now ask you three things:**
+
+| Prompt | What to do |
+| --- | --- |
+| `Enter keystore password:` | Type your password. **Nothing appears on screen — not even dots.** That is normal, not a frozen terminal |
+| `Re-enter new password:` | The same password |
+| `Enter key password for <payweek-upload>` `(RETURN if same as keystore password):` | **Press Enter.** Step 4 assumes you did |
+
+✅ Finishes with a line like:
+
+```
+[Storing C:\dev\Payweek\android\payweek-upload.jks]
 ```
 
-Then create `android/keystore.properties`:
+❌ `keytool : The term 'keytool' is not recognized` → you missed the `& "$jdk\bin\..."` part, or `$jdk` is empty. Redo step 2.
+❌ `Keystore file exists` → you already made one. If it was a mistake and you have **not uploaded to Play yet**, delete it and rerun:
+`Remove-Item C:\dev\Payweek\android\payweek-upload.jks`
 
+### 4. Write the file Gradle reads
+
+Gradle can't ask you for a password mid-build, so it reads one from
+`android\keystore.properties`.
+
+```powershell
+$pw = Read-Host "Type the same password again"
+Set-Content -Path "C:\dev\Payweek\android\keystore.properties" -Encoding ascii -Value @(
+  "storeFile=payweek-upload.jks",
+  "storePassword=$pw",
+  "keyAlias=payweek-upload",
+  "keyPassword=$pw"
+)
 ```
-storeFile=payweek-upload.jks
-storePassword=the-password-you-just-chose
-keyAlias=payweek-upload
-keyPassword=the-password-you-just-chose
+
+Your typing **is** visible here, on purpose — a silent typo turns into a
+confusing build failure twenty minutes later. PowerShell does not record
+`Read-Host` input in its history.
+
+> `storeFile` is deliberately a bare filename, not a full path. Gradle
+> resolves it relative to `android\`, which is also what makes the same
+> config work if you ever move the project.
+
+### 5. Check it actually works
+
+Three checks, each catching a different mistake.
+
+**a. The file says what you think:**
+
+```powershell
+Get-Content C:\dev\Payweek\android\keystore.properties
 ```
 
-🔐 **Back up `payweek-upload.jks` and the password now** — password manager,
-or email the file to yourself. Neither file goes into Git; `.gitignore`
-already covers both, and that has been checked.
+✅ Four lines, with your password on two of them.
 
-What losing it actually costs, accurately: this is the **upload** key, not the
-key Google signs the app with. New apps are enrolled in **Play App Signing**,
-so if you lose this one you can ask Google to register a replacement — days of
-waiting and a support thread, not the end of the listing. Before your first
-upload it costs nothing at all: delete it and run the command again.
+**b. The password actually opens the key** — this is the real test:
 
-That is still worth avoiding, and losing the password is the more common way
-it happens. Put both somewhere you will still have them in three years.
+```powershell
+& "$jdk\bin\keytool.exe" -list -v -keystore "C:\dev\Payweek\android\payweek-upload.jks" -alias payweek-upload
+```
 
----
+Type the password when asked.
+
+✅ Prints `Alias name: payweek-upload`, `Entry type: PrivateKeyEntry`, a
+validity range ending around 2053, and a **SHA-256 fingerprint**.
+❌ `Keystore was tampered with, or password was incorrect` → the password in
+`keystore.properties` doesn't match the key. Redo step 4, typing carefully.
+
+**c. Neither file can ever reach GitHub:**
+
+```powershell
+cd C:\dev\Payweek
+git status --short
+```
+
+✅ **Neither `payweek-upload.jks` nor `keystore.properties` is listed.**
+`.gitignore` covers both and that has been verified — but check, because
+publishing a signing key is the one mistake in this whole project that cannot
+be undone.
+
+### 6. Back it up — properly, now
+
+Copy **both** somewhere you will still have in three years:
+
+- `C:\dev\Payweek\android\payweek-upload.jks`
+- The password
+
+A password manager entry with the file attached is ideal. Emailing the file to
+yourself works. A note on the desktop of this laptop does not.
+
+Losing the *password* is the more common failure than losing the file, and the
+two are useless apart.
+
+### 7. Nothing else to do
+
+You do not need to tell Gradle about any of this. `android/app/build.gradle`
+already looks for `keystore.properties`, and builds a signed release when it
+finds one. **Step 8 will just work.**
+
+✅ **Step 7 is complete when:** `payweek-upload.jks` exists, `keytool -list`
+opens it with your password, `git status` is clean, and the backup is done.
 
 ## Step 8 — Build the file you upload (10 minutes)
 
