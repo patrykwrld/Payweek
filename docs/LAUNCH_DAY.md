@@ -510,6 +510,14 @@ What the parts mean, so none of it is magic:
 ❌ `Keystore file exists` → you already made one. If it was a mistake and you have **not uploaded to Play yet**, delete it and rerun:
 `Remove-Item C:\dev\Payweek\android\payweek-upload.jks`
 
+> 🔒 **Never paste this password anywhere.** Not into a chat, not into an
+> email, not into a support thread — including to me. The moment it is written
+> down somewhere you don't control, the key is compromised and has to be
+> remade. Before a first upload that costs five minutes; afterwards it costs a
+> support ticket and days of waiting.
+>
+> If it does leak, the fix is at the bottom of this step: **Remaking the key**.
+
 ### 4. Write the file Gradle reads
 
 Gradle can't ask you for a password mid-build, so it reads one from
@@ -591,6 +599,28 @@ finds one. **Step 8 will just work.**
 
 ✅ **Step 7 is complete when:** `payweek-upload.jks` exists, `keytool -list`
 opens it with your password, `git status` is clean, and the backup is done.
+
+### Remaking the key, if the password leaks
+
+**Before your first upload to Play this is free** — the key has no history and
+nothing depends on it. Do it without hesitating.
+
+```powershell
+cd C:\dev\Payweek
+Remove-Item android\payweek-upload.jks
+Remove-Item android\keystore.properties
+```
+
+Then repeat parts 2–6 with a password you have **not** typed anywhere except
+the prompt and your password manager. Delete any backup of the old `.jks` as
+well — a keystore file plus a known password is the whole key.
+
+Everything built with the old key becomes worthless, so rebuild Step 8
+afterwards. The fingerprints recorded above will change; replace them.
+
+**After a first upload it is not free.** Google would have to register a
+replacement upload key: a support request and several days. Which is the
+entire reason for the warning in part 3.
 
 </details>
 
