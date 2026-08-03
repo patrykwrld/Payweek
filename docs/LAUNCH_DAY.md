@@ -706,6 +706,13 @@ bec563ee3786ec385a24d86dde14fb06364fcc750786d775868f6fe04372c15f
 `apksigner` prints it lowercase with no colons; Step 7's `keytool` printed the
 same bytes uppercase with colons. Same key.
 
+> **The wall of `WARNING: META-INF/… not protected by signature` is normal.**
+> Expect around forty of them. They are the version-marker files the Android
+> Gradle Plugin writes into `META-INF/`, and v1 JAR signing does not cover
+> that folder. Every Android app built this way prints them. What matters is
+> what is *absent*: if verification had failed, apksigner would say
+> `DOES NOT VERIFY` and stop.
+
 ❌ `DOES NOT VERIFY` → the build did not sign. Go back to step 1's error notes.
 ❌ Nothing found → `apksigner` isn't installed. `keytool` can read the same
 certificate out of the APK, and you already have it:
