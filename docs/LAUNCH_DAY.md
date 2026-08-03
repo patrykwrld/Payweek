@@ -688,8 +688,14 @@ that file (Step 7, part 4), then rerun.
 
 ```powershell
 $sdk = "$env:LOCALAPPDATA\Android\Sdk"
-& "$sdk\build-tools\35.0.0\apksigner.bat" verify --print-certs "C:\dev\Payweek\android\app\build\outputs\apk\release\app-release.apk"
+$apksigner = (Get-ChildItem "$sdk\build-tools" -Recurse -Filter apksigner.bat | Sort-Object FullName -Descending | Select-Object -First 1).FullName
+& $apksigner verify --print-certs "C:\dev\Payweek\android\app\build\outputs\apk\release\app-release.apk"
 ```
+
+> The version folder under `build-tools` is whatever the SDK Manager
+> installed — 35.0.0, 36.0.0, something else — so this finds it instead of
+> naming one. Hardcoding a version is how this command breaks on a machine
+> that installed a different one.
 
 ✅ Prints a **SHA-256 digest** that matches the key from Step 7:
 
@@ -701,8 +707,15 @@ bec563ee3786ec385a24d86dde14fb06364fcc750786d775868f6fe04372c15f
 same bytes uppercase with colons. Same key.
 
 ❌ `DOES NOT VERIFY` → the build did not sign. Go back to step 1's error notes.
-❌ `apksigner.bat` not found → look in `$sdk\build-tools\` and use whichever
-version folder is actually there.
+❌ Nothing found → `apksigner` isn't installed. `keytool` can read the same
+certificate out of the APK, and you already have it:
+>
+> ```powershell
+> & "$jdk\bin\keytool.exe" -printcert -jarfile "C:\dev\Payweek\android\app\build\outputs\apk\release\app-release.apk"
+> ```
+>
+> That prints the fingerprints in `keytool`'s format — uppercase with colons —
+> so they compare directly against Step 7's output.
 
 ### 3. Install the release APK and use it ⚠️ do not skip
 
