@@ -34,6 +34,28 @@ export function parsePoundsToPence(input: string): number | null {
   return pounds * 100 + pence
 }
 
+/**
+ * Keeps a money field to something that can actually be a money amount:
+ * digits, at most one point, at most two places after it.
+ *
+ * Run on every keystroke, so the box can never hold a value the parser then
+ * rejects. Without it a stray third decimal makes the answer disappear with
+ * no explanation — the field looks fine, and the app looks broken.
+ *
+ * The phone keypad offers a comma as well as a point, and on a UK phone the
+ * comma is the thousands separator, so it is dropped rather than treated as
+ * a decimal.
+ */
+export function clampPoundsInput(raw: string): string {
+  const cleaned = raw.replace(/[^\d.]/g, '')
+  const [whole = '', ...rest] = cleaned.split('.')
+  // Nobody's weekly gross runs to seven figures, and a mis-tap that adds one
+  // is easier to notice if it simply doesn't go in.
+  const pounds = whole.slice(0, 6)
+  if (rest.length === 0) return pounds
+  return `${pounds}.${rest.join('').slice(0, 2)}`
+}
+
 /** Pence -> a plain decimal string with no currency symbol: 1250 ->
  * '12.50'. Integer arithmetic only. Used for form inputs and for CSV
  * columns a spreadsheet should read as numbers. */

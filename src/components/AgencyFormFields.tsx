@@ -1,7 +1,11 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import type { Tables } from "../lib/database.types";
 import { DAY_NAMES } from "../lib/days";
-import { parsePoundsToPence, penceToPoundsInput } from "../lib/money";
+import {
+  clampPoundsInput,
+  parsePoundsToPence,
+  penceToPoundsInput,
+} from "../lib/money";
 import { useIsOnline } from "../lib/offline";
 import {
   findNightRule,
@@ -185,7 +189,7 @@ export function AgencyFormFields({
         <Field label="Your normal hourly rate">
           <input
             value={baseRate}
-            onChange={(e) => setBaseRate(e.target.value)}
+            onChange={(e) => setBaseRate(clampPoundsInput(e.target.value))}
             className={inputCls}
             inputMode="decimal"
             placeholder="12.50"
@@ -233,7 +237,7 @@ export function AgencyFormFields({
           <Field label="Night hourly rate">
             <input
               value={nightRate}
-              onChange={(e) => setNightRate(e.target.value)}
+              onChange={(e) => setNightRate(clampPoundsInput(e.target.value))}
               className={inputCls}
               inputMode="decimal"
               placeholder="14.50"
@@ -250,7 +254,7 @@ export function AgencyFormFields({
           <Field label="Weekend hourly rate">
             <input
               value={weekendRate}
-              onChange={(e) => setWeekendRate(e.target.value)}
+              onChange={(e) => setWeekendRate(clampPoundsInput(e.target.value))}
               className={inputCls}
               inputMode="decimal"
               placeholder="15.00"

@@ -8,7 +8,7 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | | Step | State |
 | --- | --- | --- |
 | 1 | Privacy contact address | ✅ `privacy@payweek.app` live on Workspace |
-| 2 | **Check the maths against a real payslip** | ⬜ **not done — the one that matters** |
+| 2 | Check the maths against a real payslip | ✅ **matched to the penny** |
 | 3 | Supabase redirect URLs | ✅ `payweek://auth-callback` in place |
 | 3b | Custom SMTP for auth email | ✅ Google Workspace, `privacy@payweek.app` |
 | 3c | **Rebuild the APK** | ⬜ **next — the phone build predates sign-out, the link limit and Keep me signed in** |
@@ -24,10 +24,11 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 13 | Production rollout | ⬜ |
 | 14 | After it's live | ⬜ |
 
-**Three of those need you and nothing else: Step 2, Step 3c and Step 6.** They
-are about 60 minutes together, they can all be done in one sitting with your
-phone in your hand, and they are the last things standing between you and a
-signed upload.
+**Two of those need you and nothing else: Step 3c and Step 6.** About 40
+minutes together, both doable in one sitting with your phone in your hand,
+and they are the last things standing between you and a signed upload.
+
+The big one is behind you: **the pay maths matches a real payslip exactly.**
 
 Everything on the app side is finished — the rate engine, offline, the intro,
 account deletion, the website, the Play paperwork. That list is at the bottom.
@@ -58,25 +59,32 @@ paperwork have said `privacy@payweek.app` from the start.
 
 ---
 
-## Step 2 — Check the maths against a real payslip (20 minutes) ← the important one
+## ~~Step 2 — Check the maths against a real payslip~~ ✅ DONE — it matches
 
-**Nothing else matters if this is wrong.** Everything below is packaging.
+Checked 3 August 2026 against a real week, on a phone. Six shifts in the week
+ending Sunday 2 August:
 
-1. Open <https://payweek.app> and sign in
-2. **Rates → Add agency** — your real agency, your real hourly rate. Tick
-   **Night rate** and/or **Weekend rate** on the same screen and put your
-   actual figures in
-3. **Add** tab → log a week of shifts you already have the payslip for
-4. **Payday** tab → compare that week's total against the payslip
-5. **Shifts** → tap one → read *How this was worked out*
+| | | |
+| --- | --- | --- |
+| Tue 28 Jul | 17:00–02:00 · 8h | £115.57 |
+| Thu 30 Jul | 17:00–04:00 · 10h | £146.60 |
+| Fri 31 Jul | 17:00–02:00 · 8h | £115.66 |
+| Sat 1 Aug | 17:00–00:45 · 7h 15m | £103.51 |
+| Sun 2 Aug | 17:00–02:00 · 8h | £115.57 |
+| Sun 2 Aug | 17:00–01:00 · 7h | £100.00 |
+| | **Total** | **£696.91** |
 
-✅ **Go:** the total matches the payslip's gross, or you can account for the
-difference — holiday pay is shown separately, and tax and NI are not modelled
-at all, so compare against **gross**.
-❌ **Stop:** if a figure is off, screenshot the breakdown and send it. Do not
-carry on to the Play Store with wrong pay maths.
+**£696.91 on the payslip, £696.91 from the hours.** Night bands, a Friday
+running into Saturday, a shift ending at 00:45 and two shifts on the same
+Sunday — all priced correctly, to the penny.
 
-If sign-in fails with *"requested path is invalid"*, do Step 3 first.
+This was the one step where a bad answer would have changed the shape of the
+project. It didn't.
+
+> The £0.30 discrepancy on screen was a mistyped `696.61` in the box, not a
+> difference in the maths. That typo did expose a real bug, now fixed: the
+> money fields accepted any number of digits, and a third decimal place made
+> the whole verdict silently disappear.
 
 ---
 
@@ -137,15 +145,41 @@ Then Supabase → **Authentication → Rate Limits** → hourly email limit to
 
 ---
 
-## Step 3c — Rebuild before you sign anything ⚠️ do this first (15 minutes)
+## Step 3c — Rebuild the app on your phone (15 minutes)
 
-Your working APK was built on 2 August. Everything since then has touched the
-**sign-in path**, which is the one thing that must not be broken in the file
-you upload to Google:
+### What this is, and why it exists
 
-- a real **Sign out** button in Settings
+Payweek is a web app in an Android wrapper. The APK does **not** fetch the
+site — it carries a frozen copy of it inside, in `android/app/src/main/assets`.
+So the app on your phone is not "Payweek"; it is *Payweek as it stood on the
+afternoon of 2 August*. Pushing to GitHub updates payweek.app within a minute
+and does nothing at all to the phone.
+
+Three commands, in this order, are what move new code into the APK:
+
+| | |
+| --- | --- |
+| `npm run build` | Compiles the web app into `dist/` |
+| `npx cap sync android` | Copies `dist/` into the Android project's assets |
+| `gradlew assembleDebug` | Packages those assets into an installable APK |
+
+Miss the first two and Gradle rebuilds happily — around the **old** web app.
+That is the trap: `BUILD SUCCESSFUL` tells you nothing about whether your
+changes are in it.
+
+### What you'd be missing
+
+Everything since 2 August has touched the **sign-in path**, which is the one
+thing that must not be broken in the file you send to Google:
+
+- a real **Sign out** button in Settings — your tester couldn't find the old one
 - **3 sign-in links per address every 10 minutes**, with a live countdown
-- **Keep me signed in**, which moves where the session token is stored
+- **Keep me signed in**, which changes where the session token is stored
+- opening with no signal and nothing cached no longer pulses grey blocks forever
+- money fields now refuse a third decimal place instead of silently dropping
+  the answer
+
+### Do it
 
 ```powershell
 cd C:\dev\Payweek
@@ -157,18 +191,22 @@ cd android
 .\gradlew.bat assembleDebug
 ```
 
-Install `android\app\build\outputs\apk\debug\app-debug.apk` on your phone the
-same way you did last time, then check three things:
+Install `android\app\build\outputs\apk\debug\app-debug.apk` the same way you
+did last time — Android will offer to update the existing app, and your data
+stays. Then check three things:
 
 1. **Sign in still works.** Open the magic-link email on the phone. It should
-   now arrive from `privacy@payweek.app` rather than Supabase — that proves
-   Step 3b at the same time.
-2. **Settings → Sign out.** It's a proper button now, under your email address.
-3. **Sign back in with "Keep me signed in" ticked**, then close Payweek
-   completely and reopen it. You should still be signed in.
+   now arrive from `privacy@payweek.app` rather than Supabase — that confirms
+   Step 3b in the same action.
+2. **Settings → Sign out.** A proper button now, under your email address.
+3. **Sign back in with "Keep me signed in" ticked**, close Payweek completely,
+   reopen. You should still be signed in.
 
-❌ **Stop if sign-in fails.** Send me what the screen says. Do not build a
-release from a build you haven't signed into.
+✅ Quickest proof the rebuild took: Settings has a **Sign out** button. If it's
+still a small grey underline, the old assets are still in there.
+
+❌ **Stop if sign-in fails.** Send me what the screen says. Never build a
+release from a build you haven't signed into yourself.
 
 ---
 
@@ -475,3 +513,4 @@ This is what Step 3c picks up. All of it came from someone actually using it.
 | **3 sign-in links per address per 10 minutes** | Live countdown on the form and on the "check your inbox" panel, plus a resend button so a lost link doesn't mean retyping your address. A send that failed on a flat signal costs nobody an attempt |
 | **Keep me signed in** | Ticked by default. Unticked, the session dies when Payweek closes — for a shared or work computer |
 | **Offline first-run** | Opening with no signal and nothing cached used to pulse grey blocks forever. It now says what has happened |
+| **Money fields** | Accepted any number of digits, and a third decimal place made the payslip verdict vanish with no explanation. They now hold only what a money amount can be |

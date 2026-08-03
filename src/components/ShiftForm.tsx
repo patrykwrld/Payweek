@@ -1,6 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import type { Json, Tables, TablesInsert } from '../lib/database.types'
-import { formatMinutes, formatPence, formatRate, parsePoundsToPence, penceToPoundsInput } from '../lib/money'
+import {
+  clampPoundsInput,
+  formatMinutes,
+  formatPence,
+  formatRate,
+  parsePoundsToPence,
+  penceToPoundsInput,
+} from '../lib/money'
 import {
   breaksFromJson,
   priceShift,
@@ -328,7 +335,7 @@ export function ShiftForm({
               inputMode="decimal"
               placeholder="leave blank to use your usual rates"
               value={manualRate}
-              onChange={(e) => setManualRate(e.target.value)}
+              onChange={(e) => setManualRate(clampPoundsInput(e.target.value))}
               className={inputCls}
             />
           </Field>

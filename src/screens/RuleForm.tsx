@@ -15,6 +15,7 @@ import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { useIsOnline } from '../lib/offline'
 import type { Tables, TablesInsert } from '../lib/database.types'
 import {
+  clampPoundsInput,
   formatMinutes,
   formatPence,
   formatRate,
@@ -381,7 +382,7 @@ function RuleFormInner({
           <Field label="What those hours pay, each">
             <input
               value={payValue}
-              onChange={(e) => setPayValue(e.target.value)}
+              onChange={(e) => setPayValue(clampPoundsInput(e.target.value))}
               className={inputCls}
               inputMode="decimal"
               placeholder="14.50"

@@ -11,7 +11,12 @@ import {
 } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { useIsOnline } from '../lib/offline'
-import { formatMinutes, formatPence, parsePoundsToPence } from '../lib/money'
+import {
+  clampPoundsInput,
+  formatMinutes,
+  formatPence,
+  parsePoundsToPence,
+} from '../lib/money'
 import { buildAgencyWeeks, comparePayslip } from '../lib/payday'
 import {
   useAgencies,
@@ -149,7 +154,7 @@ export function PayslipCheck() {
             <input
               value={grossInput}
               onChange={(e) => {
-                setGrossInput(e.target.value)
+                setGrossInput(clampPoundsInput(e.target.value))
                 setSaved(false)
               }}
               className={inputCls}

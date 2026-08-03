@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  clampPoundsInput,
   formatMinutes,
   formatPence,
   parsePoundsToPence,
@@ -39,6 +40,53 @@ describe('parsePoundsToPence', () => {
     expect(parsePoundsToPence('12.345')).toBeNull()
     expect(parsePoundsToPence('-5')).toBeNull()
     expect(parsePoundsToPence('abc')).toBeNull()
+  })
+})
+
+describe('clampPoundsInput', () => {
+  it('leaves a normal amount alone', () => {
+    expect(clampPoundsInput('696.91')).toBe('696.91')
+    expect(clampPoundsInput('13')).toBe('13')
+    expect(clampPoundsInput('13.5')).toBe('13.5')
+  })
+
+  // The one that made the answer vanish: a third decimal is unparseable, so
+  // the verdict card simply stopped rendering.
+  it('stops at two decimal places', () => {
+    expect(clampPoundsInput('696.919')).toBe('696.91')
+    expect(clampPoundsInput('696.9199999')).toBe('696.91')
+  })
+
+  it('allows only one point', () => {
+    expect(clampPoundsInput('696.91.5')).toBe('696.91')
+    expect(clampPoundsInput('1.2.3')).toBe('1.23')
+  })
+
+  it('drops anything that is not a digit or a point', () => {
+    expect(clampPoundsInput('£696.91')).toBe('696.91')
+    expect(clampPoundsInput('696,91')).toBe('69691')
+    expect(clampPoundsInput('-12')).toBe('12')
+    expect(clampPoundsInput('12abc')).toBe('12')
+  })
+
+  it('keeps a half-typed amount usable', () => {
+    expect(clampPoundsInput('')).toBe('')
+    expect(clampPoundsInput('696.')).toBe('696.')
+    expect(clampPoundsInput('.5')).toBe('.5')
+  })
+
+  it('refuses a seventh figure', () => {
+    expect(clampPoundsInput('12345678.99')).toBe('123456.99')
+  })
+
+  // Everything it lets through has to survive the parser, or the clamp has
+  // just moved the problem.
+  it('never produces something the parser rejects', () => {
+    for (const raw of ['696.919', '£1,234.567', '13..5', '0.001', '9'.repeat(12)]) {
+      const clamped = clampPoundsInput(raw)
+      if (clamped === '' || clamped.endsWith('.') || clamped.startsWith('.')) continue
+      expect(parsePoundsToPence(clamped)).not.toBeNull()
+    }
   })
 })
 
