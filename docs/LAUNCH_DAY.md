@@ -11,7 +11,7 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 2 | Check the maths against a real payslip | ✅ **matched to the penny** |
 | 3 | Supabase redirect URLs | ✅ `payweek://auth-callback` in place |
 | 3b | Custom SMTP for auth email | ✅ Google Workspace, `privacy@payweek.app` |
-| 3d | **Auth settings in Supabase** | ⬜ **next** — four toggles, five minutes |
+| 3d | **Auth settings in Supabase** | ⬜ **next** — three toggles, five minutes |
 | 3c | **Rebuild the APK** | ⬜ the phone build predates usernames, passwords, sign-out and the link limit |
 | 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
 | 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
@@ -147,31 +147,43 @@ Then Supabase → **Authentication → Rate Limits** → hourly email limit to
 
 ---
 
-## Step 3d — Four auth settings in Supabase (5 minutes) ⚠️ before 3c
+## Step 3d — Three auth settings in Supabase (5 minutes) ⚠️ do this first
 
-Payweek now has usernames and passwords. Four things in the dashboard have to
-match, and one of them is a real security feature that only became relevant
-the moment passwords existed.
+How signing in works now, in one paragraph, because these settings only make
+sense against it:
 
-**Authentication → Sign In / Providers → Email:**
+> **Registering** asks for a username, an email and a password, and sends one
+> email. Opening that email drops the person straight into Payweek, already
+> signed in, with banknotes falling past a "You're in". **After that there are
+> no more emails.** They sign in with their username and password. The email
+> address exists so a forgotten password can be reset — nothing else.
 
-| Setting | Set it to | Why |
+Supabase → **Authentication → Sign In / Providers → Email**:
+
+| Setting | Set it to | Why it has to be this |
 | --- | --- | --- |
-| **Confirm email** | **Off** | With it on, a new account can't sign in until a link is opened — which puts you back to needing an inbox, and means a Play reviewer can't get in. The announcement screen adapts either way, but off is what makes username-and-password actually useful |
-| **Minimum password length** | **8** | The app refuses anything shorter, so a lower setting is a promise the app doesn't keep, and a higher one refuses passwords the app accepted |
-| **Leaked password protection** | **On** | Checks new passwords against HaveIBeenPwned. Free, and it is the single highest-value setting on this page now that there are passwords at all. The database linter is flagging it as off |
-| **Enable email provider** | **On** | Already on — this is what magic links and password sign-in both use |
+| **Confirm email** | ✅ **On** | This is the setting that *makes* the flow. The confirmation email **is** the link that finishes registration and carries the person into the app. With it off, no email is ever sent and the whole welcome never happens |
+| **Minimum password length** | **8** | The app refuses anything shorter. A lower number is a promise the app doesn't keep; a higher one refuses passwords the app just accepted |
+| **Leaked password protection** | ✅ **On** | Checks new passwords against HaveIBeenPwned. Free, and the highest-value setting on the page now that passwords exist. Your **Advisors → Security** is reporting it off right now |
 
-✅ Check: Supabase → **Advisors → Security** should stop reporting *Leaked
-Password Protection Disabled*.
+> ⚠️ **This reverses what an earlier version of this document said.** It told
+> you to turn *Confirm email* off, which was right when the email link was a
+> way to *sign in* and being asked to confirm was pure friction. Now the link
+> is the last step of *registering* — turning it off removes the email
+> entirely and there is nothing to open.
 
-> Two other warnings there are expected and can be left alone. They say
-> `public.username_available` is a `SECURITY DEFINER` function that anyone can
-> call. It is, deliberately — a sign-up form has to answer "is this username
-> taken?" before there is any session to ask with. It returns a boolean and
-> nothing else, so the most it reveals is whether a handle is in use, which is
-> inherent to having usernames. Turning a username into an email address needs
-> the service role and happens only inside the `username-signin` function.
+✅ **Check:** register a throwaway account at payweek.app. You should get an
+email from `privacy@payweek.app`; opening it should land you inside the app
+with the notes falling.
+
+> Two warnings under **Advisors → Security** are expected and should be left
+> alone. They say `public.username_available` is a `SECURITY DEFINER` function
+> anyone can call. It is, on purpose — a registration form has to answer "is
+> this username taken?" before there is any session to ask with. It returns a
+> boolean and nothing else, so the most it discloses is whether a handle is in
+> use, which is inherent to having usernames at all. Turning a username into
+> an email address needs the service role and happens only inside the
+> `username-signin` Edge Function.
 
 ---
 
@@ -202,9 +214,10 @@ changes are in it.
 Everything since 2 August has touched the **sign-in path**, which is the one
 thing that must not be broken in the file you send to Google:
 
-- **Usernames and passwords.** Creating an account asks for a username, an
-  email and a password, and finishes on a screen that shows the username back
-  with a **Sign in** button. Signing in takes either the username or the email
+- **A new way in altogether.** Registering asks for a username, an email and
+  a password and sends one email; opening it lands you inside the app with
+  banknotes falling past a "You're in". After that it is username and password
+  — **the sign-in screen no longer offers an email link at all**
 - **Forgotten your password**, with a reset link and a screen to set a new one
 - **Settings → Signing in**, so your existing magic-link account can claim a
   username and a password
@@ -231,21 +244,21 @@ Install `android\app\build\outputs\apk\debug\app-debug.apk` the same way you
 did last time — Android will offer to update the existing app, and your data
 stays. Then check three things:
 
-1. **Create an account** with a username and password. You should land on
-   *Your account is ready* showing the username you chose.
-2. **Sign in** from that screen, then **Settings → Sign out**, then sign back
-   in with the username and password. This is the path every tester and the
-   Play reviewer will take.
-3. **Settings → Signing in** on your own older account — claim a username and
+1. **Register** with a username, an email you can open **on the phone**, and
+   a password. You should land on *One step left*.
+2. **Open the email on the phone.** It should come from `privacy@payweek.app`
+   — which confirms Step 3b at the same time — and tapping the link should
+   drop you into Payweek with the notes falling. This is the moment to check;
+   it is the first thing every new user will see.
+3. **Settings → Sign out**, then sign back in with the username and password.
+   No email. This is the path every tester and the Play reviewer will take.
+4. **Settings → Signing in** on your own older account — claim a username and
    set a password, then sign out and back in with them.
-4. **Magic link still works.** *Email me a sign-in link* → the email should
-   arrive from `privacy@payweek.app` rather than Supabase, which confirms
-   Step 3b in the same action.
 5. **Keep me signed in** ticked, close Payweek completely, reopen — still in.
 
 ✅ Quickest proof the rebuild took: the sign-in screen asks for **Username or
-email** and a password. If it only asks for an email, the old assets are still
-in there.
+email** *and* a password, and there is **no** "Email me a sign-in link"
+button. If either is wrong, the old assets are still in the package.
 
 ❌ **Stop if sign-in fails.** Send me what the screen says. Never build a
 release from a build you haven't signed into yourself.
@@ -409,6 +422,10 @@ With real data on the phone, screenshot these five:
 4. **Rates** → an agency, night rate ticked
 5. **Payday**
 
+The welcome screen with the notes falling makes a strong first tile if you
+want a sixth — screenshot it while registering the reviewer account, because
+it only appears once per account.
+
 Play needs at least two; use all five. Already made for you in `assets/play/`:
 `icon-512.png` (512×512) and `feature-graphic.png` (1024×500).
 
@@ -437,12 +454,16 @@ them an account with a username and a password.**
 > the reviewer cannot open your inbox. Usernames exist partly to remove that
 > problem, and a Google account with 2FA turned off is no longer needed either.
 
-1. On the phone or at payweek.app, **Create an account**:
-   username `payweek_review`, any email you control, a password you don't use
+1. On the phone or at payweek.app, **Create an account**: username
+   `payweek_review`, any email **you** can open, a password you don't use
    anywhere else
-2. Add one agency and log two or three shifts, so the reviewer sees a working
+2. **Open the confirmation email yourself and finish the registration.** This
+   matters: the reviewer will never see an email, so the account has to be
+   fully confirmed before you hand it over. Once it is, signing in needs
+   nothing but the username and password
+3. Add one agency and log two or three shifts, so the reviewer sees a working
    app rather than an empty state and can find the deletion path
-3. In **App access** → *All or some functionality is restricted* → add:
+4. In **App access** → *All or some functionality is restricted* → add:
 
    > Username: payweek_review
    > Password: (the password)
@@ -450,7 +471,7 @@ them an account with a username and a password.**
    > Enter these on the sign-in screen and tap **Sign in**. No email or
    > confirmation step is needed.
 
-4. Sign out and sign back in with those exact details, on a device that has
+5. Sign out and sign back in with those exact details, on a device that has
    never held that session, before you submit. That is the only way to know a
    reviewer can
 
@@ -570,7 +591,7 @@ reaches a fraction of users while you fix it.
 | Database | Live in London, 5 tables, RLS on every one, advisors clean |
 | Website | payweek.app over HTTPS, redeploys on every push, proper desktop layout |
 | Privacy policy | Written, live, and matching the app's design |
-| Sign-in | Username + password, magic link, or Google. Username→email resolution happens in the `username-signin` Edge Function so nobody's address is exposed |
+| Sign-in | Username + password, or Google. Username→email resolution happens in the `username-signin` Edge Function so nobody's address is exposed |
 | Account deletion | In-app, backed by the `delete-account` Edge Function (ACTIVE, v3). **Read the comment at the top of the function before redeploying it** — the CORS header echo and `verify_jwt = false` are both load-bearing and both look optional |
 | Rate engine | Night, weekend, midnight-crossing shifts, breaks priced in the band they actually fall in |
 | Offline | Shifts log with no signal and sync on reconnect (verified) |
@@ -578,7 +599,7 @@ reaches a fraction of users while you fix it.
 | App icon & splash | Generated for every Android density |
 | Signing config | Wired — Step 7 only supplies the key |
 | Play paperwork | Data safety answers and listing copy written |
-| Tests | 133, all passing |
+| Tests | 136, all passing |
 
 ### Added since the APK on your phone was built
 
@@ -594,3 +615,5 @@ This is what Step 3c picks up. All of it came from someone actually using it.
 | **Usernames and passwords** | Creating an account asks for a username, an email and a password, and ends on a screen that shows the username back with a Sign in button. Signing in takes either the username or the email |
 | **Password resets** | A forgotten password can't mean losing months of shifts. Reset link, and a screen to set a new one — including on Android, where the link arrives as an ordinary sign-in and needs telling apart |
 | **Settings → Signing in** | Everyone so far signed up with a magic link and has neither a username nor a password. This is where they claim both |
+| **The welcome** | Opening the registration email lands you inside the app with banknotes falling past a "You're in". Compositor-only, so it stays smooth on a cheap phone, and it holds still under reduced-motion |
+| **No more sign-in links** | The email link belongs to registration now. Signing in is username and password |
