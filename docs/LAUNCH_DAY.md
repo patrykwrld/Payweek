@@ -15,7 +15,7 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 3c | **Rebuild the APK** | ⬜ the phone build predates usernames, passwords, sign-out and the link limit |
 | 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
 | 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
-| 6 | Export + Delete account on real hardware | 🟡 **deletion works** (verified 3 Aug on a phone). Export still needs a tick |
+| 6 | Export + Delete account on real hardware | ✅ both verified on a phone, 3 Aug |
 | 7 | Signing key | ⬜ 5 minutes, once ever |
 | 8 | Build the `.aab` you upload | ⬜ test the release APK first |
 | 9 | Screenshots + store listing | ⬜ copy is already written for you |
@@ -370,9 +370,18 @@ keyAlias=payweek-upload
 keyPassword=the-password-you-just-chose
 ```
 
-🔐 **Back up `payweek-upload.jks` and the password now** — password manager, or
-email the file to yourself. Lose them and you can never update the app again.
-Neither file goes into Git; that is already set up.
+🔐 **Back up `payweek-upload.jks` and the password now** — password manager,
+or email the file to yourself. Neither file goes into Git; `.gitignore`
+already covers both, and that has been checked.
+
+What losing it actually costs, accurately: this is the **upload** key, not the
+key Google signs the app with. New apps are enrolled in **Play App Signing**,
+so if you lose this one you can ask Google to register a replacement — days of
+waiting and a support thread, not the end of the listing. Before your first
+upload it costs nothing at all: delete it and run the command again.
+
+That is still worth avoiding, and losing the password is the more common way
+it happens. Put both somewhere you will still have them in three years.
 
 ---
 
