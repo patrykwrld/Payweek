@@ -8,11 +8,13 @@ form that disagrees with the app's behaviour is a policy violation.
 
 | Claim | Evidence in the repo |
 | --- | --- |
-| Email is collected | `src/auth/SignIn.tsx` — magic link and Google sign-in |
+| Email is collected | `src/auth/SignIn.tsx` — registration, password reset, Google sign-in |
+| A username is collected | `src/auth/SignIn.tsx` registration; stored in `profiles.username` (`supabase/migrations/20260803000004_username_signin.sql`) |
 | Shifts / agencies / rules / payslips are collected | `supabase/migrations/20260728000001_init.sql` |
 | Data is sent off-device | `src/lib/supabase.ts`, `src/lib/queries.ts` |
 | Data is encrypted in transit | Supabase client uses HTTPS only |
 | Users can delete data | Delete actions in `AgencyDetail`, `ShiftDetail`, `PayslipCheck`, plus Settings → Delete my account (`supabase/functions/delete-account`) |
+| Deletion can be requested off-device | `public/delete-account.html`, served at <https://payweek.app/delete-account.html> |
 | Users can export data | `src/lib/csv.ts`, `src/lib/download.ts`, Settings → Export my shifts as a spreadsheet |
 | No ads, analytics or tracking SDKs | No such dependency in `package.json` |
 | Nothing is backed up to Google Drive | `android:allowBackup="false"` plus `res/xml/data_extraction_rules.xml` exclude every domain from cloud backup and device transfer |
@@ -23,14 +25,22 @@ form that disagrees with the app's behaviour is a policy violation.
 | --- | --- |
 | Does your app collect or share any of the required user data types? | **Yes** |
 | Is all of the user data collected by your app encrypted in transit? | **Yes** |
-| Do you provide a way for users to request that their data is deleted? | **Yes** — in-app deletion, plus `privacy@payweek.app` for account deletion |
+| Do you provide a way for users to request that their data is deleted? | **Yes** |
+| Account deletion URL | `https://payweek.app/delete-account.html` |
+
+⚠️ **The account deletion URL is not optional.** Any app that lets people
+create an account must give Play a **web page**, reachable by someone who has
+already uninstalled the app, explaining how to delete the account. An in-app
+button alone is not enough and is a common rejection. `public/delete-account.html`
+is that page; it needs nothing from the app bundle so it still works after an
+uninstall.
 
 "Collected" here means the data leaves the device and reaches our server, which
 it does — Payweek syncs to Supabase.
 
 ## Data types
 
-Declare exactly these three. For every one: **Collected = Yes**,
+Declare exactly these four. For every one: **Collected = Yes**,
 **Shared = No**, **Processed ephemerally = No**, **Required (not optional)**,
 purpose **App functionality** only.
 
@@ -39,14 +49,25 @@ purpose **App functionality** only.
 - Purpose: **App functionality** (account creation and sign-in)
 - Required: Yes
 
-### 2. Personal info → Name
+### 2. Personal info → User IDs
+- The username chosen at registration. It identifies the account and is what
+  people sign in with.
+- Collected: Yes · Shared: No
+- Purpose: **App functionality** (account creation and sign-in)
+- Required: Yes
+
+> Passwords are not a Data safety data type and are not declared. They are
+> never stored by Payweek — Supabase Auth holds a bcrypt hash, and the app
+> only ever passes a password straight to it.
+
+### 3. Personal info → Name
 - Only if you keep the optional display-name field in Settings. It is optional
   for the user, so mark **Optional**.
 - Collected: Yes · Shared: No
 - Purpose: **App functionality**
 - Required: No (users can leave it blank)
 
-### 3. App activity → Other user-generated content
+### 4. App activity → Other user-generated content
 - Covers shifts, agencies, rate rules and payslip figures the user types in.
 - Collected: Yes · Shared: No
 - Purpose: **App functionality**

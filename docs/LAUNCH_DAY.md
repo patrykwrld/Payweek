@@ -444,6 +444,7 @@ App, Free. Work through **App content** — every item needs a green tick:
 | Item | Answer |
 | --- | --- |
 | Privacy policy | `https://payweek.app/privacy.html` |
+| **Account deletion URL** | `https://payweek.app/delete-account.html` — ⚠️ **required**, see below |
 | Ads | No |
 | App access | ⚠️ **see below — likeliest cause of rejection** |
 | Content rating | Fill in the questionnaire → expect Everyone / PEGI 3 |
@@ -451,6 +452,18 @@ App, Free. Work through **App content** — every item needs a green tick:
 | Data safety | Copy from [DATA_SAFETY.md](DATA_SAFETY.md) — every answer is written out |
 | Financial features | **No** |
 | Government apps | No |
+
+### ⚠️ The account deletion URL is a rejection trap
+
+Any app that lets people create an account has to give Play a **web page**,
+reachable by somebody who has already uninstalled the app, that explains how
+to delete the account. The in-app button is necessary and **not sufficient** —
+this is a separate field on the Data safety form and apps get rejected for
+leaving it out.
+
+`https://payweek.app/delete-account.html` is that page. It is written, live,
+and deliberately plain HTML that needs nothing from the app bundle, so it
+still works for someone who has uninstalled.
 
 ### App access — a reviewer needs a way in
 
@@ -600,6 +613,7 @@ reaches a fraction of users while you fix it.
 | Database | Live in London, 5 tables, RLS on every one, advisors clean |
 | Website | payweek.app over HTTPS, redeploys on every push, proper desktop layout |
 | Privacy policy | Written, live, and matching the app's design |
+| Account deletion page | `payweek.app/delete-account.html` — the web route Play requires alongside the in-app one |
 | Sign-in | Username + password, or Google. Username→email resolution happens in the `username-signin` Edge Function so nobody's address is exposed |
 | Account deletion | In-app, backed by the `delete-account` Edge Function (ACTIVE, v3). **Read the comment at the top of the function before redeploying it** — the CORS header echo and `verify_jwt = false` are both load-bearing and both look optional |
 | Rate engine | Night, weekend, midnight-crossing shifts, breaks priced in the band they actually fall in |

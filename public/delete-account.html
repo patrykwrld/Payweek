@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0f14" />
+    <title>Payweek — Delete your account</title>
+    <meta
+      name="description"
+      content="How to delete your Payweek account and everything in it, from inside the app or by email."
+    />
+    <style>
+      /* Kept in step with src/index.css by hand — this page is plain HTML so
+         it can be served without the app bundle. Google Play requires this
+         page to be reachable by someone who has already uninstalled the app,
+         so it must not depend on anything the app loads. */
+      :root {
+        --void: #0b0f14;
+        --surface: #131a22;
+        --edge: #242e3a;
+        --accent: #5e9bff;
+        --negative: #ff6b6b;
+        --ink: #eef3f8;
+        --muted: #8f9bab;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--void);
+        color: var(--ink);
+        font:
+          16px/1.65 'Inter Variable',
+          Inter,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -webkit-text-size-adjust: 100%;
+      }
+      main {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 3rem 1.25rem 6rem;
+      }
+      h1 {
+        font-size: 1.9rem;
+        font-weight: 650;
+        letter-spacing: -0.03em;
+        margin: 0 0 0.25rem;
+      }
+      h2 {
+        font-size: 1.15rem;
+        margin: 2.5rem 0 0.6rem;
+        letter-spacing: -0.01em;
+      }
+      p,
+      li {
+        color: #cdd6e2;
+      }
+      ol,
+      ul {
+        padding-left: 1.15rem;
+      }
+      li {
+        margin: 0.35rem 0;
+      }
+      .lede,
+      .updated {
+        color: var(--muted);
+      }
+      .updated {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+      }
+      a {
+        color: var(--accent);
+        text-underline-offset: 3px;
+      }
+      .card {
+        border: 1px solid var(--edge);
+        background: color-mix(in srgb, var(--surface) 60%, transparent);
+        border-radius: 0.9rem;
+        padding: 1.1rem 1.25rem;
+        margin-top: 1rem;
+      }
+      .card.warn {
+        border-color: color-mix(in srgb, var(--negative) 45%, transparent);
+      }
+      .card h3 {
+        margin: 0 0 0.4rem;
+        font-size: 1rem;
+      }
+      table {
+        width: 100%;
+        min-width: 30rem;
+        border-collapse: collapse;
+        margin-top: 0.75rem;
+        font-size: 0.94rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--edge);
+        vertical-align: top;
+      }
+      tbody tr:nth-child(odd) td {
+        background: color-mix(in srgb, var(--surface) 45%, transparent);
+      }
+      th {
+        background: var(--surface);
+        font-weight: 600;
+      }
+      .wrap {
+        overflow-x: auto;
+      }
+      footer {
+        margin-top: 3.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--edge);
+        color: var(--muted);
+        font-size: 0.875rem;
+      }
+      .home {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: var(--muted);
+        font-size: 0.875rem;
+        text-decoration: none;
+      }
+      .home:hover {
+        color: var(--ink);
+      }
+      .brand {
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      .brand span {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="home" href="/">&larr; Payweek</a>
+
+      <h1>Delete your Payweek account</h1>
+      <p class="lede">
+        Two ways to do it. The first takes about ten seconds and needs nothing
+        from us.
+      </p>
+      <p class="updated">Last updated 3 August 2026</p>
+
+      <h2>From inside the app</h2>
+      <ol>
+        <li>Open Payweek and sign in</li>
+        <li>Go to <strong>Settings</strong></li>
+        <li>Scroll to <strong>Delete my account</strong></li>
+        <li>
+          Tap it, type <strong>DELETE</strong> to confirm, then tap
+          <strong>Delete my account permanently</strong>
+        </li>
+      </ol>
+      <p>
+        It happens straight away. You are signed out, and the account is gone
+        before you get back to the sign-in screen.
+      </p>
+
+      <div class="card">
+        <h3>Take a copy first, if you want one</h3>
+        <p style="margin: 0">
+          The same screen has <strong>Export my shifts as a spreadsheet</strong>,
+          which saves a CSV of every shift and what it paid. Do that before you
+          delete — afterwards there is nothing left to export.
+        </p>
+      </div>
+
+      <h2>By email, if you can&rsquo;t get into the app</h2>
+      <p>
+        If you have uninstalled Payweek, lost access to your email address, or
+        simply can&rsquo;t sign in, email
+        <a href="mailto:privacy@payweek.app?subject=Delete%20my%20Payweek%20account"
+          >privacy@payweek.app</a
+        >
+        from the address on the account, or tell us the username you signed up
+        with.
+      </p>
+      <p>
+        We delete the account and reply to confirm, normally within a few days
+        and always within 30 days.
+      </p>
+
+      <h2>What gets deleted</h2>
+      <div class="wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>What happens</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Your account and sign-in details</td>
+              <td>Deleted immediately</td>
+            </tr>
+            <tr>
+              <td>Every shift you have logged</td>
+              <td>Deleted immediately</td>
+            </tr>
+            <tr>
+              <td>Agencies, pay rates and rate rules</td>
+              <td>Deleted immediately</td>
+            </tr>
+            <tr>
+              <td>Payslips you have checked</td>
+              <td>Deleted immediately</td>
+            </tr>
+            <tr>
+              <td>Your settings and display name</td>
+              <td>Deleted immediately</td>
+            </tr>
+            <tr>
+              <td>The copy held on your phone</td>
+              <td>
+                Cleared when you sign out or uninstall. Uninstalling Payweek
+                removes it whether or not you delete the account
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card warn">
+        <h3>There is no undo, and nothing is kept back</h3>
+        <p style="margin: 0">
+          Deleting is permanent. We keep no copy, no archive and no backup of a
+          deleted account, and there is no grace period during which it could be
+          restored. Nothing is retained for any period after deletion.
+        </p>
+      </div>
+
+      <h2>If you only want part of it gone</h2>
+      <p>
+        You don&rsquo;t have to delete the whole account. Inside the app you can
+        delete an individual shift, an agency and its rates, or a saved payslip,
+        and keep everything else.
+      </p>
+
+      <footer>
+        <p>
+          <span class="brand">Payweek<span>.</span></span> &middot;
+          <a href="/privacy.html">Privacy policy</a> &middot;
+          <a href="mailto:privacy@payweek.app">privacy@payweek.app</a>
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
