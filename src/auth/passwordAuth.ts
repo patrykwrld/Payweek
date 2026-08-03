@@ -1,7 +1,12 @@
 import { supabase } from '../lib/supabase'
 import { looksLikeEmail, normaliseUsername } from '../lib/credentials'
 import { authRedirectUrl } from './redirects'
-import { clearResetRequest, markResetRequested } from './recoveryFlag'
+import {
+  clearResetRequest,
+  clearSignedUp,
+  markResetRequested,
+  markSignedUp,
+} from './recoveryFlag'
 
 /**
  * Everything to do with usernames and passwords, kept away from the screens
@@ -79,14 +84,32 @@ export async function signUpWithPassword(input: {
   })
   if (error) return { ok: false, message: readable(error.message) }
 
-  // No session means the project requires the address to be confirmed. The
-  // announcement screen says so rather than leaving them at a sign-in form
-  // that will refuse them.
+  // Left before the link is opened, because the link comes back as an
+  // ordinary SIGNED_IN and there is nothing else to recognise it by. It is
+  // what turns landing in the app into a welcome rather than a silent drop
+  // onto the Add screen.
+  markSignedUp()
+
+  // No session means the project requires the address to be confirmed — which
+  // is the intended setup: the emailed link is what finishes signing up.
   if (!data.session) return { ok: true, needsConfirmation: true }
 
-  // Signed straight in. Sign back out so the announcement is actually seen and
-  // the password gets used once, immediately, while it is still in mind.
-  await supabase.auth.signOut()
+  // Confirmation is switched off, so they are already in. Nothing to wait for.
+  return { ok: true }
+}
+
+/**
+ * Sends the confirmation email again, for a link that never arrived or was
+ * deleted. Same address, same account — this creates nothing.
+ */
+export async function resendConfirmation(email: string): Promise<AuthOutcome> {
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: email.trim(),
+    options: { emailRedirectTo: authRedirectUrl() },
+  })
+  if (error) return { ok: false, message: readable(error.message) }
+  markSignedUp()
   return { ok: true }
 }
 
@@ -103,9 +126,11 @@ export async function signInWithPassword(
   password: string,
 ): Promise<AuthOutcome> {
   const id = identifier.trim()
-  // Somebody signing in with a password they remember is not mid-reset, even
-  // if they asked for a link earlier and then thought better of it.
+  // Somebody signing in with a password they remember is not mid-reset and is
+  // not arriving from a confirmation link, even if they asked for one earlier
+  // and then thought better of it.
   clearResetRequest()
+  clearSignedUp()
 
   if (looksLikeEmail(id)) {
     const { error } = await supabase.auth.signInWithPassword({

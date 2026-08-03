@@ -1,3 +1,5 @@
+import { createOneShot } from '../lib/oneShot'
+
 /**
  * Remembers that a password reset was asked for on this device.
  *
@@ -7,46 +9,26 @@
  * `SIGNED_IN` — indistinguishable from any other sign-in. Left alone, the app
  * would simply open, the reset would be abandoned half-done, and the old
  * password would quietly still work.
- *
- * The reset link has to be opened on the device that asked for it anyway (the
- * PKCE verifier is stored locally), so a local note is a reliable signal —
- * more reliable than parsing a URL whose shape Supabase is free to change.
  */
+const reset = createOneShot(
+  'payweek-reset-requested-at',
+  // Long enough to walk to the laptop and find the email; not open-ended.
+  60 * 60 * 1000,
+)
 
-const KEY = 'payweek-reset-requested-at'
-
-/** Long enough to walk to the laptop and find the email; not open-ended. */
-const VALID_FOR_MS = 60 * 60 * 1000
-
-export function markResetRequested(now: number = Date.now()): void {
-  try {
-    localStorage.setItem(KEY, String(now))
-  } catch {
-    // Storage disabled. The web PASSWORD_RECOVERY event still covers that case.
-  }
-}
-
-export function clearResetRequest(): void {
-  try {
-    localStorage.removeItem(KEY)
-  } catch {
-    // Nothing to clear.
-  }
-}
+export const markResetRequested = reset.mark
+export const clearResetRequest = reset.clear
+export const consumeResetRequest = reset.consume
 
 /**
- * True once, if a reset was asked for recently. Clears as it answers, so a
- * single request can't turn every later sign-in into a password change.
+ * Remembers that an account was just created here, so the confirmation link
+ * can be met with a celebration rather than a silent drop into the Add screen.
+ *
+ * Longer-lived than the reset note: people sign up, put the phone down, and
+ * come back to the email later.
  */
-export function consumeResetRequest(now: number = Date.now()): boolean {
-  let raw: string | null = null
-  try {
-    raw = localStorage.getItem(KEY)
-  } catch {
-    return false
-  }
-  if (raw === null) return false
-  clearResetRequest()
-  const at = Number(raw)
-  return Number.isFinite(at) && now - at >= 0 && now - at < VALID_FOR_MS
-}
+const signup = createOneShot('payweek-signed-up-at', 24 * 60 * 60 * 1000)
+
+export const markSignedUp = signup.mark
+export const clearSignedUp = signup.clear
+export const consumeSignedUp = signup.consume

@@ -166,6 +166,27 @@ input[type='number']::-webkit-inner-spin-button {
     animation: drift 24s ease-in-out infinite alternate;
     will-change: transform;
   }
+
+  /* Banknotes falling past "You're in", once, after the confirmation link.
+     Each note is handed to the compositor and then left alone: no per-frame
+     JavaScript, no canvas, and nothing here touches layout or paint. The
+     per-note drift and spin come in as custom properties so twenty-six
+     different falls need one rule rather than twenty-six. */
+  .note {
+    animation-name: fall;
+    animation-timing-function: cubic-bezier(0.35, 0.1, 0.55, 1);
+    animation-fill-mode: both;
+    will-change: transform, opacity;
+  }
+}
+
+/* Reduced motion: the notes are the decoration, the words are the message.
+   Hold them still, spaced out, and the screen still reads as a celebration. */
+@media (prefers-reduced-motion: reduce) {
+  .note {
+    opacity: 0.25;
+    transform: translate3d(0, 30vh, 0);
+  }
 }
 
 @keyframes rise {
@@ -213,4 +234,21 @@ input[type='number']::-webkit-inner-spin-button {
 /* Tap targets should never flash a grey box on Android. */
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes fall {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(var(--drift, 0), 108vh, 0) rotate(var(--spin, 0deg));
+  }
 }

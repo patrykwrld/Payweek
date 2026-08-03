@@ -8,8 +8,13 @@ vi.stubGlobal('localStorage', {
   clear: () => store.clear(),
 })
 
-const { clearResetRequest, consumeResetRequest, markResetRequested } =
-  await import('./recoveryFlag')
+const {
+  clearResetRequest,
+  consumeResetRequest,
+  markResetRequested,
+  consumeSignedUp,
+  markSignedUp,
+} = await import('./recoveryFlag')
 
 const T0 = 1_700_000_000_000
 const HOUR = 60 * 60 * 1000
@@ -58,5 +63,25 @@ describe('consumeResetRequest', () => {
   it('ignores a timestamp from the future, which is a clock change', () => {
     markResetRequested(T0 + HOUR)
     expect(consumeResetRequest(T0)).toBe(false)
+  })
+})
+
+describe('consumeSignedUp', () => {
+  it('survives putting the phone down and coming back to the email', () => {
+    markSignedUp(T0)
+    expect(consumeSignedUp(T0 + 8 * HOUR)).toBe(true)
+  })
+
+  it('gives up after a day', () => {
+    markSignedUp(T0)
+    expect(consumeSignedUp(T0 + 25 * HOUR)).toBe(false)
+  })
+
+  // Two separate notes. Asking for a password reset must not make the next
+  // sign-in throw confetti, and vice versa.
+  it('is independent of the reset note', () => {
+    markSignedUp(T0)
+    expect(consumeResetRequest(T0)).toBe(false)
+    expect(consumeSignedUp(T0)).toBe(true)
   })
 })

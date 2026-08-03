@@ -14,6 +14,7 @@ import { keepSignedIn, setKeepSignedIn } from '../lib/authStorage'
 import { passwordProblem, usernameProblem } from '../lib/credentials'
 import {
   isUsernameFree,
+  resendConfirmation,
   sendPasswordReset,
   signInWithPassword,
   signUpWithPassword,
@@ -32,13 +33,11 @@ import { authRedirectUrl } from './redirects'
  * a sign-in form that also offers sign-up, magic links, password resets and
  * Google in one view is a wall of boxes.
  */
-type Mode = 'signIn' | 'createAccount' | 'magicLink' | 'forgotPassword'
+type Mode = 'signIn' | 'createAccount' | 'forgotPassword'
 
 type Notice =
-  /** Account made. The announcement, with a Sign in button. */
+  /** Account made; the link that finishes it is in their inbox. */
   | { kind: 'created'; username: string; email: string; needsConfirmation: boolean }
-  /** A magic link is in their inbox. */
-  | { kind: 'linkSent'; email: string }
   /** A password reset is in their inbox. */
   | { kind: 'resetSent'; email: string }
 
@@ -158,14 +157,17 @@ export function SignIn() {
   const [newPassword, setNewPassword] = useState('')
   const [usernameTaken, setUsernameTaken] = useState(false)
 
-  // Magic link / reset
+  // Password reset
   const [email, setEmail] = useState('')
 
   const [keep, setKeep] = useState(() => keepSignedIn())
   const [tickOn, setTickOn] = useState(false)
   const now = useSecondsTick(tickOn)
-  const gate = gateSend(email, now)
-  const left = attemptsLeft(email, now)
+  // Whichever address is currently in play — the one being registered, or the
+  // one being reset.
+  const emailInPlay = notice?.kind === 'created' ? notice.email : email
+  const gate = gateSend(emailInPlay, now)
+  const left = attemptsLeft(emailInPlay, now)
   useEffect(() => setTickOn(!gate.allowed), [gate.allowed])
   const waitText = gate.allowed ? null : formatWait(gate.waitMs)
 
@@ -240,34 +242,37 @@ export function SignIn() {
     setError(result.message)
   }
 
-  async function doSendMagicLink(event: FormEvent) {
-    event.preventDefault()
-    if (!gate.allowed) return
+  /**
+   * Sends the confirmation link again. Same three-per-ten-minutes allowance
+   * the magic link used to have — the link is now the only way to finish
+   * signing up, so a lost one has to be replaceable without hammering it.
+   */
+  async function doResend() {
+    if (notice?.kind !== 'created' || !gate.allowed) return
     setError(null)
     setBusy(true)
-    const { error: sendError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: authRedirectUrl() },
-    })
+    const result = await resendConfirmation(notice.email)
     setBusy(false)
-    if (sendError) {
+    if (!result.ok) {
       // A request that died on a flat signal sent no email, so it must not
       // cost anybody one of their three.
-      setError(readable(sendError.message))
+      setError(result.message)
       return
     }
-    recordSend(email)
+    recordSend(notice.email)
     setTickOn(true)
-    setNotice({ kind: 'linkSent', email })
   }
 
   async function doSendReset(event: FormEvent) {
     event.preventDefault()
+    if (!gate.allowed) return
     setError(null)
     setBusy(true)
     const result = await sendPasswordReset(email)
     setBusy(false)
     if (!result.ok) return setError(result.message)
+    recordSend(email)
+    setTickOn(true)
     setNotice({ kind: 'resetSent', email })
   }
 
@@ -362,64 +367,70 @@ export function SignIn() {
             <p className="mt-1 break-all font-mono text-lg">{notice.username}</p>
           </div>
 
-          <p className="text-sm text-muted">
-            Sign in with that and your password from now on. You won&rsquo;t
-            need your email address, and you won&rsquo;t need to wait for a
-            link.
-          </p>
-
           {notice.needsConfirmation ? (
-            <p className="rounded-xl border border-accent/40 bg-accent/5 p-3 text-sm">
-              One thing first: open the confirmation email we&rsquo;ve just
-              sent to <span className="font-mono">{notice.email}</span>, then
-              come back and sign in.
-            </p>
+            <>
+              <p className="text-sm">
+                <span className="font-semibold">One step left.</span> Open the
+                link we&rsquo;ve just emailed to{' '}
+                <span className="font-mono text-ink">{notice.email}</span> and
+                it will take you straight into Payweek — no signing in needed.
+              </p>
+              <p className="text-sm text-muted">
+                Open it <span className="font-semibold">on this device</span>.
+                Nothing after a minute? Check your spam folder.
+              </p>
+
+              <button
+                type="button"
+                disabled={!gate.allowed || busy}
+                onClick={() => void doResend()}
+                className="press w-full rounded-lg border border-edge bg-void px-4 py-3 text-base font-semibold transition-colors hover:border-accent disabled:opacity-50 disabled:hover:border-edge"
+              >
+                {busy
+                  ? 'Sending…'
+                  : gate.allowed
+                    ? 'Send the email again'
+                    : `Send again in ${waitText}`}
+              </button>
+
+              <p aria-live="polite" className="text-xs text-muted">
+                {left > 0
+                  ? `${left} more ${left === 1 ? 'email' : 'emails'} available in the next 10 minutes.`
+                  : `That’s ${MAX_PER_WINDOW} emails in 10 minutes. The next one is available in ${waitText}.`}
+              </p>
+
+              <p className="text-sm text-muted">
+                After that, sign in with{' '}
+                <span className="font-mono text-ink">{notice.username}</span>{' '}
+                and your password. You won&rsquo;t need another email.
+              </p>
+
+              {error && <p className="text-sm text-negative">{error}</p>}
+
+              <div className="text-center">
+                <Quiet onClick={() => go('signIn')}>Back to sign in</Quiet>
+              </div>
+            </>
           ) : (
-            <p className="text-sm text-muted">
-              Forgotten it later? We&rsquo;ll email a reset link to{' '}
-              <span className="font-mono text-ink">{notice.email}</span> — so
-              keep that address one you can open.
-            </p>
+            <>
+              <p className="text-sm text-muted">
+                Sign in with that and your password from now on. Forgotten it
+                later? We&rsquo;ll email a reset link to{' '}
+                <span className="font-mono text-ink">{notice.email}</span> — so
+                keep that address one you can open.
+              </p>
+
+              {error && <p className="text-sm text-negative">{error}</p>}
+
+              <PrimaryAction
+                type="button"
+                disabled={busy}
+                onClick={() => void signInFromAnnouncement()}
+              >
+                {busy ? 'Signing in…' : 'Sign in'}
+              </PrimaryAction>
+            </>
           )}
-
-          {error && <p className="text-sm text-negative">{error}</p>}
-
-          <PrimaryAction
-            type="button"
-            disabled={busy}
-            onClick={() => void signInFromAnnouncement()}
-          >
-            {busy ? 'Signing in…' : 'Sign in'}
-          </PrimaryAction>
-        </section>
-      ) : notice?.kind === 'linkSent' ? (
-        <section className="space-y-3 rounded-xl border border-edge bg-surface p-6">
-          <p className="text-lg font-semibold">Check your inbox</p>
-          <p className="text-sm text-muted">
-            We sent a sign-in link to{' '}
-            <span className="font-mono text-ink">{notice.email}</span>. Open it
-            on this device to finish signing in.
-          </p>
-          <p className="text-sm text-muted">
-            Nothing there after a minute? Check your spam folder.
-          </p>
-
-          <button
-            type="button"
-            disabled={!gate.allowed || busy}
-            onClick={(e) => void doSendMagicLink(e as unknown as FormEvent)}
-            className="press w-full rounded-lg border border-edge bg-void px-4 py-3 text-base font-semibold transition-colors hover:border-accent disabled:opacity-50 disabled:hover:border-edge"
-          >
-            {gate.allowed ? 'Send another link' : `Send another in ${waitText}`}
-          </button>
-
-          <p aria-live="polite" className="text-xs text-muted">
-            {left > 0
-              ? `${left} more ${left === 1 ? 'link' : 'links'} available in the next 10 minutes.`
-              : `That’s ${MAX_PER_WINDOW} links in 10 minutes. The next one is available in ${waitText}.`}
-          </p>
-
-          <Quiet onClick={() => go('signIn')}>Back to sign in</Quiet>
         </section>
       ) : notice?.kind === 'resetSent' ? (
         <section className="space-y-3 rounded-xl border border-edge bg-surface p-6">
@@ -487,13 +498,6 @@ export function SignIn() {
           >
             Continue with Google
           </button>
-          <button
-            type="button"
-            onClick={() => go('magicLink')}
-            className="press w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold transition-colors hover:border-accent"
-          >
-            Email me a sign-in link
-          </button>
         </form>
       ) : mode === 'createAccount' ? (
         /* ------------------------------------------------ create account */
@@ -559,53 +563,6 @@ export function SignIn() {
             </Quiet>
           </div>
         </form>
-      ) : mode === 'magicLink' ? (
-        /* ---------------------------------------------------- magic link */
-        <form onSubmit={doSendMagicLink} className="space-y-4">
-          <Labelled
-            label="Email"
-            hint="We’ll send a link that signs you in — no password needed."
-          >
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              inputMode="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className={`${fieldCls} font-mono`}
-            />
-          </Labelled>
-
-          {keepBox}
-
-          <PrimaryAction disabled={busy || !gate.allowed}>
-            {busy
-              ? 'Sending…'
-              : gate.allowed
-                ? 'Email me a sign-in link'
-                : `Try again in ${waitText}`}
-          </PrimaryAction>
-
-          {/* Say why the button is dead. A disabled button with no reason is
-              the single most common way an app looks broken. */}
-          {!gate.allowed && (
-            <p aria-live="polite" className="text-sm text-muted">
-              {gate.reason === 'spacing'
-                ? `A link is already on its way to that address. You can ask for another in ${waitText}.`
-                : `That address has had ${MAX_PER_WINDOW} links in the last 10 minutes. The next one is available in ${waitText} — check your spam folder in the meantime.`}
-            </p>
-          )}
-
-          {error && <p className="text-sm text-negative">{error}</p>}
-
-          <div className="text-center">
-            <Quiet onClick={() => go('signIn')}>
-              Use a username and password instead
-            </Quiet>
-          </div>
-        </form>
       ) : (
         /* ----------------------------------------------- forgot password */
         <form onSubmit={doSendReset} className="space-y-4">
@@ -632,9 +589,23 @@ export function SignIn() {
 
           {error && <p className="text-sm text-negative">{error}</p>}
 
-          <PrimaryAction disabled={busy}>
-            {busy ? 'Sending…' : 'Send me a reset link'}
+          <PrimaryAction disabled={busy || !gate.allowed}>
+            {busy
+              ? 'Sending…'
+              : gate.allowed
+                ? 'Send me a reset link'
+                : `Try again in ${waitText}`}
           </PrimaryAction>
+
+          {/* Say why the button is dead. A disabled button with no reason is
+              the single most common way an app looks broken. */}
+          {!gate.allowed && (
+            <p aria-live="polite" className="text-sm text-muted">
+              {gate.reason === 'spacing'
+                ? `A link is already on its way to that address. You can ask for another in ${waitText}.`
+                : `That address has had ${MAX_PER_WINDOW} emails in the last 10 minutes. The next one is available in ${waitText} — check your spam folder in the meantime.`}
+            </p>
+          )}
 
           <div className="text-center">
             <Quiet onClick={() => go('signIn')}>Back to sign in</Quiet>
