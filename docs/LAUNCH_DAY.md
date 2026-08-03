@@ -760,20 +760,24 @@ and so on — or Play rejects the file. Nothing to change today.
 
 ## Step 9 — Screenshots and the listing (45 minutes)
 
-With real data on the phone, screenshot these five:
+### The screenshots are already made ✅
 
-1. **Add** tab — the pay-week total
-2. **Shifts** — grouped by week
-3. A shift's **How this was worked out**
-4. **Rates** → an agency, night rate ticked
-5. **Payday**
+Six of them, in `assets/play/screenshots/`, at exactly **1080×1920** — the
+size Play wants, so nothing is resampled and no aspect ratio is rejected.
+Upload them in the numbered order; [assets/play/README.md](../assets/play/README.md)
+says what each one is and why it sits where it does.
 
-The welcome screen with the notes falling makes a strong first tile if you
-want a sixth — screenshot it while registering the reviewer account, because
-it only appears once per account.
+They are real screens from the real app, captioned — not mock-ups. The data is
+a fictional agency on plausible UK rates, and the week shown deliberately
+includes two shifts running past midnight and a Sunday night that hits both
+the weekend and night rules, because that is the case the app exists for.
 
-Play needs at least two; use all five. Already made for you in `assets/play/`:
-`icon-512.png` (512×512) and `feature-graphic.png` (1024×500).
+Also ready in `assets/play/`: `icon-512.png` (512×512) and
+`feature-graphic.png` (1024×500).
+
+> If you'd rather use your own, take them on the phone with your real data —
+> just check each is 9:16 and at least 320px on the short side. The set in the
+> repo is enough to publish with, so this is optional.
 
 Play Console → **Create app**: *Payweek: Hours & Pay Tracker*, English (UK),
 App, Free. Work through **App content** — every item needs a green tick:
