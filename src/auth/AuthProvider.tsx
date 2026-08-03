@@ -7,17 +7,31 @@ import {
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { consumeResetRequest } from './recoveryFlag'
 
 interface AuthState {
   session: Session | null
   loading: boolean
+  /**
+   * True between opening a password-reset link and choosing a new password.
+   * The link creates a real session, so without this the app would simply
+   * open and the reset would be silently abandoned half-done.
+   */
+  recovering: boolean
+  finishRecovery: () => void
 }
 
-const AuthContext = createContext<AuthState>({ session: null, loading: true })
+const AuthContext = createContext<AuthState>({
+  session: null,
+  loading: true,
+  recovering: false,
+  finishRecovery: () => {},
+})
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recovering, setRecovering] = useState(false)
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
@@ -27,7 +41,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, next) => {
+    } = supabase.auth.onAuthStateChange((event, next) => {
+      if (event === 'PASSWORD_RECOVERY') setRecovering(true)
+      // Android exchanges the reset link with exchangeCodeForSession, which
+      // fires an ordinary SIGNED_IN. The local note left when the reset was
+      // requested is what tells the two apart. See recoveryFlag.ts.
+      if (event === 'SIGNED_IN' && consumeResetRequest()) setRecovering(true)
+      // Signing out ends recovery too, so cancelling doesn't leave the flag
+      // set for whoever signs in next on this device.
+      if (event === 'SIGNED_OUT') setRecovering(false)
       setSession(next)
       setLoading(false)
     })
@@ -36,7 +58,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ session, loading }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        loading,
+        recovering,
+        finishRecovery: () => setRecovering(false),
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

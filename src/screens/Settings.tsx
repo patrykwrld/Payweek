@@ -15,6 +15,8 @@ import {
 } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { replayIntro } from '../lib/intro'
+import { passwordProblem, usernameProblem } from '../lib/credentials'
+import { claimUsername, updatePassword } from '../auth/passwordAuth'
 import { useIsOnline, useQueuedWriteCount } from '../lib/offline'
 import { buildShiftsCsv } from '../lib/csv'
 import { saveTextFile } from '../lib/download'
@@ -140,6 +142,150 @@ function DeleteAccount({
           )}
         </div>
       )}
+    </section>
+  )
+}
+
+/**
+ * Lets an account that predates usernames claim one, and lets anybody change
+ * their password.
+ *
+ * Everyone who signed up with a magic link or with Google has no username and
+ * no password, so without this they could never use the sign-in form — they
+ * would be stuck waiting for an email every time, forever.
+ */
+function UsernameAndPassword({
+  profile,
+  online,
+}: {
+  profile: Tables<'profiles'> | null
+  online: boolean
+}) {
+  const { session } = useAuth()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [again, setAgain] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState<string | null>(null)
+
+  const claimed = profile?.username ?? null
+
+  async function save() {
+    setError(null)
+    setDone(null)
+
+    const wantsUsername = claimed === null && username.trim() !== ''
+    const wantsPassword = password !== ''
+    if (!wantsUsername && !wantsPassword) {
+      return setError('Nothing to save yet.')
+    }
+    if (wantsUsername) {
+      const problem = usernameProblem(username)
+      if (problem) return setError(problem)
+    }
+    if (wantsPassword) {
+      const problem = passwordProblem(password)
+      if (problem) return setError(problem)
+      if (password !== again) return setError('Those two passwords don’t match.')
+    }
+
+    const id = session?.user.id
+    if (!id) return
+
+    setBusy(true)
+    if (wantsUsername) {
+      const result = await claimUsername(id, username)
+      if (!result.ok) {
+        setBusy(false)
+        return setError(result.message)
+      }
+    }
+    if (wantsPassword) {
+      const result = await updatePassword(password)
+      if (!result.ok) {
+        setBusy(false)
+        // A username claimed a moment ago has stuck, so say so rather than
+        // letting them think the whole thing failed.
+        setError(
+          wantsUsername
+            ? `Username saved, but the password didn’t: ${result.message}`
+            : result.message,
+        )
+        return
+      }
+    }
+    setBusy(false)
+    setPassword('')
+    setAgain('')
+    setDone(
+      wantsUsername && wantsPassword
+        ? 'Saved. You can sign in with that username and password now.'
+        : wantsUsername
+          ? 'Username saved.'
+          : 'Password changed.',
+    )
+  }
+
+  return (
+    <section className="mt-10 border-t border-edge pt-6">
+      <h2 className="text-sm font-semibold">Signing in</h2>
+
+      {claimed ? (
+        <p className="mb-3 mt-1 text-sm text-muted">
+          You sign in as <span className="font-mono text-ink">{claimed}</span>.
+          You can change your password below.
+        </p>
+      ) : (
+        <p className="mb-3 mt-1 text-sm text-muted">
+          Pick a username and a password and you can sign straight in, instead
+          of waiting for an email every time.
+        </p>
+      )}
+
+      <div className="space-y-3">
+        {claimed === null && (
+          <Field label="Username">
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={`${inputCls} font-mono`}
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="sam_1"
+            />
+          </Field>
+        )}
+
+        <Field label={claimed ? 'New password' : 'Password'}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={inputCls}
+            autoComplete="new-password"
+          />
+        </Field>
+        <Field label="And again">
+          <input
+            type="password"
+            value={again}
+            onChange={(e) => setAgain(e.target.value)}
+            className={inputCls}
+            autoComplete="new-password"
+          />
+        </Field>
+
+        {error && <p className="text-sm text-negative">{error}</p>}
+        {done && <p className="text-sm text-positive">{done}</p>}
+        {!online && <NeedsConnection />}
+
+        <GhostButton onClick={() => void save()} disabled={busy || !online}>
+          {busy ? 'Saving…' : claimed ? 'Change my password' : 'Save'}
+        </GhostButton>
+      </div>
     </section>
   )
 }
@@ -318,6 +464,8 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
         <GhostButton onClick={replayIntro}>Show the intro again</GhostButton>
         <GhostButton onClick={openPrivacyPolicy}>Privacy policy</GhostButton>
       </div>
+
+      <UsernameAndPassword profile={profile} online={online} />
 
       {/* Sign out is a real button, not a grey underline below the fold. The
           first person to look for it on a phone couldn't find it. */}

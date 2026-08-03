@@ -50,18 +50,21 @@ export function GhostButton({
   children,
   onClick,
   danger,
+  disabled,
   type = 'button',
 }: {
   children: ReactNode
   onClick?: () => void
   danger?: boolean
+  disabled?: boolean
   type?: 'submit' | 'button'
 }) {
   return (
     <button
       type={type}
       onClick={onClick}
-      className={`press w-full rounded-xl border border-edge bg-surface px-4 py-3.5 text-base font-semibold transition-colors ${
+      disabled={disabled}
+      className={`press w-full rounded-xl border border-edge bg-surface px-4 py-3.5 text-base font-semibold transition-colors disabled:opacity-40 disabled:hover:border-edge ${
         danger ? 'text-negative hover:border-negative' : 'hover:border-accent'
       }`}
     >

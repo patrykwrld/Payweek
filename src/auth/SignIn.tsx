@@ -1,8 +1,23 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import {
+  cloneElement,
+  useEffect,
+  useId,
+  useState,
+  type FormEvent,
+  type ReactElement,
+  type ReactNode,
+} from 'react'
 import { Capacitor } from '@capacitor/core'
 import { Browser } from '@capacitor/browser'
 import { supabase } from '../lib/supabase'
 import { keepSignedIn, setKeepSignedIn } from '../lib/authStorage'
+import { passwordProblem, usernameProblem } from '../lib/credentials'
+import {
+  isUsernameFree,
+  sendPasswordReset,
+  signInWithPassword,
+  signUpWithPassword,
+} from './passwordAuth'
 import {
   MAX_PER_WINDOW,
   attemptsLeft,
@@ -12,16 +27,21 @@ import {
 } from '../lib/signInThrottle'
 import { authRedirectUrl } from './redirects'
 
-type Status =
-  | { kind: 'idle' }
-  | { kind: 'sending' }
-  | { kind: 'sent' }
-  | { kind: 'error'; message: string }
-
 /**
- * Sign-in is the one screen that can't work offline, and "Failed to fetch" on
- * a warehouse floor tells nobody anything.
+ * Which of the screen's several jobs it is currently doing. One at a time:
+ * a sign-in form that also offers sign-up, magic links, password resets and
+ * Google in one view is a wall of boxes.
  */
+type Mode = 'signIn' | 'createAccount' | 'magicLink' | 'forgotPassword'
+
+type Notice =
+  /** Account made. The announcement, with a Sign in button. */
+  | { kind: 'created'; username: string; email: string; needsConfirmation: boolean }
+  /** A magic link is in their inbox. */
+  | { kind: 'linkSent'; email: string }
+  /** A password reset is in their inbox. */
+  | { kind: 'resetSent'; email: string }
+
 function readable(message: string): string {
   if (/failed to fetch|network|offline/i.test(message)) {
     return 'No connection. Sign-in needs signal — try again when you have some.'
@@ -48,111 +68,346 @@ function useSecondsTick(active: boolean): number {
   return now
 }
 
+const fieldCls =
+  'w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base outline-none placeholder:text-muted/50 focus:border-accent'
+
+/**
+ * The hint sits outside the <label> and is attached with aria-describedby.
+ * Inside it, it becomes part of the field's name — a screen reader, and
+ * Playwright, both read the email box as "Email Only used to reset your
+ * password if you forget it".
+ */
+function Labelled({
+  label,
+  hint,
+  children,
+}: {
+  label: string
+  hint?: string
+  children: ReactElement
+}) {
+  const hintId = useId()
+  return (
+    <div className="space-y-2">
+      <label className="block space-y-2">
+        <span className="text-sm text-muted">{label}</span>
+        {hint
+          ? cloneElement(
+              children as ReactElement<{ 'aria-describedby'?: string }>,
+              { 'aria-describedby': hintId },
+            )
+          : children}
+      </label>
+      {hint && (
+        <p id={hintId} className="text-xs text-muted">
+          {hint}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function PrimaryAction({
+  children,
+  disabled,
+  type = 'submit',
+  onClick,
+}: {
+  children: ReactNode
+  disabled?: boolean
+  type?: 'submit' | 'button'
+  onClick?: () => void
+}) {
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className="press w-full rounded-lg bg-accent px-4 py-3.5 text-base font-semibold text-void transition-opacity disabled:opacity-50"
+    >
+      {children}
+    </button>
+  )
+}
+
+function Quiet({ onClick, children }: { onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-sm text-accent underline underline-offset-4"
+    >
+      {children}
+    </button>
+  )
+}
+
 export function SignIn() {
+  const [mode, setMode] = useState<Mode>('signIn')
+  const [notice, setNotice] = useState<Notice | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Sign in
+  const [identifier, setIdentifier] = useState('')
+  const [password, setPassword] = useState('')
+
+  // Create account
+  const [newUsername, setNewUsername] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [usernameTaken, setUsernameTaken] = useState(false)
+
+  // Magic link / reset
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<Status>({ kind: 'idle' })
+
   const [keep, setKeep] = useState(() => keepSignedIn())
-  // Cheap enough to recompute on every render, and it has to be: the answer
-  // changes with the clock as well as with what's in the box.
   const [tickOn, setTickOn] = useState(false)
   const now = useSecondsTick(tickOn)
   const gate = gateSend(email, now)
   const left = attemptsLeft(email, now)
-
-  useEffect(() => {
-    setTickOn(!gate.allowed)
-  }, [gate.allowed])
-
+  useEffect(() => setTickOn(!gate.allowed), [gate.allowed])
   const waitText = gate.allowed ? null : formatWait(gate.waitMs)
 
-  async function send() {
+  function go(next: Mode) {
+    setMode(next)
+    setNotice(null)
+    setError(null)
+  }
+
+  // Checked as they type, but only once they've stopped — a request per
+  // keystroke to say "taken" about half a username helps nobody.
+  useEffect(() => {
+    setUsernameTaken(false)
+    const value = newUsername.trim()
+    if (usernameProblem(value)) return
+    const timer = setTimeout(() => {
+      void isUsernameFree(value).then((free) => setUsernameTaken(!free))
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [newUsername])
+
+  async function doSignIn(event: FormEvent) {
+    event.preventDefault()
+    setError(null)
+    setBusy(true)
+    const result = await signInWithPassword(identifier, password)
+    setBusy(false)
+    if (!result.ok) setError(result.message)
+    // On success the auth listener swaps this screen for the app.
+  }
+
+  async function doCreateAccount(event: FormEvent) {
+    event.preventDefault()
+    const nameProblem = usernameProblem(newUsername)
+    if (nameProblem) return setError(nameProblem)
+    if (usernameTaken) return setError('That username is taken. Try another.')
+    const pwProblem = passwordProblem(newPassword)
+    if (pwProblem) return setError(pwProblem)
+
+    setError(null)
+    setBusy(true)
+    const result = await signUpWithPassword({
+      username: newUsername,
+      email: newEmail,
+      password: newPassword,
+    })
+    setBusy(false)
+    if (!result.ok) return setError(result.message)
+
+    setNotice({
+      kind: 'created',
+      username: newUsername.trim(),
+      email: newEmail.trim(),
+      needsConfirmation: result.needsConfirmation === true,
+    })
+    // Carried over so the button on the announcement can just sign them in.
+    setIdentifier(newUsername.trim())
+    setPassword(newPassword)
+    setNewPassword('')
+  }
+
+  async function signInFromAnnouncement() {
+    setError(null)
+    setBusy(true)
+    const result = await signInWithPassword(identifier, password)
+    setBusy(false)
+    if (result.ok) return
+    // Confirmation pending, or something else. Put them on the sign-in form
+    // with the reason showing, rather than leaving them on a dead button.
+    setNotice(null)
+    setMode('signIn')
+    setError(result.message)
+  }
+
+  async function doSendMagicLink(event: FormEvent) {
+    event.preventDefault()
     if (!gate.allowed) return
-    setStatus({ kind: 'sending' })
-    const { error } = await supabase.auth.signInWithOtp({
+    setError(null)
+    setBusy(true)
+    const { error: sendError } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: authRedirectUrl() },
     })
-    if (error) {
+    setBusy(false)
+    if (sendError) {
       // A request that died on a flat signal sent no email, so it must not
       // cost anybody one of their three.
-      setStatus({ kind: 'error', message: readable(error.message) })
+      setError(readable(sendError.message))
       return
     }
     recordSend(email)
     setTickOn(true)
-    setStatus({ kind: 'sent' })
+    setNotice({ kind: 'linkSent', email })
   }
 
-  function onSubmit(event: FormEvent) {
+  async function doSendReset(event: FormEvent) {
     event.preventDefault()
-    void send()
+    setError(null)
+    setBusy(true)
+    const result = await sendPasswordReset(email)
+    setBusy(false)
+    if (!result.ok) return setError(result.message)
+    setNotice({ kind: 'resetSent', email })
   }
 
   async function signInWithGoogle() {
-    setStatus({ kind: 'idle' })
+    setError(null)
     const redirectTo = authRedirectUrl()
     if (Capacitor.isNativePlatform()) {
       // Google blocks OAuth inside webviews, so open a Custom Tab instead;
       // the deep-link listener finishes the sign-in.
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo, skipBrowserRedirect: true },
       })
-      if (error) {
-        setStatus({ kind: 'error', message: readable(error.message) })
-      } else if (data.url) {
-        await Browser.open({ url: data.url })
-      }
+      if (oauthError) setError(readable(oauthError.message))
+      else if (data.url) await Browser.open({ url: data.url })
     } else {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo },
       })
-      if (error) setStatus({ kind: 'error', message: readable(error.message) })
+      if (oauthError) setError(readable(oauthError.message))
     }
   }
 
+  const keepBox = (
+    <label className="flex items-start gap-3 text-sm">
+      <input
+        type="checkbox"
+        checked={keep}
+        onChange={(e) => {
+          setKeep(e.target.checked)
+          // Written now rather than on submit, because an emailed link may
+          // well come back in a different tab.
+          setKeepSignedIn(e.target.checked)
+        }}
+        className="mt-0.5 size-4 shrink-0 accent-(--color-accent)"
+      />
+      <span className="min-w-0">
+        Keep me signed in
+        {!keep && (
+          <span className="block text-xs text-muted">
+            You&rsquo;ll be signed out when you close Payweek. Use this on a
+            shared or work computer.
+          </span>
+        )}
+      </span>
+    </label>
+  )
+
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-10 px-6 py-12 sm:max-w-md">
+    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-8 px-6 py-12 sm:max-w-md">
       <header className="space-y-3">
         <h1 className="text-3xl font-semibold tracking-tight">
           Payweek<span className="text-accent">.</span>
         </h1>
         <p className="text-muted">Know what&rsquo;s in your packet.</p>
         {/* This screen is also what payweek.app shows a visitor, so it has to
-            say what the thing is — not just ask for an email. */}
-        <ul className="space-y-2 pt-3 text-sm text-muted">
-          {[
-            'Log your shifts and see what you’re owed as you go.',
-            'Night and weekend rates, breaks and midnight shifts, priced.',
-            'Check a payslip against your own hours when it lands.',
-          ].map((line) => (
-            <li key={line} className="flex gap-2.5">
-              <span aria-hidden className="mt-2 size-1 shrink-0 rounded-full bg-accent" />
-              <span>{line}</span>
-            </li>
-          ))}
-        </ul>
+            say what the thing is — not just ask for a password. */}
+        {notice === null && mode !== 'forgotPassword' && (
+          <ul className="space-y-2 pt-2 text-sm text-muted">
+            {[
+              'Log your shifts and see what you’re owed as you go.',
+              'Night and weekend rates, breaks and midnight shifts, priced.',
+              'Check a payslip against your own hours when it lands.',
+            ].map((line) => (
+              <li key={line} className="flex gap-2.5">
+                <span aria-hidden className="mt-2 size-1 shrink-0 rounded-full bg-accent" />
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </header>
 
-      {status.kind === 'sent' ? (
-        <div className="space-y-3 rounded-xl border border-edge bg-surface p-6">
+      {/* ---------------------------------------------------- announcements */}
+      {notice?.kind === 'created' ? (
+        <section className="space-y-4 rounded-2xl border border-positive/40 bg-surface p-6">
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden
+              className="grid size-9 shrink-0 place-items-center rounded-full bg-positive/15 text-lg text-positive"
+            >
+              ✓
+            </span>
+            <p className="text-lg font-semibold">Your account is ready</p>
+          </div>
+
+          <div className="rounded-xl border border-edge bg-void p-4">
+            <p className="text-xs uppercase tracking-wider text-muted">
+              Your username
+            </p>
+            <p className="mt-1 break-all font-mono text-lg">{notice.username}</p>
+          </div>
+
+          <p className="text-sm text-muted">
+            Sign in with that and your password from now on. You won&rsquo;t
+            need your email address, and you won&rsquo;t need to wait for a
+            link.
+          </p>
+
+          {notice.needsConfirmation ? (
+            <p className="rounded-xl border border-accent/40 bg-accent/5 p-3 text-sm">
+              One thing first: open the confirmation email we&rsquo;ve just
+              sent to <span className="font-mono">{notice.email}</span>, then
+              come back and sign in.
+            </p>
+          ) : (
+            <p className="text-sm text-muted">
+              Forgotten it later? We&rsquo;ll email a reset link to{' '}
+              <span className="font-mono text-ink">{notice.email}</span> — so
+              keep that address one you can open.
+            </p>
+          )}
+
+          {error && <p className="text-sm text-negative">{error}</p>}
+
+          <PrimaryAction
+            type="button"
+            disabled={busy}
+            onClick={() => void signInFromAnnouncement()}
+          >
+            {busy ? 'Signing in…' : 'Sign in'}
+          </PrimaryAction>
+        </section>
+      ) : notice?.kind === 'linkSent' ? (
+        <section className="space-y-3 rounded-xl border border-edge bg-surface p-6">
           <p className="text-lg font-semibold">Check your inbox</p>
           <p className="text-sm text-muted">
             We sent a sign-in link to{' '}
-            <span className="font-mono text-ink">{email}</span>. Open it on this
-            device to finish signing in.
+            <span className="font-mono text-ink">{notice.email}</span>. Open it
+            on this device to finish signing in.
           </p>
           <p className="text-sm text-muted">
             Nothing there after a minute? Check your spam folder.
           </p>
 
-          {/* The link goes missing often enough that "send another" has to be
-              here rather than behind going back and retyping the address. */}
           <button
             type="button"
-            disabled={!gate.allowed}
-            onClick={() => void send()}
+            disabled={!gate.allowed || busy}
+            onClick={(e) => void doSendMagicLink(e as unknown as FormEvent)}
             className="press w-full rounded-lg border border-edge bg-void px-4 py-3 text-base font-semibold transition-colors hover:border-accent disabled:opacity-50 disabled:hover:border-edge"
           >
             {gate.allowed ? 'Send another link' : `Send another in ${waitText}`}
@@ -164,18 +419,153 @@ export function SignIn() {
               : `That’s ${MAX_PER_WINDOW} links in 10 minutes. The next one is available in ${waitText}.`}
           </p>
 
+          <Quiet onClick={() => go('signIn')}>Back to sign in</Quiet>
+        </section>
+      ) : notice?.kind === 'resetSent' ? (
+        <section className="space-y-3 rounded-xl border border-edge bg-surface p-6">
+          <p className="text-lg font-semibold">Check your inbox</p>
+          <p className="text-sm text-muted">
+            If there&rsquo;s an account for{' '}
+            <span className="font-mono text-ink">{notice.email}</span>,
+            a link to set a new password is on its way. Open it on this device.
+          </p>
+          <Quiet onClick={() => go('signIn')}>Back to sign in</Quiet>
+        </section>
+      ) : mode === 'signIn' ? (
+        /* ------------------------------------------------------- sign in */
+        <form onSubmit={doSignIn} className="space-y-4">
+          <Labelled label="Username or email">
+            <input
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="your username"
+              className={`${fieldCls} font-mono`}
+              required
+            />
+          </Labelled>
+
+          <Labelled label="Password">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              className={fieldCls}
+              required
+            />
+          </Labelled>
+
+          {keepBox}
+
+          {error && <p className="text-sm text-negative">{error}</p>}
+
+          <PrimaryAction disabled={busy}>
+            {busy ? 'Signing in…' : 'Sign in'}
+          </PrimaryAction>
+
+          <div className="flex justify-between text-sm">
+            <Quiet onClick={() => go('createAccount')}>Create an account</Quiet>
+            <Quiet onClick={() => go('forgotPassword')}>
+              Forgotten your password?
+            </Quiet>
+          </div>
+
+          <div className="flex items-center gap-3 py-1 text-xs text-muted">
+            <span className="h-px flex-1 bg-edge" />
+            or
+            <span className="h-px flex-1 bg-edge" />
+          </div>
+
           <button
             type="button"
-            className="text-sm text-accent underline underline-offset-4"
-            onClick={() => setStatus({ kind: 'idle' })}
+            onClick={() => void signInWithGoogle()}
+            className="press w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold transition-colors hover:border-accent"
           >
-            Use a different email
+            Continue with Google
           </button>
-        </div>
-      ) : (
-        <form onSubmit={onSubmit} className="space-y-4">
-          <label className="block space-y-2">
-            <span className="text-sm text-muted">Email</span>
+          <button
+            type="button"
+            onClick={() => go('magicLink')}
+            className="press w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold transition-colors hover:border-accent"
+          >
+            Email me a sign-in link
+          </button>
+        </form>
+      ) : mode === 'createAccount' ? (
+        /* ------------------------------------------------ create account */
+        <form onSubmit={doCreateAccount} className="space-y-4">
+          <Labelled
+            label="Choose a username"
+            hint="3–20 characters. Letters, numbers and underscores."
+          >
+            <input
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="sam_1"
+              className={`${fieldCls} font-mono`}
+              required
+            />
+          </Labelled>
+          {usernameTaken && (
+            <p className="-mt-2 text-sm text-negative">
+              That username is taken. Try another.
+            </p>
+          )}
+
+          <Labelled
+            label="Email"
+            hint="Only used to reset your password if you forget it."
+          >
+            <input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              autoComplete="email"
+              inputMode="email"
+              placeholder="you@example.com"
+              className={`${fieldCls} font-mono`}
+              required
+            />
+          </Labelled>
+
+          <Labelled label="Password" hint="At least 8 characters.">
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              autoComplete="new-password"
+              className={fieldCls}
+              required
+            />
+          </Labelled>
+
+          {error && <p className="text-sm text-negative">{error}</p>}
+
+          <PrimaryAction disabled={busy}>
+            {busy ? 'Creating your account…' : 'Create my account'}
+          </PrimaryAction>
+
+          <div className="text-center">
+            <Quiet onClick={() => go('signIn')}>
+              I&rsquo;ve already got an account
+            </Quiet>
+          </div>
+        </form>
+      ) : mode === 'magicLink' ? (
+        /* ---------------------------------------------------- magic link */
+        <form onSubmit={doSendMagicLink} className="space-y-4">
+          <Labelled
+            label="Email"
+            hint="We’ll send a link that signs you in — no password needed."
+          >
             <input
               type="email"
               required
@@ -184,47 +574,19 @@ export function SignIn() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full rounded-lg border border-edge bg-surface px-4 py-3 font-mono text-base outline-none placeholder:text-muted/50 focus:border-accent"
+              className={`${fieldCls} font-mono`}
             />
-          </label>
+          </Labelled>
 
-          {/* Ticked by default. Almost everyone is on their own phone, and
-              being signed out of a pay tracker every time you close it is the
-              fastest way to lose someone who logs a shift on their break. */}
-          <label className="flex items-start gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={keep}
-              onChange={(e) => {
-                setKeep(e.target.checked)
-                // Written now rather than on submit, because the emailed link
-                // may well come back in a different tab.
-                setKeepSignedIn(e.target.checked)
-              }}
-              className="mt-0.5 size-4 shrink-0 accent-(--color-accent)"
-            />
-            <span className="min-w-0">
-              Keep me signed in
-              {!keep && (
-                <span className="block text-xs text-muted">
-                  You&rsquo;ll be signed out when you close Payweek. Use this on
-                  a shared or work computer.
-                </span>
-              )}
-            </span>
-          </label>
+          {keepBox}
 
-          <button
-            type="submit"
-            disabled={status.kind === 'sending' || !gate.allowed}
-            className="w-full rounded-lg bg-accent px-4 py-3 text-base font-semibold text-void transition-opacity disabled:opacity-50"
-          >
-            {status.kind === 'sending'
+          <PrimaryAction disabled={busy || !gate.allowed}>
+            {busy
               ? 'Sending…'
               : gate.allowed
                 ? 'Email me a sign-in link'
                 : `Try again in ${waitText}`}
-          </button>
+          </PrimaryAction>
 
           {/* Say why the button is dead. A disabled button with no reason is
               the single most common way an app looks broken. */}
@@ -236,23 +598,47 @@ export function SignIn() {
             </p>
           )}
 
-          {status.kind === 'error' && (
-            <p className="text-sm text-negative">{status.message}</p>
-          )}
+          {error && <p className="text-sm text-negative">{error}</p>}
 
-          <div className="flex items-center gap-3 py-2 text-xs text-muted">
-            <span className="h-px flex-1 bg-edge" />
-            or
-            <span className="h-px flex-1 bg-edge" />
+          <div className="text-center">
+            <Quiet onClick={() => go('signIn')}>
+              Use a username and password instead
+            </Quiet>
+          </div>
+        </form>
+      ) : (
+        /* ----------------------------------------------- forgot password */
+        <form onSubmit={doSendReset} className="space-y-4">
+          <div>
+            <p className="text-lg font-semibold">Reset your password</p>
+            <p className="mt-1 text-sm text-muted">
+              Put in the email address on your account and we&rsquo;ll send a
+              link to set a new password.
+            </p>
           </div>
 
-          <button
-            type="button"
-            onClick={signInWithGoogle}
-            className="w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold transition-colors hover:border-accent"
-          >
-            Continue with Google
-          </button>
+          <Labelled label="Email">
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              inputMode="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className={`${fieldCls} font-mono`}
+            />
+          </Labelled>
+
+          {error && <p className="text-sm text-negative">{error}</p>}
+
+          <PrimaryAction disabled={busy}>
+            {busy ? 'Sending…' : 'Send me a reset link'}
+          </PrimaryAction>
+
+          <div className="text-center">
+            <Quiet onClick={() => go('signIn')}>Back to sign in</Quiet>
+          </div>
         </form>
       )}
     </main>

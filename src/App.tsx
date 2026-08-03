@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/AuthProvider'
 import { SignIn } from './auth/SignIn'
+import { ResetPassword } from './auth/ResetPassword'
 import { Intro } from './components/Intro'
 import { REPLAY_EVENT, hasSeenIntro } from './lib/intro'
 import { Shell } from './components/Shell'
@@ -17,7 +18,7 @@ import { Settings } from './screens/Settings'
 import { Shifts } from './screens/Shifts'
 
 export default function App() {
-  const { session, loading } = useAuth()
+  const { session, loading, recovering, finishRecovery } = useAuth()
   // Read once, so dismissing it doesn't need a reload and reopening it from
   // Settings works without one either.
   const [introDone, setIntroDone] = useState(hasSeenIntro)
@@ -39,6 +40,11 @@ export default function App() {
   }
 
   if (!session) return <SignIn />
+
+  // A reset link signs you in for real, so this has to come before the app.
+  // Otherwise someone arriving from the email lands on the Add screen with no
+  // sign a reset was in progress, and their old password still works.
+  if (recovering) return <ResetPassword onDone={finishRecovery} />
 
   // After sign-in, not before: someone who hasn't decided to use Payweek yet
   // shouldn't be read four cards about it.

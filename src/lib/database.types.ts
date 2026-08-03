@@ -102,6 +102,7 @@ export type Database = {
           holiday_accrual_pct: number
           id: string
           show_holiday_accrual: boolean
+          username: string | null
           week_starts_on: number
         }
         Insert: {
@@ -111,6 +112,7 @@ export type Database = {
           holiday_accrual_pct?: number
           id: string
           show_holiday_accrual?: boolean
+          username?: string | null
           week_starts_on?: number
         }
         Update: {
@@ -120,6 +122,7 @@ export type Database = {
           holiday_accrual_pct?: number
           id?: string
           show_holiday_accrual?: boolean
+          username?: string | null
           week_starts_on?: number
         }
         Relationships: []
@@ -238,7 +241,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      username_available: { Args: { p_username: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
