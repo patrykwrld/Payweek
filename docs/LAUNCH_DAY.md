@@ -16,7 +16,7 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
 | 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
 | 6 | Export + Delete account on real hardware | ✅ both verified on a phone, 3 Aug |
-| 7 | **Signing key** | ⬜ 10 minutes, once ever — can be done any time, even now |
+| 7 | Signing key | 🟡 **key created and verified**; back it up and check `git status` |
 | 8 | Build the `.aab` you upload | ⬜ test the release APK first |
 | 9 | Screenshots + store listing | ⬜ copy is already written for you |
 | 10 | Closed testing — 12 testers, 14 days | ⬜ the long pole |
@@ -25,9 +25,9 @@ built into it, so the whole plan is really "get to Step 10 quickly".
 | 13 | Production rollout | ⬜ |
 | 14 | After it's live | ⬜ |
 
-**Two things stand between you and a signed upload: Step 3c and Step 7.**
-About half an hour together. Step 7 needs only the laptop, so it can be done
-right now; Step 3c needs the phone.
+**Step 3c is the last thing standing between you and a signed upload.** The
+signing key exists and is verified; Step 3c needs the phone and takes about
+twenty minutes.
 
 The big one is behind you: **the pay maths matches a real payslip exactly.**
 
@@ -363,7 +363,33 @@ stand-in now work on real hardware.
 
 ---
 
-## Step 7 — Create your signing key (10 minutes, once ever)
+## Step 7 — Create your signing key ✅ KEY CREATED — 3 August 2026
+
+Verified with `keytool -list -v`. Every field Play cares about passes:
+
+| Play requires | Yours |
+| --- | --- |
+| A private key, not just a certificate | `PrivateKeyEntry` ✅ |
+| RSA 2048-bit or better | **4096-bit RSA** ✅ |
+| Valid beyond 22 October 2033 | **19 December 2053** ✅ |
+| Alias matching `keyAlias` | `payweek-upload` ✅ |
+
+```
+SHA-256  BE:C5:63:EE:37:86:EC:38:5A:24:D8:6D:DE:14:FB:06:
+         36:4F:CC:75:07:86:D7:75:86:8F:6F:E0:43:72:C1:5F
+SHA-1    E9:E1:CB:F0:38:F2:9B:53:CF:14:29:7C:E1:05:92:65:BC:0B:D9:55
+```
+
+Fingerprints are public — Play Console displays them, and they are not
+secret. They are recorded here so that after the first upload you can compare
+the **Upload certificate** shown in Play Console → *Setup → App integrity*
+against these, and know the right key was used.
+
+**Still to do:** the `git status` check, and the backup. Both below.
+
+<details>
+<summary>The full instructions, kept in case the key ever needs remaking</summary>
+
 
 ### What this is, in plain terms
 
@@ -560,6 +586,8 @@ finds one. **Step 8 will just work.**
 ✅ **Step 7 is complete when:** `payweek-upload.jks` exists, `keytool -list`
 opens it with your password, `git status` is clean, and the backup is done.
 
+</details>
+
 ## Step 8 — Build the file you upload (10 minutes)
 
 ```powershell
@@ -639,6 +667,29 @@ leaving it out.
 `https://payweek.app/delete-account.html` is that page. It is written, live,
 and deliberately plain HTML that needs nothing from the app bundle, so it
 still works for someone who has uninstalled.
+
+### ⚠️ "Continue with Google" — check it before a reviewer does
+
+Every one of the 11 accounts in the database signed up with **email**. Not one
+has ever used Google, which means the Google provider has probably never been
+configured in Supabase — and the sign-in screen shows a **Continue with
+Google** button regardless.
+
+A reviewer taps every button. One that throws an error is a poor look at best
+and a rejection at worst.
+
+**Test it in twenty seconds:** open <https://payweek.app>, tap *Continue with
+Google*.
+
+- **It works** → nothing to do.
+- **It errors** (typically *"Unsupported provider"* or *"provider is not
+  enabled"*) → two options. Configuring it properly means creating an OAuth
+  client in Google Cloud and pasting the ID and secret into Supabase →
+  Authentication → Sign In / Providers → Google. Or **remove the button** —
+  the app has a complete sign-in story without it, and Google can be added in
+  a later update. Removing takes five minutes.
+
+Do not ship a button you have not pressed.
 
 ### App access — a reviewer needs a way in
 
