@@ -98,6 +98,11 @@ likeliest thing for release-mode code shrinking to have broken.
 Play Console → **Policy → App content**. Every item needs a green tick before
 anything can be reviewed.
 
+📋 **Open [PLAY_ANSWERS.md](PLAY_ANSWERS.md) and work down it.** Every field on
+both this step and Step C is written out there in the order Play asks, so you
+never have to decide anything or open a second document. The table below is the
+summary; that file is the thing to actually use.
+
 | Item | Answer |
 | --- | --- |
 | Privacy policy | `https://payweek.app/privacy.html` |
@@ -139,7 +144,9 @@ works. Make it **before** you fill the form in:
 ## Step C — Store listing (30 minutes)
 
 Play Console → **Grow users → Store presence → Main store listing**.
-Everything here is written or made already.
+Everything here is written or made already — field by field in
+[PLAY_ANSWERS.md](PLAY_ANSWERS.md), including the Store settings page below the
+listing itself.
 
 | Field | Where it is |
 | --- | --- |

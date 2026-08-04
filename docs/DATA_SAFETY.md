@@ -8,7 +8,7 @@ form that disagrees with the app's behaviour is a policy violation.
 
 | Claim | Evidence in the repo |
 | --- | --- |
-| Email is collected | `src/auth/SignIn.tsx` — registration, password reset, Google sign-in |
+| Email is collected | `src/auth/SignIn.tsx` — registration and password reset |
 | A username is collected | `src/auth/SignIn.tsx` registration; stored in `profiles.username` (`supabase/migrations/20260803000004_username_signin.sql`) |
 | Shifts / agencies / rules / payslips are collected | `supabase/migrations/20260728000001_init.sql` |
 | Data is sent off-device | `src/lib/supabase.ts`, `src/lib/queries.ts` |
@@ -112,8 +112,10 @@ that lets users create an account.
 - **In-app:** Settings → **Delete my account**. Two taps, no support ticket.
   It calls the `delete-account` Edge Function, which removes the `auth.users`
   row; every table cascades from it.
-- **Deletion URL:** `https://payweek.app/privacy.html` — live. The *Your
-  rights* section names the in-app route and the contact address.
+- **Deletion URL:** `https://payweek.app/delete-account.html` — live. This is
+  the address that goes in the Play form. The privacy policy also covers
+  deletion under *Your rights*, but the policy URL is a **different field** and
+  putting it here is a rejection.
 - What is deleted: the account and all agencies, rate rules, shifts and
   payslips belonging to it
 - What is retained: nothing
