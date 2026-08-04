@@ -17,7 +17,7 @@ work, and the rest is waiting.
 
 | | Step | Your time | Then |
 | --- | --- | --- | --- |
-| **A** | Upload the bundle to Internal testing | 15 min | live in minutes |
+| ~~**A**~~ | ~~Upload the bundle to Internal testing~~ | ✅ **done 4 Aug** | installed from Play |
 | **B** | App content — the compliance forms | 45 min | — |
 | **C** | Store listing — text and images | 30 min | — |
 | **D** | **Closed testing — starts the 14-day clock** | 20 min | ⏳ **14 days** |
@@ -25,8 +25,13 @@ work, and the rest is waiting.
 | **F** | Apply for production access | 20 min | ⏳ a few days |
 | **G** | Production rollout | 10 min | 🎉 live |
 
-**A, B and C can all be done in one evening.** Do them tonight and the clock
-starts tomorrow instead of next week.
+**B and C are the only things between you and the clock.** Both are pure
+form-filling, both are already written out, and neither needs the phone. Every
+hour they sit unfinished is an hour added to the end of the project.
+
+There is also **Step H — building an audience**, which runs *alongside* all of
+this rather than after it. It is at the bottom, and it is the one part of this
+document that is not on a deadline.
 
 ---
 
@@ -45,51 +50,42 @@ reset alongside. Nothing else changed.
 > Providers → Google, and restore the button. Worth doing **after** launch,
 > when there is someone to benefit from it.
 
-⚠️ **This changed the app, so the bundle has to be rebuilt.** The `.aab` you
-have was built before it. Step A starts with that.
+✅ The bundle was rebuilt after the removal and is the one now on Internal
+testing, so there is nothing outstanding here.
 
 ---
 
-## Step A — Rebuild, then upload the bundle (20 minutes)
+## ~~Step A — Upload the bundle to Internal testing~~ ✅ DONE — 4 August
 
-**Rebuild first.** Removing the Google button changed the app, so the bundle
-on disk is out of date:
+Release **1 (1.0.0)** is live on the Internal testing track and was installed
+from Play onto a real phone. That closes the largest remaining unknown: the
+bundle is accepted, correctly signed with the Step 7 upload key, and Google's
+re-signing produces an app that installs and runs.
 
-```powershell
-cd C:\dev\Payweek
-git pull origin claude/payweek-app-zk4tcb
-npm install
-npm run build
-npx cap sync android
-cd android
-.\gradlew.bat bundleRelease
-```
+### The empty-looking Play page is not a fault
 
-Then open the folder holding the file you upload:
+The Play listing currently shows `app.payweek`, a grey robot icon, *Unrated*,
+and *No information available* under Data safety. Every one of those is a form
+that hasn't been filled in yet, not a bug:
 
-```powershell
-explorer.exe C:\dev\Payweek\android\app\build\outputs\bundle\release
-```
+| What you see | The form behind it |
+| --- | --- |
+| `app.payweek` as the name | Store listing → App name (Step C) |
+| Grey robot icon | Store listing → App icon. The icon in the APK is the *launcher* icon; Play uses the 512×512 you upload separately |
+| No screenshots or description | Store listing (Step C) |
+| **Unrated** | App content → Content ratings (Step B) |
+| Data safety: *No information available* | App content → Data safety (Step B) |
+| *"(unreviewed)"* · *"a test build that has not been verified"* | **Nothing.** Internal testing skips review by design. This wording stays for the whole internal track |
 
-Play Console → **Test and release → Testing → Internal testing → Create new
-release**.
+Expect the page to keep showing the old version for a few hours after you save
+the listing. Play caches it.
 
-1. **Upload** `app-release.aab` from that folder
-2. **Release name** — accept whatever Play suggests. Internal only; users never see it
-3. **Release notes** — keep the `<en-GB>` tags, paste the text from
-   [STORE_LISTING.md](STORE_LISTING.md) between them
-4. **Next → Preview and confirm → Start rollout**
+### Still worth doing when you next have the phone
 
-Internal testing goes live in minutes with no review, which is exactly why it
-is first: it proves the bundle is accepted and correctly signed before you
-commit it to the track whose clock matters.
-
-✅ **Install it from Play on your own phone.** Uninstall the sideloaded copy
-first — Play's version is signed with Google's key, yours with the upload key,
-and Android will not install one over the other.
-
-Then check: sign in, log a shift, **Settings → Export**. That last one is the
-likeliest thing for release-mode code shrinking to have broken.
+`Settings → Export` on the **Play-installed** build. Release mode runs ProGuard
+and the Filesystem and Share plugins are the likeliest casualties — a silently
+dead button is exactly what that failure looks like. Everything else in the app
+has been exercised on this build.
 
 ---
 
@@ -245,6 +241,101 @@ notes in Step E this is twenty minutes.
 
 ---
 
+## Step H — Building an audience (runs alongside everything above)
+
+Not on the critical path, no deadline, and the only part of this document that
+compounds. Start it whenever; it pays off in months, not days.
+
+### First, separate two jobs that look like one
+
+| | Recruiting 12 testers | Building an audience |
+| --- | --- | --- |
+| **When** | Now — it gates the 14 days | Any time |
+| **How many** | Exactly 14–15 people | As many as possible |
+| **Where they come from** | **People you already know** | Strangers |
+| **Does social media help?** | **No** | Yes, slowly |
+
+A brand-new account with no followers recruits nobody. **The 12 testers will
+come from your phone contacts, your workplace and your family** — that is
+normal and it is what almost every developer does. Do not wait on social to
+solve Step D.
+
+### The gap that matters more than any account
+
+**payweek.app has nowhere for a visitor to land.** The root URL serves the app
+— someone arriving from Instagram hits a sign-in screen for a product they have
+never heard of, with no explanation and no reason to trust it. Every visitor
+you send there today is wasted.
+
+Before any promotion is worth doing, the site needs a front page: what Payweek
+is, the £696.91 story, the screenshots that already exist, and one thing to do
+— **"Tell me when it's on Google Play"** with an email box. During closed
+testing the app is not publicly installable, so an email list is the *only*
+thing worth collecting. It also becomes the launch-day announcement list.
+
+> This is a real piece of work — a landing page and somewhere to put the
+> addresses. Ask me and I'll build it. It is the highest-value thing on this
+> page that isn't a Play form.
+
+### On Instagram and Twitter specifically
+
+Both are fine. Neither is where your users are, and one of them is a poor fit.
+
+| Platform | Verdict for Payweek |
+| --- | --- |
+| **Facebook groups** | **Where UK agency workers actually are.** Warehouse and agency job groups, regional job groups, and the Polish, Romanian and Bulgarian community groups that a large share of agency work runs through. Not a page — *groups*, joining as a person |
+| **TikTok** | **The strongest growth channel available to you.** UK shift-work and payslip content performs, the audience skews exactly right, and it is the last platform where a standing start can still reach people |
+| **Instagram** | Worth having. Discovery is weak without Reels, so in practice it is a credibility page people check after hearing about you elsewhere — which is a real job, just not a growth one |
+| **Twitter / X** | **The weakest of the four for this audience.** UK employment and union Twitter exists but it is small, and agency workers are not scrolling it for tools. Claim the handle; don't spend time there |
+
+**Claim all four handles now anyway**, plus TikTok, even the ones you won't
+use. It costs ten minutes and it is unrecoverable if somebody takes
+`payweek` while you are waiting on Google.
+
+### What to actually post
+
+The instinct is to post about shift tracking. Don't lead with it — it is a
+chore, and nobody follows an account about a chore. **Lead with the
+underpayment.**
+
+- *"Your payslip is £30 short. Here's how to prove it."* — this is the hook.
+  It is also the thing Payweek genuinely does better than a notes app
+- **Holiday pay at 12.07%** — enormously misunderstood by agency workers, and
+  a lot of people are owed money they don't know about
+- **Night and weekend rates** — how a shift that crosses midnight should be
+  priced, and how often it isn't
+- Short clips of the breakdown screen showing exactly where a figure came from
+
+That content is useful whether or not anyone installs anything, which is why it
+travels. The product demo is a by-product.
+
+⚠️ **Be careful being wrong about employment rights.** If you state what
+someone is owed and it isn't right, that is a reputational problem and
+potentially worse. Link to **gov.uk** and **ACAS** rather than asserting, and
+say "check your contract" often. The safe framing is *here is how to check*,
+never *here is what you are owed*.
+
+### Two timing rules
+
+1. **Do not point anyone at Google Play until Step G.** During closed testing
+   the link shows *"item not found"* to everybody who isn't on your tester
+   list. A dead link is worse than no link — you only get one first impression
+   per person. Point at the website instead.
+2. **Do not promise it's free forever.** The plan is free now, paid later. Say
+   "free while we're building it" and nobody is misled when that changes.
+
+### Honest expectations
+
+A new account posting into a void does approximately nothing for two to three
+months. That is not a sign it isn't working, and it is the reason to start now
+rather than at launch — so that when Payweek does go live there is somewhere
+for the announcement to land.
+
+**If you only do one thing here:** the landing page with an email box. Ten
+addresses collected before launch are worth more than a thousand followers.
+
+---
+
 ## If something goes wrong
 
 | What you see | What it means |
@@ -271,6 +362,31 @@ notes in Step E this is twenty minutes.
 | Website | payweek.app live, privacy policy and deletion page published |
 | Store assets | Six screenshots, icon, feature graphic, all listing copy |
 | Play paperwork | Data safety answers and reviewer instructions written |
+| Internal testing | Release 1 (1.0.0) live, installed from Play on a real phone |
+
+### ⚠️ The two-day deploy outage — fixed 4 August, worth remembering
+
+Between 2 and 4 August **every push to payweek.app silently failed to deploy.**
+The site kept serving an old build, which is why *Continue with Google* was
+still on the live sign-in screen days after the button was deleted from the
+code.
+
+The cause was a `_comment` key in `vercel.json`. JSON has no comment syntax and
+Vercel rejects unknown top-level properties outright:
+
+```
+The `vercel.json` schema validation failed:
+should NOT have additional property `_comment`
+```
+
+The failure mode is what makes it dangerous: rejection happens **before the
+build starts**, so the build log is empty, the previous deployment stays live,
+and the whole thing looks like a site that simply didn't update. Nine
+deployments failed in a row without anything looking broken.
+
+**The lesson generalises: "the site didn't change" is not evidence the code is
+wrong.** Check the deploy state first. `docs/DEPLOY_VERCEL.md` now carries the
+rule about not putting comments in `vercel.json`.
 
 ---
 
@@ -1038,29 +1154,6 @@ leaving it out.
 and deliberately plain HTML that needs nothing from the app bundle, so it
 still works for someone who has uninstalled.
 
-### ⚠️ "Continue with Google" — check it before a reviewer does
-
-Every one of the 11 accounts in the database signed up with **email**. Not one
-has ever used Google, which means the Google provider has probably never been
-configured in Supabase — and the sign-in screen shows a **Continue with
-Google** button regardless.
-
-A reviewer taps every button. One that throws an error is a poor look at best
-and a rejection at worst.
-
-**Test it in twenty seconds:** open <https://payweek.app>, tap *Continue with
-Google*.
-
-- **It works** → nothing to do.
-- **It errors** (typically *"Unsupported provider"* or *"provider is not
-  enabled"*) → two options. Configuring it properly means creating an OAuth
-  client in Google Cloud and pasting the ID and secret into Supabase →
-  Authentication → Sign In / Providers → Google. Or **remove the button** —
-  the app has a complete sign-in story without it, and Google can be added in
-  a later update. Removing takes five minutes.
-
-Do not ship a button you have not pressed.
-
 ### App access — a reviewer needs a way in
 
 Payweek shows nothing without a login, so Play requires you to hand the
@@ -1245,7 +1338,7 @@ reaches a fraction of users while you fix it.
 | Website | payweek.app over HTTPS, redeploys on every push, proper desktop layout |
 | Privacy policy | Written, live, and matching the app's design |
 | Account deletion page | `payweek.app/delete-account.html` — the web route Play requires alongside the in-app one |
-| Sign-in | Username + password, or Google. Username→email resolution happens in the `username-signin` Edge Function so nobody's address is exposed |
+| Sign-in | Username or email, plus a password. Username→email resolution happens in the `username-signin` Edge Function so nobody's address is exposed. No Google button — it was removed before launch |
 | Account deletion | In-app, backed by the `delete-account` Edge Function (ACTIVE, v3). **Read the comment at the top of the function before redeploying it** — the CORS header echo and `verify_jwt = false` are both load-bearing and both look optional |
 | Rate engine | Night, weekend, midnight-crossing shifts, breaks priced in the band they actually fall in |
 | Offline | Shifts log with no signal and sync on reconnect (verified) |
@@ -1253,7 +1346,7 @@ reaches a fraction of users while you fix it.
 | App icon & splash | Generated for every Android density |
 | Signing config | Wired — Step 7 only supplies the key |
 | Play paperwork | Data safety answers and listing copy written |
-| Tests | 136, all passing |
+| Tests | 148, all passing |
 
 ### Added since the APK on your phone was built
 
