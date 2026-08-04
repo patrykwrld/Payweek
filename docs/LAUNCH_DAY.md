@@ -1,45 +1,247 @@
-# What's left, in order
+# Getting Payweek published — from here
 
-Ordered so nothing waits on anything above it. **Step 10** has a 14-day wait
-built into it, so the whole plan is really "get to Step 10 quickly".
+The app is built, tested and in Play Console. Everything below is Play Console
+work plus one unavoidable wait.
 
-## Where you are
+**The wait is the whole game.** Google requires **12 testers opted in for 14
+continuous days** before a personal developer account can publish to
+production. Nothing shortens it. So the only thing that matters is reaching
+**Step D** quickly — every day before that is a day added to the end.
 
-| | Step | State |
-| --- | --- | --- |
-| 1 | Privacy contact address | ✅ `privacy@payweek.app` live on Workspace |
-| 2 | Check the maths against a real payslip | ✅ **matched to the penny** |
-| 3 | Supabase redirect URLs | ✅ `payweek://auth-callback` in place |
-| 3b | Custom SMTP for auth email | ✅ Google Workspace, `privacy@payweek.app` |
-| 3d | Auth settings in Supabase | ✅ **proven** — a real registration arrived unconfirmed and confirmed 13s later |
-| 3c | Rebuild the APK | ✅ registered on the phone; username reached `profiles`, welcome played |
-| 4 | Android Studio + SDK 35 | ✅ installed, JDK 21 pinned |
-| 5 | Prove the Android build compiles | ✅ `BUILD SUCCESSFUL`, 4.8 MB debug APK |
-| 6 | Export + Delete account on real hardware | ✅ both verified on a phone, 3 Aug |
-| 7 | Signing key | ✅ created, verified, regenerated after the first password was exposed |
-| 8 | Build the `.aab` you upload | 🟡 both built and signed — confirm the **release** APK is the one you tested |
-| 9 | **Store listing** | ⬜ **next** — screenshots, icon, graphic and copy are all made |
-| 10 | Closed testing — 12 testers, 14 days | ⬜ the long pole |
-| 11 | Use it and collect feedback | ⬜ runs during the 14 days |
-| 12 | Apply for production access | ⬜ |
-| 13 | Production rollout | ⬜ |
-| 14 | After it's live | ⬜ |
+Realistic timeline from today: **about 3 weeks.** Two to three hours of your
+work, and the rest is waiting.
 
-**Step 9 is next — the Play Console listing.** Every asset it needs is already
-in the repo: six screenshots at 1080×1920, the icon, the feature graphic, the
-listing copy, the Data safety answers and the reviewer instructions.
+---
 
-Nothing about the app is unproven any more. The last gap closed on 3 August
-when a real registration went through on the phone: the row arrived
-unconfirmed, confirmed 13 seconds later when the link was opened, and the
-username reached `profiles.username` through the database trigger. Sign-up,
-the confirmation email, the deep link, the welcome and the trigger are all
-verified against the live project rather than a stand-in.
+## The seven steps left
 
-The big one is behind you: **the pay maths matches a real payslip exactly.**
+| | Step | Your time | Then |
+| --- | --- | --- | --- |
+| **A** | Upload the bundle to Internal testing | 15 min | live in minutes |
+| **B** | App content — the compliance forms | 45 min | — |
+| **C** | Store listing — text and images | 30 min | — |
+| **D** | **Closed testing — starts the 14-day clock** | 20 min | ⏳ **14 days** |
+| **E** | Use it, collect feedback, fix things | during the wait | — |
+| **F** | Apply for production access | 20 min | ⏳ a few days |
+| **G** | Production rollout | 10 min | 🎉 live |
 
-Everything on the app side is finished — the rate engine, offline, the intro,
-account deletion, the website, the Play paperwork. That list is at the bottom.
+**A, B and C can all be done in one evening.** Do them tonight and the clock
+starts tomorrow instead of next week.
+
+---
+
+## Before you start: one decision
+
+The sign-in screen has a **Continue with Google** button. Every one of the 11
+accounts on the project signed up with email — not one has ever used Google,
+which strongly suggests the provider was never configured in Supabase.
+
+**A reviewer taps every button.** One that errors is a rejection risk.
+
+Open <https://payweek.app> and tap it:
+
+- **It signs you in** → nothing to do.
+- **It errors** (*"Unsupported provider"* or similar) → tell me and I'll hide
+  it behind a build flag in five minutes. The app has a complete sign-in story
+  without it, and Google can go into a later update.
+
+---
+
+## Step A — Upload the bundle (15 minutes)
+
+Play Console → **Test and release → Testing → Internal testing → Create new
+release**.
+
+1. **Upload** `C:\dev\Payweek\android\app\build\outputs\bundle\release\app-release.aab`
+2. **Release name** — accept whatever Play suggests. Internal only; users never see it
+3. **Release notes** — keep the `<en-GB>` tags, paste the text from
+   [STORE_LISTING.md](STORE_LISTING.md) between them
+4. **Next → Preview and confirm → Start rollout**
+
+Internal testing goes live in minutes with no review, which is exactly why it
+is first: it proves the bundle is accepted and correctly signed before you
+commit it to the track whose clock matters.
+
+✅ **Install it from Play on your own phone.** Uninstall the sideloaded copy
+first — Play's version is signed with Google's key, yours with the upload key,
+and Android will not install one over the other.
+
+Then check: sign in, log a shift, **Settings → Export**. That last one is the
+likeliest thing for release-mode code shrinking to have broken.
+
+---
+
+## Step B — App content (45 minutes)
+
+Play Console → **Policy → App content**. Every item needs a green tick before
+anything can be reviewed.
+
+| Item | Answer |
+| --- | --- |
+| Privacy policy | `https://payweek.app/privacy.html` |
+| **Account deletion** | `https://payweek.app/delete-account.html` |
+| Ads | **No** |
+| App access | ⚠️ see below |
+| Content rating | Fill in the questionnaire → expect PEGI 3 |
+| Target audience | **18+** |
+| News app | **No** |
+| Data safety | Copy from [DATA_SAFETY.md](DATA_SAFETY.md) — all four types written out |
+| Financial features | **No** |
+| Health | **No** |
+| Government apps | **No** |
+
+### App access — do this bit properly
+
+The reviewer cannot receive your emails, so they need an account that already
+works. Make it **before** you fill the form in:
+
+1. Register in the app: username `payweek_review`, an email **you** can open,
+   a password you don't use anywhere else
+2. **Open the confirmation email yourself** and finish the registration —
+   the account must be confirmed before you hand it over
+3. Add one agency and log two or three shifts, so the reviewer sees a working
+   app rather than an empty screen
+4. In **App access** → *All or some functionality is restricted* → add:
+
+   > Username: payweek_review
+   > Password: (the password)
+   >
+   > Enter these on the sign-in screen and tap **Sign in**. No email or
+   > confirmation step is needed.
+
+5. Sign out and sign back in with those exact details on a device that has
+   never held that session. That is the only way to know a reviewer can
+
+---
+
+## Step C — Store listing (30 minutes)
+
+Play Console → **Grow users → Store presence → Main store listing**.
+Everything here is written or made already.
+
+| Field | Where it is |
+| --- | --- |
+| App name | `Payweek: Hours & Pay Tracker` |
+| Short description | [STORE_LISTING.md](STORE_LISTING.md) — 73 characters |
+| Full description | [STORE_LISTING.md](STORE_LISTING.md) |
+| App icon | `assets/play/icon-512.png` |
+| Feature graphic | `assets/play/feature-graphic.png` |
+| Phone screenshots | `assets/play/screenshots/` — all six, in the numbered order |
+| Category | **Productivity** |
+| Email | `privacy@payweek.app` |
+| Website | `https://payweek.app` |
+
+---
+
+## Step D — Closed testing ⏳ this starts the clock
+
+Play Console → **Testing → Closed testing → Create track** (default "Alpha").
+
+1. **Testers → Create email list** → add **14–15 Gmail addresses**. It must be
+   the Google account each person uses on their phone
+2. **Releases → Create new release** → *Add from library* → pick the bundle you
+   already uploaded in Step A. No need to build again
+3. **Review release → Start rollout**
+4. Copy the opt-in link from the **Testers** tab and send it out
+
+⚠️ **The requirement is 12 people opted in, continuously, for 14 days.** An
+APK you send someone over Drive counts for nothing — Google only sees installs
+that came through Play. Recruit 14–15 so one person uninstalling doesn't stop
+the clock.
+
+**Send them this:**
+
+> I've made an app for tracking agency shifts and what you're owed. Can you
+> try it for a couple of weeks?
+>
+> 1. Tap this link on your phone: *(opt-in link)*
+> 2. Tap **Become a tester**
+> 3. Then tap the Google Play link on that page to install it
+>
+> It needs the Google account you use on your phone. Please leave it installed
+> for two weeks even if you don't use it much — that part matters most.
+
+⏱️ First review of a new app takes a few days. The 14 days count from when
+12 testers are opted in.
+
+✅ **Testing → Closed testing** shows 12+ testers and a running day count.
+
+---
+
+## Step E — While the 14 days run
+
+The only quiet window you'll get. None of it is urgent; all of it is worth it.
+
+- **Use it yourself, for real.** Log your own shifts for two weeks. You will
+  notice a wrong figure in a way no test ever will
+- **Chase drop-outs the same day.** The count is continuous; if it falls below
+  12 the clock stalls
+- **Write down what testers say.** You need it for Step F, and it is the only
+  honest source of what to fix
+- **Fix and re-upload freely.** Bump `versionCode` in
+  `android/app/build.gradle` (1 → 2 → 3…). It does **not** restart the 14 days
+- **Watch Android vitals** for crashes. There is no crash-reporting SDK in the
+  app by design, so Vitals is your only view
+
+---
+
+## Step F — Apply for production access (20 minutes)
+
+Once the 14 days complete, Play Console prompts you to apply. You'll be asked,
+in writing:
+
+- how you recruited testers and what feedback you got
+- what you changed as a result
+- who the app is for and why it's ready
+
+Answer it properly. A thin answer gets bounced and costs days. If you kept
+notes in Step E this is twenty minutes.
+
+⏱️ Google reviews the application. Expect days, not hours.
+
+---
+
+## Step G — Production rollout (10 minutes)
+
+1. **Production → Create new release**
+2. Add the bundle from your library (bump `versionCode` if you've rebuilt)
+3. **Countries** — United Kingdom at minimum; the app is built around UK pay,
+   12.07% holiday accrual and £ only
+4. Release notes in plain English
+5. Consider a **staged rollout at 20%** for the first release, so a serious bug
+   reaches a fraction of people while you fix it
+6. **Review release → Start rollout to production**
+
+🎉 **Payweek is on Google Play.**
+
+---
+
+## If something goes wrong
+
+| What you see | What it means |
+| --- | --- |
+| Upload rejected, wrong package | The bundle must be `app.payweek` — it is |
+| "You need to complete App content" | Step B has an unticked item |
+| Tester can't find the app | They opened the opt-in link but didn't tap *Become a tester* |
+| Day count not moving | Fewer than 12 opted in. Check the Testers tab |
+| Rejected for "unable to access" | The reviewer login didn't work — Step B, and test it yourself first |
+| **A pay figure looks wrong** | **Stop and send me the breakdown screenshot** |
+
+---
+
+## What's already done — don't redo any of it
+
+| | |
+| --- | --- |
+| Pay maths | Verified against a real payslip to the penny — £696.91 |
+| Android build | Compiles, signed, bundle and APK both produced |
+| Signing key | Created, verified, backed up |
+| Account deletion | Works on a real phone, plus the web page Play requires |
+| Export | Works on a real phone |
+| Registration | Verified end to end against the live project |
+| Website | payweek.app live, privacy policy and deletion page published |
+| Store assets | Six screenshots, icon, feature graphic, all listing copy |
+| Play paperwork | Data safety answers and reviewer instructions written |
 
 ---
 
