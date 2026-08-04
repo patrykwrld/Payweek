@@ -150,9 +150,8 @@ function DeleteAccount({
  * Lets an account that predates usernames claim one, and lets anybody change
  * their password.
  *
- * Everyone who signed up with a magic link or with Google has no username and
- * no password, so without this they could never use the sign-in form — they
- * would be stuck waiting for an email every time, forever.
+ * Everyone who signed up with a magic link has no username and no password,
+ * so without this they could never use the sign-in form at all.
  */
 function UsernameAndPassword({
   profile,

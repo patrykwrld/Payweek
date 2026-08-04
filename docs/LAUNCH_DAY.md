@@ -30,29 +30,51 @@ starts tomorrow instead of next week.
 
 ---
 
-## Before you start: one decision
+## ~~Before you start: the Google button~~ ✅ REMOVED
 
-The sign-in screen has a **Continue with Google** button. Every one of the 11
-accounts on the project signed up with email — not one has ever used Google,
-which strongly suggests the provider was never configured in Supabase.
+The sign-in screen used to offer **Continue with Google**. Every one of the 11
+accounts on the project signed up with email and not one ever used Google,
+which meant the provider was almost certainly never configured — and a
+reviewer taps every button. It is gone, along with its handler and imports.
 
-**A reviewer taps every button.** One that errors is a rejection risk.
+Sign-in is now username-or-email plus password, with registration and password
+reset alongside. Nothing else changed.
 
-Open <https://payweek.app> and tap it:
+> Adding Google back later is a small job: create an OAuth client in Google
+> Cloud, paste the ID and secret into Supabase → Authentication → Sign In /
+> Providers → Google, and restore the button. Worth doing **after** launch,
+> when there is someone to benefit from it.
 
-- **It signs you in** → nothing to do.
-- **It errors** (*"Unsupported provider"* or similar) → tell me and I'll hide
-  it behind a build flag in five minutes. The app has a complete sign-in story
-  without it, and Google can go into a later update.
+⚠️ **This changed the app, so the bundle has to be rebuilt.** The `.aab` you
+have was built before it. Step A starts with that.
 
 ---
 
-## Step A — Upload the bundle (15 minutes)
+## Step A — Rebuild, then upload the bundle (20 minutes)
+
+**Rebuild first.** Removing the Google button changed the app, so the bundle
+on disk is out of date:
+
+```powershell
+cd C:\dev\Payweek
+git pull origin claude/payweek-app-zk4tcb
+npm install
+npm run build
+npx cap sync android
+cd android
+.\gradlew.bat bundleRelease
+```
+
+Then open the folder holding the file you upload:
+
+```powershell
+explorer.exe C:\dev\Payweek\android\app\build\outputs\bundle\release
+```
 
 Play Console → **Test and release → Testing → Internal testing → Create new
 release**.
 
-1. **Upload** `C:\dev\Payweek\android\app\build\outputs\bundle\release\app-release.aab`
+1. **Upload** `app-release.aab` from that folder
 2. **Release name** — accept whatever Play suggests. Internal only; users never see it
 3. **Release notes** — keep the `<en-GB>` tags, paste the text from
    [STORE_LISTING.md](STORE_LISTING.md) between them

@@ -214,7 +214,7 @@ export async function updatePassword(password: string): Promise<AuthOutcome> {
 
 /**
  * Claims a username for an account that hasn't got one — anybody who signed
- * up with a magic link or with Google before this existed.
+ * up with a magic link before usernames existed.
  */
 export async function claimUsername(
   userId: string,

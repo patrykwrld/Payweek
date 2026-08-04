@@ -7,9 +7,6 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react'
-import { Capacitor } from '@capacitor/core'
-import { Browser } from '@capacitor/browser'
-import { supabase } from '../lib/supabase'
 import { keepSignedIn, setKeepSignedIn } from '../lib/authStorage'
 import { passwordProblem, usernameProblem } from '../lib/credentials'
 import {
@@ -26,12 +23,11 @@ import {
   gateSend,
   recordSend,
 } from '../lib/signInThrottle'
-import { authRedirectUrl } from './redirects'
 
 /**
- * Which of the screen's several jobs it is currently doing. One at a time:
- * a sign-in form that also offers sign-up, magic links, password resets and
- * Google in one view is a wall of boxes.
+ * Which of the screen's three jobs it is currently doing. One at a time: a
+ * sign-in form that also offers sign-up and password resets in a single view
+ * is a wall of boxes.
  */
 type Mode = 'signIn' | 'createAccount' | 'forgotPassword'
 
@@ -40,16 +36,6 @@ type Notice =
   | { kind: 'created'; username: string; email: string; needsConfirmation: boolean }
   /** A password reset is in their inbox. */
   | { kind: 'resetSent'; email: string }
-
-function readable(message: string): string {
-  if (/failed to fetch|network|offline/i.test(message)) {
-    return 'No connection. Sign-in needs signal — try again when you have some.'
-  }
-  if (/rate limit|too many|429/i.test(message)) {
-    return 'That was one link too many. Give it a couple of minutes and try again.'
-  }
-  return message
-}
 
 /**
  * A clock that only ticks while something on screen is counting down. The
@@ -276,27 +262,6 @@ export function SignIn() {
     setNotice({ kind: 'resetSent', email })
   }
 
-  async function signInWithGoogle() {
-    setError(null)
-    const redirectTo = authRedirectUrl()
-    if (Capacitor.isNativePlatform()) {
-      // Google blocks OAuth inside webviews, so open a Custom Tab instead;
-      // the deep-link listener finishes the sign-in.
-      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo, skipBrowserRedirect: true },
-      })
-      if (oauthError) setError(readable(oauthError.message))
-      else if (data.url) await Browser.open({ url: data.url })
-    } else {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo },
-      })
-      if (oauthError) setError(readable(oauthError.message))
-    }
-  }
-
   const keepBox = (
     <label className="flex items-start gap-3 text-sm">
       <input
@@ -485,19 +450,6 @@ export function SignIn() {
             </Quiet>
           </div>
 
-          <div className="flex items-center gap-3 py-1 text-xs text-muted">
-            <span className="h-px flex-1 bg-edge" />
-            or
-            <span className="h-px flex-1 bg-edge" />
-          </div>
-
-          <button
-            type="button"
-            onClick={() => void signInWithGoogle()}
-            className="press w-full rounded-lg border border-edge bg-surface px-4 py-3 text-base font-semibold transition-colors hover:border-accent"
-          >
-            Continue with Google
-          </button>
         </form>
       ) : mode === 'createAccount' ? (
         /* ------------------------------------------------ create account */
