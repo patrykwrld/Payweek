@@ -63,6 +63,16 @@ vercel deploy --prebuilt --prod    # or: vercel --prod  (lets Vercel build)
 
 - `vercel.json` rewrites every path that isn't a real file to `/index.html`, so
   client-side routes (`/shifts`, `/payday`, …) work on refresh, while
-  `/privacy.html`, `/assets/*` and `/favicon.svg` are served directly.
+  `/privacy.html`, `/delete-account.html`, `/assets/*` and `/favicon.svg` are
+  served directly.
+- **Every real file has to be named in that negative lookahead**, or the SPA
+  rewrite swallows it and serves the app instead. `delete-account.html` is the
+  URL Google Play requires for account deletion, so it silently "working" as
+  the app would be a rejection.
+- **Do not put comments in `vercel.json`.** It has no comment syntax, and
+  Vercel rejects unknown top-level keys — including a `_comment` string —
+  before the build starts. The deployment fails with an empty build log and
+  the last good deployment stays live, which looks exactly like a site that
+  didn't update. Explanations go here instead.
 - The Android app reads the privacy URL from `VITE_PRIVACY_URL` (see
   `.env.example`); point it at the live URL before building the release AAB.

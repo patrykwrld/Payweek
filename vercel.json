@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "_comment": "Every real file has to be named in the negative lookahead below, or the SPA rewrite swallows it and serves index.html instead. delete-account.html is the URL Google Play requires for account deletion, so it silently 'working' as the app would be a rejection.",
   "rewrites": [
     {
       "source": "/((?!privacy\\.html|delete-account\\.html|assets/|favicon\\.svg).*)",
