@@ -18,16 +18,15 @@ work, and the rest is waiting.
 | | Step | Your time | Then |
 | --- | --- | --- | --- |
 | ~~**A**~~ | ~~Upload the bundle to Internal testing~~ | ✅ **done 4 Aug** | installed from Play |
-| **B** | App content — the compliance forms | 45 min | — |
-| **C** | Store listing — text and images | 30 min | — |
+| ~~**B**~~ | ~~App content — the compliance forms~~ | ✅ **done 5 Aug** | — |
+| ~~**C**~~ | ~~Store listing — text and images~~ | ✅ **done 5 Aug** | — |
 | **D** | **Closed testing — starts the 14-day clock** | 20 min | ⏳ **14 days** |
 | **E** | Use it, collect feedback, fix things | during the wait | — |
 | **F** | Apply for production access | 20 min | ⏳ a few days |
 | **G** | Production rollout | 10 min | 🎉 live |
 
-**B and C are the only things between you and the clock.** Both are pure
-form-filling, both are already written out, and neither needs the phone. Every
-hour they sit unfinished is an hour added to the end of the project.
+**Setup is complete — all 11 Play Console items are green.** From here nothing
+is paperwork. Everything that remains is either one 20-minute job or waiting.
 
 There is also **Step H — building an audience**, which runs *alongside* all of
 this rather than after it. It is at the bottom, and it is the one part of this
@@ -159,6 +158,25 @@ listing itself.
 ---
 
 ## Step D — Closed testing ⏳ this starts the clock
+
+### The three gates, in Play's own words
+
+With setup complete, the **Production** panel on the dashboard now shows
+exactly what is left. It is the whole remaining project on one screen:
+
+| | Gate | State |
+| --- | --- | --- |
+| 1 | Publish a closed testing release | 20 minutes of your time |
+| 2 | Have at least 12 testers opted in | **0 currently opted in** |
+| 3 | Run the closed test with ≥12 testers for ≥14 days | not started |
+
+**Apply for production** stays greyed out until all three are ticked.
+
+> ⚠️ **The clock starts when the 12th tester opts in — not when you publish
+> the track.** Gate 3 counts days on which at least 12 people were opted in.
+> Publish today and recruit slowly and you have simply moved launch day later.
+> This is why recruiting is now the highest-leverage thing in the project: it
+> is the only remaining task whose speed you control.
 
 Play Console → **Testing → Closed testing → Create track** (default "Alpha").
 
@@ -363,6 +381,7 @@ addresses collected before launch are worth more than a thousand followers.
 | Store assets | Six screenshots, icon, feature graphic, all listing copy |
 | Play paperwork | Data safety answers and reviewer instructions written |
 | Internal testing | Release 1 (1.0.0) live, installed from Play on a real phone |
+| **Play Console setup** | **All 11 items green — App content and store listing both complete, 5 Aug** |
 
 ### ⚠️ The two-day deploy outage — fixed 4 August, worth remembering
 
