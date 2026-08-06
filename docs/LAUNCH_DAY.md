@@ -20,7 +20,7 @@ work, and the rest is waiting.
 | ~~**A**~~ | ~~Upload the bundle to Internal testing~~ | ✅ **done 4 Aug** | installed from Play |
 | ~~**B**~~ | ~~App content — the compliance forms~~ | ✅ **done 5 Aug** | — |
 | ~~**C**~~ | ~~Store listing — text and images~~ | ✅ **done 5 Aug** | — |
-| **D** | **Closed testing — starts the 14-day clock** | 20 min | ⏳ **14 days** |
+| **D** | **Closed testing — published 5 Aug.** Now recruiting | ⏳ **waiting on opt-ins** |  |
 | **E** | Use it, collect feedback, fix things | during the wait | — |
 | **F** | Apply for production access | 20 min | ⏳ a few days |
 | **G** | Production rollout | 10 min | 🎉 live |
@@ -177,6 +177,18 @@ exactly what is left. It is the whole remaining project on one screen:
 > Publish today and recruit slowly and you have simply moved launch day later.
 > This is why recruiting is now the highest-leverage thing in the project: it
 > is the only remaining task whose speed you control.
+
+> ⚠️ **An address on the tester list is not an opt-in.** Adding somebody to
+> the email list only grants them permission to see the app. Gate 2 counts
+> people who then *tapped the link, tapped Become a tester, and installed from
+> Play*. A list of 14 addresses with nobody having tapped anything reads as
+> **0 testers** in Play Console, and the 14 days do not begin. Chase the taps,
+> not the addresses.
+
+**Track published 5 August**, listing rendering correctly — icon, name,
+description and release notes all live, installable from Play as
+*Payweek: Hours & Pay Tracker (Early Access)*. The "Early Access" label is
+what Play calls a closed track; it goes when Step G does.
 
 Play Console → **Testing → Closed testing → Create track** (default "Alpha").
 
