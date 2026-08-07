@@ -1,10 +1,14 @@
 ext {
     minSdkVersion = 23
-    // Play will not accept a new app targeting below API 35. The window moves
-    // every August — check the current floor before each submission:
+    // Play's floor moves every August. From 31 Aug 2026 an app targeting below
+    // API 36 cannot be updated at all — not rejected, simply frozen. Check the
+    // current floor before each submission:
     // https://developer.android.com/google/play/requirements/target-sdk
-    compileSdkVersion = 35
-    targetSdkVersion = 35
+    //
+    // 36 needs AGP 8.9+, which needs Gradle 8.11.1+. All four move together;
+    // see the note in build.gradle.
+    compileSdkVersion = 36
+    targetSdkVersion = 36
     androidxActivityVersion = '1.9.3'
     androidxAppCompatVersion = '1.7.0'
     androidxCoordinatorLayoutVersion = '1.2.0'

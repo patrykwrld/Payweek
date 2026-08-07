@@ -7,10 +7,19 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // AGP 8.2 refuses to compile against SDK 35; 8.6 is the first that
-        // accepts it, and 8.7 needs Gradle 8.9 (see gradle-wrapper.properties).
-        // These three move together — changing one alone will fail the build.
-        classpath 'com.android.tools.build:gradle:8.7.2'
+        // Google's minimum-versions-per-API-level table gives API 36 as
+        // needing AGP 8.9.1 and Gradle 8.11.1 at minimum:
+        // https://developer.android.com/build/releases/about-agp
+        //
+        // These three move together — SDK, AGP, Gradle — and changing one
+        // alone will fail the build. The chain before this was
+        // SDK 35 / AGP 8.7.2 / Gradle 8.9.
+        //
+        // 8.9.2 is deliberately the smallest step that clears the floor:
+        // Capacitor 6's plugin modules are the thing most likely to object to
+        // a large AGP jump. If the build ever complains that compileSdk 36
+        // needs something newer, AGP 8.13.0 with Gradle 8.13 is the next rung.
+        classpath 'com.android.tools.build:gradle:8.9.2'
         classpath 'com.google.gms:google-services:4.4.2'
 
         // NOTE: Do not place your application dependencies here; they belong
