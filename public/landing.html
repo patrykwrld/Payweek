@@ -126,17 +126,17 @@
          a transform on a single element, so it stays on the compositor. */
       .beams {
         position: absolute;
-        right: 2%; bottom: -16%;
-        width: min(62rem, 86%); aspect-ratio: 820 / 620;
+        right: -2%; bottom: -8%;
+        width: min(66rem, 92%); aspect-ratio: 820 / 620;
         background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22820%22%20height%3D%22620%22%20viewBox%3D%220%200%20820%20620%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%221%22%20x2%3D%220%22%20y2%3D%220%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%235e9bff%22%20stop-opacity%3D%22.85%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%237aa8ff%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a9c8ff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3Cfilter%20id%3D%22b%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22160%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2226%22%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Cg%20filter%3D%22url%28%23b%29%22%3E%3Crect%20x%3D%2240%22%20y%3D%22335%22%20width%3D%2258%22%20height%3D%22285%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22150%22%20y%3D%22230%22%20width%3D%2258%22%20height%3D%22390%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22260%22%20y%3D%22410%22%20width%3D%2258%22%20height%3D%22210%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22370%22%20y%3D%22174%22%20width%3D%2258%22%20height%3D%22446%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22480%22%20y%3D%22298%22%20width%3D%2258%22%20height%3D%22322%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22590%22%20y%3D%2250%22%20width%3D%2258%22%20height%3D%22570%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22700%22%20y%3D%22447%22%20width%3D%2258%22%20height%3D%22173%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") no-repeat center / contain;
-        opacity: 0.6;
+        opacity: 1;
         transform-origin: 50% 100%;
         animation: breathe 19s ease-in-out infinite;
         will-change: transform;
       }
       @keyframes breathe {
-        0%, 100% { transform: scaleY(1) translate3d(0, 0, 0); opacity: 0.5; }
-        50% { transform: scaleY(1.07) translate3d(-1.5rem, 0, 0); opacity: 0.72; }
+        0%, 100% { transform: scaleY(1) translate3d(0, 0, 0); opacity: 0.95; }
+        50% { transform: scaleY(1.07) translate3d(-1.5rem, 0, 0); opacity: 1; }
       }
 
       /* Hairlines, fading as they rise. Just enough structure to stop the
@@ -150,7 +150,7 @@
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .beams { animation: none; opacity: 0.58; }
+        .beams { animation: none; opacity: 0.95; }
       }
 
       .photo {
@@ -170,7 +170,7 @@
       .scrim {
         position: absolute; inset: 0;
         background:
-          linear-gradient(180deg, transparent 0%, rgba(8, 11, 16, 0.35) 58%, var(--bg) 97%),
+          linear-gradient(180deg, transparent 0%, rgba(8, 11, 16, 0.22) 62%, rgba(8, 11, 16, 0.75) 99%),
           linear-gradient(100deg, rgba(8, 11, 16, 0.92) 0%, rgba(8, 11, 16, 0.42) 34%, transparent 66%);
       }
 
