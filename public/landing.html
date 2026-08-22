@@ -106,9 +106,17 @@
       header { padding: 1.75rem 0; }
       .bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
       .brand {
+        display: inline-flex; align-items: center; gap: 0.6rem;
         font-weight: 700; font-size: 1.2rem; letter-spacing: -0.03em; color: var(--ink);
       }
-      .brand span { color: var(--accent); }
+      .mark {
+        width: 26px; height: 26px; border-radius: 7px; flex: none;
+        box-shadow: 0 0 0 1px var(--line);
+      }
+      /* The full stop has to live inside one text node with the word, or the
+         flex gap that separates the mark also separates the dot. */
+      .brand .word { white-space: nowrap; }
+      .brand .word span { color: var(--accent); }
       .ghost {
         font-size: 0.9rem; color: var(--body);
         border: 1px solid var(--line); border-radius: 999px; padding: 0.5rem 1.1rem;
@@ -117,7 +125,7 @@
       .ghost:hover { border-color: var(--line-2); color: var(--ink); background: var(--surface); }
 
       /* ── hero ───────────────────────────────────────────────────── */
-      .hero { padding: 3rem 0 5rem; }
+      .hero { padding: 1.5rem 0 4.5rem; }
       .pill {
         display: inline-flex; align-items: center; gap: 0.55rem;
         font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
@@ -235,7 +243,7 @@
           grid-template-columns: 1.02fr 0.98fr;
           align-items: center;
           gap: 4.5rem;
-          padding: 4.5rem 0 6rem;
+          padding: 2.5rem 0 5.5rem;
         }
         .art { margin-top: 0; justify-content: flex-end; }
         .frame { max-width: 320px; }
@@ -243,20 +251,36 @@
 
       /* ── the three points ───────────────────────────────────────── */
       .points {
-        display: grid; gap: 2.25rem;
-        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-        padding: 0 0 5.5rem;
+        display: grid; gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        padding: 0 0 5rem;
       }
+      .point {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 1.5rem 1.5rem 1.6rem;
+        opacity: 0; transform: translateY(18px);
+        transition:
+          opacity 0.75s var(--ease), transform 0.75s var(--ease),
+          border-color 0.4s var(--ease), background 0.4s var(--ease);
+      }
+      .point.seen { opacity: 1; transform: none; }
+      .point:hover { border-color: var(--line-2); background: rgba(255, 255, 255, 0.055); }
       .point h3 {
         font-size: 1.03rem; font-weight: 650; letter-spacing: -0.015em;
-        margin: 0 0 0.45rem; display: flex; align-items: center; gap: 0.6rem;
+        margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.65rem;
       }
       .point h3::before {
-        content: ''; width: 7px; height: 7px; border-radius: 2px;
+        content: ''; width: 8px; height: 8px; border-radius: 3px;
         background: linear-gradient(140deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 12px rgba(94, 155, 255, 0.55);
         flex: none;
       }
       .point p { margin: 0; color: var(--body); font-size: 0.97rem; line-height: 1.65; }
+      @media (prefers-reduced-motion: reduce) {
+        .point { opacity: 1; transform: none; transition: none; }
+      }
 
       /* ── footer ─────────────────────────────────────────────────── */
       footer {
@@ -275,7 +299,19 @@
     <div class="wrap">
       <header class="rise">
         <div class="bar">
-          <a class="brand" href="/">Payweek<span>.</span></a>
+          <a class="brand" href="/">
+            <svg class="mark" viewBox="0 0 512 512" aria-hidden="true">
+              <rect width="512" height="512" rx="112" fill="#0d1117"/>
+              <g stroke-linecap="round" stroke-width="46" fill="none">
+                <path d="M136 372 V 318" stroke="#3d5a86"/>
+                <path d="M204 372 V 280" stroke="#46679b"/>
+                <path d="M272 372 V 236" stroke="#4d78b8"/>
+                <path d="M340 372 V 190" stroke="#5489dc"/>
+                <path d="M408 372 V 140" stroke="#5e9bff"/>
+              </g>
+            </svg>
+            <span class="word">Payweek<span>.</span></span>
+          </a>
           <a class="ghost" href="/app">Open the app</a>
         </div>
       </header>
@@ -344,6 +380,30 @@
         </p>
       </footer>
     </div>
+
+    <script>
+      // Reveal the points as they come into view. IntersectionObserver rather
+      // than a scroll handler so it costs nothing on a cheap phone, and it
+      // degrades to simply visible if the API is missing.
+      ;(function () {
+        var items = document.querySelectorAll('.point')
+        if (!('IntersectionObserver' in window)) {
+          items.forEach(function (el) { el.classList.add('seen') })
+          return
+        }
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (e, i) {
+              if (!e.isIntersecting) return
+              setTimeout(function () { e.target.classList.add('seen') }, i * 90)
+              io.unobserve(e.target)
+            })
+          },
+          { rootMargin: '0px 0px -12% 0px' }
+        )
+        items.forEach(function (el) { io.observe(el) })
+      })()
+    </script>
 
     <script>
       // The publishable key is meant to be public. It is safe here because the
