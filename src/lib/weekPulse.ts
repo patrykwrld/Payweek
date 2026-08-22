@@ -25,6 +25,16 @@ export interface WeekPulse {
   /** Nearest payday still to come for the weeks in progress. */
   paydayDate: string | null
   daysToPayday: number | null
+  /** What each day of the pay week earned, index 0 being the week's start. */
+  perDay: readonly DayEarnings[]
+}
+
+export interface DayEarnings {
+  date: string
+  pence: number
+  isToday: boolean
+  /** Later than today, so an empty bar means "not yet" rather than "nothing". */
+  isFuture: boolean
 }
 
 /** Total the priced shifts falling in [weekStart, weekStart+6] for an agency. */
@@ -93,6 +103,20 @@ export function weekPulse(
 
   const weekStart = leadWeekStart ?? payWeekStart(today, 1)
 
+  // Bucketed here rather than in the component for the same reason as the
+  // comparison above: it is week-boundary arithmetic, and an off-by-one would
+  // put somebody's Sunday night under the wrong bar. Deliberately by calendar
+  // date across every agency, so a day with two agencies' shifts reads as one
+  // day's earnings — which is what the person looking at it means by it.
+  const perDay: DayEarnings[] = Array.from({ length: 7 }, (_, i) => {
+    const date = format(addDays(parseISO(weekStart), i), 'yyyy-MM-dd')
+    let pence = 0
+    for (const entry of priced.values()) {
+      if (entry.shift.date === date) pence += entry.pricing.grossPence
+    }
+    return { date, pence, isToday: date === today, isFuture: date > today }
+  })
+
   return {
     grossPence,
     paidMinutes,
@@ -106,5 +130,6 @@ export function weekPulse(
       payday === null
         ? null
         : differenceInCalendarDays(parseISO(payday), parseISO(today)),
+    perDay,
   }
 }
