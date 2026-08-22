@@ -86,6 +86,13 @@
           radial-gradient(45rem 32rem at 8% 8%, rgba(94, 155, 255, 0.07), transparent 62%);
       }
 
+      body::after {
+        content: '';
+        position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+        opacity: 0.032;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+
       .wrap { position: relative; max-width: 70rem; margin: 0 auto; padding: 0 1.75rem; }
       a { color: var(--accent); text-decoration: none; }
 
@@ -220,6 +227,13 @@
         background: linear-gradient(160deg, rgba(255,255,255,0.16), rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.09));
         box-shadow: 0 34px 70px rgba(0, 0, 0, 0.62), 0 2px 0 rgba(255,255,255,0.06) inset;
       }
+      @keyframes drift {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+      .frame { animation: drift 8s ease-in-out 1.2s infinite; }
+      @media (prefers-reduced-motion: reduce) { .frame { animation: none; } }
+
       .frame img {
         display: block; width: 100%; height: auto;
         border-radius: 26px;
@@ -280,6 +294,28 @@
       .point p { margin: 0; color: var(--body); font-size: 0.97rem; line-height: 1.65; }
       @media (prefers-reduced-motion: reduce) {
         .point { opacity: 1; transform: none; transition: none; }
+      }
+
+      /* ── close ──────────────────────────────────────────────────── */
+      .close {
+        text-align: center;
+        padding: 0 0 5rem;
+      }
+      .close p {
+        font-size: 1.18rem; letter-spacing: -0.02em; color: var(--ink);
+        margin: 0 0 1.4rem; max-width: 32rem; margin-inline: auto;
+      }
+      .cta {
+        display: inline-block;
+        color: var(--ink); font-weight: 600; font-size: 0.97rem;
+        border: 1px solid var(--line-2); border-radius: 999px;
+        padding: 0.75rem 1.6rem;
+        transition: background 0.4s var(--ease), border-color 0.4s var(--ease), transform 0.35s var(--ease);
+      }
+      .cta:hover {
+        background: rgba(94, 155, 255, 0.1);
+        border-color: rgba(94, 155, 255, 0.45);
+        transform: translateY(-1px);
       }
 
       /* ── footer ─────────────────────────────────────────────────── */
@@ -365,6 +401,11 @@
         </div>
       </section>
 
+      <section class="close">
+        <p>Payweek is finished and in closed testing on Google Play right now.</p>
+        <a class="cta" href="#email" id="jump">Get the launch email</a>
+      </section>
+
       <footer>
         <div>Payweek · Know what's in your packet</div>
         <nav class="flinks">
@@ -406,6 +447,11 @@
     </script>
 
     <script>
+      // Scrolling to the field is not much use if the cursor is not in it.
+      document.getElementById('jump').addEventListener('click', function () {
+        setTimeout(function () { document.getElementById('email').focus() }, 500)
+      })
+
       // The publishable key is meant to be public. It is safe here because the
       // launch_signups table has an insert policy and deliberately no select
       // policy — this key can add an address and cannot read the list back.
