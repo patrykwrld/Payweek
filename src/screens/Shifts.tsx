@@ -1,6 +1,11 @@
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { EmptyState, ScreenTitle } from '../components/ui'
+import {
+  EmptyState,
+  RateBands,
+  RateBandsLegend,
+  ScreenTitle,
+} from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { UndoBar } from '../components/Undo'
 import type { Tables } from '../lib/database.types'
@@ -26,9 +31,10 @@ export function Shifts() {
 
   const [selecting, setSelecting] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [undo, setUndo] = useState<{ rows: Tables<'shifts'>[]; message: string } | null>(
-    null,
-  )
+  const [undo, setUndo] = useState<{
+    rows: Tables<'shifts'>[]
+    message: string
+  } | null>(null)
 
   const dismissUndo = useCallback(() => setUndo(null), [])
 
@@ -116,6 +122,12 @@ export function Shifts() {
         Shifts
       </ScreenTitle>
 
+      {shifts.length > 0 && !selecting && (
+        <p className="-mt-4 mb-6 font-mono text-xs text-muted">
+          {shifts.length} logged
+        </p>
+      )}
+
       {ordered.length === 0 && (
         <EmptyState
           title="No shifts logged"
@@ -131,7 +143,7 @@ export function Shifts() {
           const allPicked = weekIds.every((id) => selected.has(id))
           return (
             <section key={weekStart}>
-              <header className="mb-2 flex items-baseline justify-between">
+              <header className="sticky top-0 z-[2] mb-2 flex items-baseline justify-between gap-2.5 bg-gradient-to-b from-void from-72% to-transparent py-2">
                 <h2 className="text-sm font-semibold text-muted">
                   {selecting ? (
                     <button
@@ -156,47 +168,62 @@ export function Shifts() {
                 </h2>
                 <p className="font-mono text-sm">
                   {formatMinutes(minutes)} ·{' '}
-                  <span className="font-semibold text-ink">{formatPence(gross)}</span>
+                  <span className="font-semibold text-ink">
+                    {formatPence(gross)}
+                  </span>
                 </p>
               </header>
-              <div className="card-raised overflow-hidden rounded-2xl border border-edge bg-surface">
+              <div className="card-raised overflow-hidden rounded-[20px] border border-edge bg-surface">
                 {entries.map((entry, i) => {
                   const picked = selected.has(entry.shift.id)
                   const body = (
                     <>
-                      {selecting && (
-                        <span
-                          aria-hidden="true"
-                          className={`mr-3 grid size-5 shrink-0 place-items-center rounded-md border text-xs ${
-                            picked
-                              ? 'border-accent bg-accent text-void'
-                              : 'border-edge'
-                          }`}
-                        >
-                          {picked ? '✓' : ''}
-                        </span>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold">{formatDay(entry.shift.date)}</p>
-                        <p className="truncate text-sm text-muted">
-                          {agencyName.get(entry.shift.agency_id) ?? '—'} ·{' '}
-                          <span className="font-mono">
-                            {entry.shift.start_time.slice(0, 5)}–
-                            {entry.shift.end_time.slice(0, 5)}
+                      <div className="flex items-center gap-3">
+                        {selecting && (
+                          <span
+                            aria-hidden="true"
+                            className={`mr-3 grid size-5 shrink-0 place-items-center rounded-md border text-xs ${
+                              picked
+                                ? 'border-accent bg-accent text-void'
+                                : 'border-edge'
+                            }`}
+                          >
+                            {picked ? '✓' : ''}
                           </span>
-                        </p>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold">
+                            {formatDay(entry.shift.date)}
+                          </p>
+                          <p className="truncate text-sm text-muted">
+                            {agencyName.get(entry.shift.agency_id) ?? '—'} ·{' '}
+                            <span className="font-mono">
+                              {entry.shift.start_time.slice(0, 5)}–
+                              {entry.shift.end_time.slice(0, 5)}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="font-mono font-semibold">
+                            {formatPence(entry.pricing.grossPence)}
+                          </p>
+                          <p className="font-mono text-sm text-muted">
+                            {formatMinutes(entry.pricing.paidMinutes)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="shrink-0 text-right">
-                        <p className="font-mono font-semibold">
-                          {formatPence(entry.pricing.grossPence)}
-                        </p>
-                        <p className="font-mono text-sm text-muted">
-                          {formatMinutes(entry.pricing.paidMinutes)}
-                        </p>
+                      {/* What the money was actually made of, at a glance:
+                          how much of the row was ordinary hours and how much
+                          was nights and weekends. */}
+                      <div className="mt-[9px]">
+                        <RateBands
+                          breakdown={entry.pricing.breakdown}
+                          paidMinutes={entry.pricing.paidMinutes}
+                        />
                       </div>
                     </>
                   )
-                  const cls = `press flex w-full items-center px-4 py-3.5 text-left ${
+                  const cls = `press block w-full px-3.5 pb-3 pt-[13px] text-left ${
                     i > 0 ? 'border-t border-edge' : ''
                   } ${picked ? 'bg-accent/10' : ''}`
 
@@ -226,6 +253,8 @@ export function Shifts() {
         })}
       </div>
 
+      {ordered.length > 0 && <RateBandsLegend />}
+
       {/* Bulk actions sit above the tab bar while anything is picked. */}
       {selecting && totalSelected > 0 && (
         <div className="fixed inset-x-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 mx-auto md:bottom-8 md:left-60 w-full max-w-md px-5 md:max-w-2xl md:px-8">
@@ -250,7 +279,11 @@ export function Shifts() {
       )}
 
       {undo && (
-        <UndoBar message={undo.message} onUndo={restore} onDismiss={dismissUndo} />
+        <UndoBar
+          message={undo.message}
+          onUndo={restore}
+          onDismiss={dismissUndo}
+        />
       )}
     </>
   )
