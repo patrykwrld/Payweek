@@ -58,7 +58,7 @@
         -webkit-font-smoothing: antialiased;
         overflow-x: hidden;
       }
-      .wrap { max-width: 68rem; margin: 0 auto; padding: 0 1.25rem; }
+      .wrap { max-width: 66rem; margin: 0 auto; padding: 0 1.5rem; }
       a { color: var(--accent); }
 
       header { padding: 1.5rem 0; }
@@ -72,60 +72,82 @@
       }
       .ghost:hover { border-color: var(--accent); color: var(--ink); }
 
-      .hero { padding: 3rem 0 1rem; text-align: center; }
+      .hero { padding: 2.5rem 0 3rem; text-align: center; }
       .eyebrow {
-        display: inline-block; font-size: 0.78rem; font-weight: 650;
+        display: inline-block; font-size: 0.72rem; font-weight: 650;
         letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
         border: 1px solid rgba(94,155,255,0.35); border-radius: 999px;
-        padding: 0.4rem 0.9rem; margin-bottom: 1.5rem;
+        padding: 0.35rem 0.8rem; margin-bottom: 1.25rem;
       }
       h1 {
-        font-size: clamp(2.1rem, 6vw, 3.6rem); line-height: 1.08;
-        letter-spacing: -0.035em; font-weight: 700; margin: 0 0 1.1rem;
+        font-size: clamp(1.9rem, 4vw, 2.5rem); line-height: 1.14;
+        letter-spacing: -0.035em; font-weight: 700; margin: 0 0 1rem;
       }
       h1 em { font-style: normal; color: var(--accent); }
       .lede {
-        font-size: clamp(1.05rem, 2.4vw, 1.3rem); color: var(--body);
-        max-width: 34rem; margin: 0 auto 2.25rem;
+        font-size: clamp(1rem, 1.6vw, 1.15rem); color: var(--body);
+        max-width: 38rem; margin: 0 auto 2rem;
       }
+
+      /* The phone shots are 416x732. Left unconstrained they render near full
+         size and get cut off by the fold, which reads as a broken image rather
+         than a screenshot. Capped and framed instead. */
+      .phone {
+        width: 100%; max-width: 300px; height: auto; display: block;
+        border: 1px solid var(--edge); border-radius: 20px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      }
+
+      /* Desktop: two columns. A centred column of huge type with a screenshot
+         dumped underneath is what made this look unfinished. */
+      @media (min-width: 60rem) {
+        .hero {
+          display: grid; grid-template-columns: 1.15fr 0.85fr;
+          align-items: center; gap: 3.5rem; text-align: left;
+          padding: 2.5rem 0 4rem;
+        }
+        .hero .lede { margin-left: 0; margin-right: 0; }
+        .hero form { margin-left: 0; }
+        .hero-art { justify-content: flex-end; margin-top: 0; }
+        .hero-art .phone { max-width: 330px; }
+      }
+      /* Shown on every width: it is the screen the headline is talking about.
+         Beside the copy on desktop, under the form on a phone. */
+      .hero-art { display: flex; justify-content: center; margin-top: 2.5rem; }
 
       form { max-width: 30rem; margin: 0 auto; }
       .row { display: flex; gap: 0.6rem; }
       input[type=email] {
         flex: 1; min-width: 0; background: var(--surface); color: var(--ink);
         border: 1px solid var(--edge); border-radius: 12px;
-        padding: 0.95rem 1rem; font: inherit; font-size: 1rem;
+        padding: 0.9rem 1rem; font: inherit; font-size: 1rem;
       }
+      input[type=email]::placeholder { color: #6d7a8a; }
       input[type=email]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
       button {
         background: var(--accent); color: #07101f; border: 0; border-radius: 12px;
-        padding: 0.95rem 1.4rem; font: inherit; font-weight: 650; font-size: 1rem;
+        padding: 0.9rem 1.3rem; font: inherit; font-weight: 650; font-size: 1rem;
         cursor: pointer; white-space: nowrap;
       }
       button:hover { filter: brightness(1.08); }
       button[disabled] { opacity: 0.6; cursor: default; }
-      .hint { font-size: 0.85rem; color: var(--muted); margin: 0.8rem 0 0; }
-      /* On a phone the button eats the row and the email box collapses to
-         about seven characters, which reads as broken. Stack instead. */
+      .hint { font-size: 0.85rem; color: var(--muted); margin: 0.75rem 0 0; }
+      .note { margin: 0.8rem 0 0; font-size: 0.95rem; min-height: 1.4rem; }
+      .note.ok { color: #5fd39a; }
+      .note.bad { color: var(--warn); }
+      .pot { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
       @media (max-width: 30rem) {
         .row { flex-direction: column; }
         button { width: 100%; }
       }
-      .note { margin: 0.9rem 0 0; font-size: 0.95rem; min-height: 1.4rem; }
-      .note.ok { color: #5fd39a; }
-      .note.bad { color: var(--warn); }
-      .pot { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
       .shots {
-        display: grid; gap: 1.25rem; margin: 3.5rem 0 1rem;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        display: grid; gap: 2rem; margin: 0 0 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        justify-items: center;
       }
-      figure { margin: 0; }
-      .shots img {
-        width: 100%; height: auto; display: block;
-        border: 1px solid var(--edge); border-radius: 16px;
-      }
-      figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.75rem; text-align: center; }
+      figure { margin: 0; max-width: 300px; }
+      figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.9rem; text-align: center; }
 
       section { padding: 3.5rem 0; }
       h2 { font-size: clamp(1.5rem, 3.5vw, 2.1rem); letter-spacing: -0.025em; margin: 0 0 0.6rem; }
@@ -154,42 +176,49 @@
       </header>
 
       <div class="hero">
-        <span class="eyebrow">Coming to Google Play</span>
-        <h1>Your payslip is <em>£30 short</em>.<br />Here's how to prove it.</h1>
-        <p class="lede">
-          Payweek prices every shift you work — night rates, weekend rates,
-          breaks, shifts that run past midnight — so you know what you're owed
-          before the money lands.
-        </p>
+        <div class="hero-copy">
+          <span class="eyebrow">Coming to Google Play</span>
+          <h1>Your payslip is <em>£30 short</em>.<br />Here's how to prove it.</h1>
+          <p class="lede">
+            Payweek prices every shift you work — night rates, weekend rates,
+            breaks, shifts that run past midnight — so you know what you're owed
+            before the money lands.
+          </p>
 
-        <form id="signup" novalidate>
-          <div class="row">
-            <label for="email" class="pot">Your email address</label>
-            <input id="email" name="email" type="email" inputmode="email"
-                   autocomplete="email" placeholder="you@example.com" required />
-            <!-- Honeypot. Bots fill every field they find; people never see it. -->
-            <input class="pot" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
-            <button type="submit" id="go">Tell me when it's out</button>
-          </div>
-          <p class="note" id="note" role="status" aria-live="polite"></p>
-          <p class="hint">One email when it launches. Nothing else, ever.</p>
-        </form>
+          <form id="signup" novalidate>
+            <div class="row">
+              <label for="email" class="pot">Your email address</label>
+              <input id="email" name="email" type="email" inputmode="email"
+                     autocomplete="email" placeholder="you@example.com" required />
+              <!-- Honeypot. Bots fill every field they find; people never see it. -->
+              <input class="pot" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
+              <button type="submit" id="go">Tell me when it's out</button>
+            </div>
+            <p class="note" id="note" role="status" aria-live="polite"></p>
+            <p class="hint">One email when it launches. Nothing else, ever.</p>
+          </form>
+        </div>
+
+        <div class="hero-art">
+          <img class="phone" src="/shots/check.png" width="416" height="732"
+               alt="The payslip check screen reporting the payslip is £30.00 short of the hours logged." />
+        </div>
       </div>
 
-      <div class="shots">
-        <figure>
-          <img src="/shots/week.png" width="416" height="732" alt="The Payweek home screen showing £628.29 earned across 5 shifts this pay week." loading="lazy" />
-          <figcaption>Watch the week's total climb</figcaption>
-        </figure>
-        <figure>
-          <img src="/shots/breakdown.png" width="416" height="732" alt="A single shift broken down into rate bands with a subtotal for each." loading="lazy" />
-          <figcaption>Every band, every rate, no black box</figcaption>
-        </figure>
-        <figure>
-          <img src="/shots/check.png" width="416" height="732" alt="The payslip check screen reporting the payslip is £30.00 short of the hours logged." loading="lazy" />
-          <figcaption>Catch it when they get it wrong</figcaption>
-        </figure>
-      </div>
+      <section>
+        <h2>See exactly where the number came from</h2>
+        <p class="sub">No black box. Every band, every rate, every subtotal.</p>
+        <div class="shots">
+          <figure>
+            <img class="phone" src="/shots/week.png" width="416" height="732" alt="The Payweek home screen showing £628.29 earned across 5 shifts this pay week." loading="lazy" />
+            <figcaption>Watch the week's total climb</figcaption>
+          </figure>
+          <figure>
+            <img class="phone" src="/shots/breakdown.png" width="416" height="732" alt="A single shift broken down into rate bands with a subtotal for each." loading="lazy" />
+            <figcaption>Tap any shift for the full working</figcaption>
+          </figure>
+        </div>
+      </section>
 
       <section>
         <h2>Built for agency work, not office work</h2>
