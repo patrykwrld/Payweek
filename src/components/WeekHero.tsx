@@ -57,7 +57,9 @@ export function WeekHero({ pulse }: { pulse: WeekPulse }) {
       <p className="figure-week relative mt-1.5">{formatPence(shown)}</p>
 
       <div className="relative mt-2.5 flex flex-wrap items-center gap-2 text-sm text-muted">
-        <span className="font-mono">{formatMinutes(pulse.paidMinutes)} logged</span>
+        <span className="font-mono">
+          {formatMinutes(pulse.paidMinutes)} logged
+        </span>
         {delta !== null && delta !== 0 && (
           <span
             className={`rounded-[7px] px-2 py-[3px] font-mono text-[11.5px] font-semibold ${
@@ -75,7 +77,9 @@ export function WeekHero({ pulse }: { pulse: WeekPulse }) {
       <div className="relative mt-5 flex h-[70px] items-end gap-1.5">
         {perDay.map((day, i) => {
           const height =
-            day.pence === 0 ? '3px' : `${Math.round(14 + 86 * (day.pence / most))}%`
+            day.pence === 0
+              ? '3px'
+              : `${Math.round(14 + 86 * (day.pence / most))}%`
           return (
             <button
               key={day.date}
@@ -92,8 +96,8 @@ export function WeekHero({ pulse }: { pulse: WeekPulse }) {
                   day.pence === 0
                     ? 'bg-edge'
                     : day.isToday
-                      ? 'bg-accent shadow-[0_0_16px_rgba(94,155,255,0.45)]'
-                      : 'bg-accent/55'
+                    ? 'bg-accent shadow-[0_0_16px_rgba(94,155,255,0.45)]'
+                    : 'bg-accent/55'
                 } ${picked === i ? 'ring-2 ring-accent/60' : ''}`}
                 style={{ height }}
               />
@@ -120,7 +124,9 @@ export function WeekHero({ pulse }: { pulse: WeekPulse }) {
         <p className="min-w-0 flex-1 truncate whitespace-nowrap font-mono text-xs text-muted">
           {chosen
             ? `${format(parseISO(chosen.date), 'EEE d MMM')} · ${
-                chosen.pence === 0 ? 'nothing logged' : formatPence(chosen.pence)
+                chosen.pence === 0
+                  ? 'nothing logged'
+                  : formatPence(chosen.pence)
               }`
             : `Day ${days} of 7 · tap a bar`}
         </p>
@@ -128,12 +134,12 @@ export function WeekHero({ pulse }: { pulse: WeekPulse }) {
           {chosen
             ? 'clear'
             : pulse.daysToPayday === null
-              ? `week to ${format(parseISO(pulse.weekEnd), 'EEE d MMM')}`
-              : pulse.daysToPayday === 0
-                ? 'pays today'
-                : pulse.daysToPayday === 1
-                  ? 'pays tomorrow'
-                  : `pays in ${pulse.daysToPayday} days`}
+            ? `week to ${format(parseISO(pulse.weekEnd), 'EEE d MMM')}`
+            : pulse.daysToPayday === 0
+            ? 'pays today'
+            : pulse.daysToPayday === 1
+            ? 'pays tomorrow'
+            : `pays in ${pulse.daysToPayday} days`}
         </span>
       </div>
     </section>
