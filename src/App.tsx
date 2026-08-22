@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from './auth/AuthProvider'
 import { SignIn } from './auth/SignIn'
 import { ResetPassword } from './auth/ResetPassword'
@@ -68,7 +69,12 @@ export default function App() {
   if (!introDone) return <Intro onDone={() => setIntroDone(true)} />
 
   return (
-    <BrowserRouter>
+    // On the web the app lives under /app, because payweek.app itself is now
+    // the marketing page. Android serves from the root of its own bundle and
+    // must stay there, so the basename is platform-dependent rather than a
+    // constant. Getting this wrong sends the nav's home tab to the landing
+    // page instead of Add a shift.
+    <BrowserRouter basename={Capacitor.isNativePlatform() ? undefined : '/app'}>
       <Routes>
         <Route element={<Shell />}>
           <Route path="/" element={<QuickAdd />} />

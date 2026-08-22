@@ -69,6 +69,22 @@ vercel deploy --prebuilt --prod    # or: vercel --prod  (lets Vercel build)
   rewrite swallows it and serves the app instead. `delete-account.html` is the
   URL Google Play requires for account deletion, so it silently "working" as
   the app would be a rejection.
+- **Vercel checks the filesystem before it consults rewrites.** This is the
+  rule that decides the whole layout. `dist/index.html` exists, so `/` resolves
+  to it directly and *no rewrite for `/` can ever fire* — a rewrite sending
+  `/` to a landing page is silently ignored while `/shifts` works fine, because
+  `/shifts` is not a file. The only way to serve something else at the root is
+  for it to **be** `index.html`.
+  That is what `scripts/postbuild-web.mjs` does: after the build it copies the
+  SPA to `app.html` and the landing page over `index.html`. It runs from the
+  `vercel-build` script and **never** from `npm run build`, because
+  `npx cap sync android` copies `dist/` into the Android bundle and Capacitor
+  loads `index.html` from it — swapping there would ship the marketing page as
+  the Android app.
+  The matching half is in `src/App.tsx`: the router's `basename` is `/app` on
+  web and unset on native. Without it the bottom nav's home tab points at `/`,
+  which is now the landing page, so tapping **Add** would throw a signed-in
+  user out of the app.
 - **Do not put comments in `vercel.json`.** It has no comment syntax, and
   Vercel rejects unknown top-level keys — including a `_comment` string —
   before the build starts. The deployment fails with an empty build log and

@@ -4,6 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0b0f14" />
+    <script>
+      // Supabase sends confirmation and password-reset links back to the site
+      // root, and the root is now this page. Hand those straight to the app
+      // before anything renders, so nobody lands on marketing copy holding a
+      // one-time token.
+      (function () {
+        var q = window.location.search
+        var h = window.location.hash
+        if (/[?&](code|error|error_description)=/.test(q) || /access_token=|type=recovery/.test(h)) {
+          window.location.replace('/app' + q + h)
+        }
+      })()
+    </script>
     <title>Payweek — know what you're owed before payday</title>
     <meta name="description" content="Payweek works out what you're owed for the shifts you've worked, and tells you if your payslip is short. Built for UK agency workers paid weekly." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
