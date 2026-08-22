@@ -2,7 +2,18 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/((?!privacy\\.html|delete-account\\.html|assets/|favicon\\.svg).*)",
+      "source": "/",
+      "has": [{ "type": "query", "key": "code" }],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "query", "key": "error" }],
+      "destination": "/index.html"
+    },
+    { "source": "/", "destination": "/landing.html" },
+    {
+      "source": "/((?!privacy\\.html|delete-account\\.html|landing\\.html|og\\.png|shots/|assets/|favicon\\.svg).*)",
       "destination": "/index.html"
     }
   ],

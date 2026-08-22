@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0f14" />
+    <title>Payweek — know what you're owed before payday</title>
+    <meta name="description" content="Payweek works out what you're owed for the shifts you've worked, and tells you if your payslip is short. Built for UK agency workers paid weekly." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href="https://payweek.app/" />
+
+    <!-- Link previews. Without these, a link pasted into Instagram, WhatsApp
+         or X renders as a bare URL, which converts terribly. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://payweek.app/" />
+    <meta property="og:title" content="Payweek — know what you're owed before payday" />
+    <meta property="og:description" content="Log agency shifts, see your expected pay, and catch an underpaid payslip." />
+    <meta property="og:image" content="https://payweek.app/og.png" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="500" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Payweek — know what you're owed before payday" />
+    <meta name="twitter:description" content="Log agency shifts, see your expected pay, and catch an underpaid payslip." />
+    <meta name="twitter:image" content="https://payweek.app/og.png" />
+
+    <style>
+      :root {
+        --void: #0b0f14;
+        --surface: #131a22;
+        --edge: #242e3a;
+        --accent: #5e9bff;
+        --ink: #eef3f8;
+        --body: #cdd6e2;
+        --muted: #8f9bab;
+        --warn: #ff6b6b;
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--void);
+        color: var(--ink);
+        font: 17px/1.6 'Inter Variable', Inter, system-ui, -apple-system,
+          'Segoe UI', Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      .wrap { max-width: 68rem; margin: 0 auto; padding: 0 1.25rem; }
+      a { color: var(--accent); }
+
+      header { padding: 1.5rem 0; }
+      .bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+      .brand { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.02em; text-decoration: none; color: var(--ink); }
+      .brand span { color: var(--accent); }
+      .ghost {
+        font-size: 0.9rem; text-decoration: none; color: var(--body);
+        border: 1px solid var(--edge); border-radius: 999px; padding: 0.5rem 1rem;
+        white-space: nowrap;
+      }
+      .ghost:hover { border-color: var(--accent); color: var(--ink); }
+
+      .hero { padding: 3rem 0 1rem; text-align: center; }
+      .eyebrow {
+        display: inline-block; font-size: 0.78rem; font-weight: 650;
+        letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
+        border: 1px solid rgba(94,155,255,0.35); border-radius: 999px;
+        padding: 0.4rem 0.9rem; margin-bottom: 1.5rem;
+      }
+      h1 {
+        font-size: clamp(2.1rem, 6vw, 3.6rem); line-height: 1.08;
+        letter-spacing: -0.035em; font-weight: 700; margin: 0 0 1.1rem;
+      }
+      h1 em { font-style: normal; color: var(--accent); }
+      .lede {
+        font-size: clamp(1.05rem, 2.4vw, 1.3rem); color: var(--body);
+        max-width: 34rem; margin: 0 auto 2.25rem;
+      }
+
+      form { max-width: 30rem; margin: 0 auto; }
+      .row { display: flex; gap: 0.6rem; }
+      input[type=email] {
+        flex: 1; min-width: 0; background: var(--surface); color: var(--ink);
+        border: 1px solid var(--edge); border-radius: 12px;
+        padding: 0.95rem 1rem; font: inherit; font-size: 1rem;
+      }
+      input[type=email]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+      button {
+        background: var(--accent); color: #07101f; border: 0; border-radius: 12px;
+        padding: 0.95rem 1.4rem; font: inherit; font-weight: 650; font-size: 1rem;
+        cursor: pointer; white-space: nowrap;
+      }
+      button:hover { filter: brightness(1.08); }
+      button[disabled] { opacity: 0.6; cursor: default; }
+      .hint { font-size: 0.85rem; color: var(--muted); margin: 0.8rem 0 0; }
+      /* On a phone the button eats the row and the email box collapses to
+         about seven characters, which reads as broken. Stack instead. */
+      @media (max-width: 30rem) {
+        .row { flex-direction: column; }
+        button { width: 100%; }
+      }
+      .note { margin: 0.9rem 0 0; font-size: 0.95rem; min-height: 1.4rem; }
+      .note.ok { color: #5fd39a; }
+      .note.bad { color: var(--warn); }
+      .pot { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+      .shots {
+        display: grid; gap: 1.25rem; margin: 3.5rem 0 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      }
+      figure { margin: 0; }
+      .shots img {
+        width: 100%; height: auto; display: block;
+        border: 1px solid var(--edge); border-radius: 16px;
+      }
+      figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.75rem; text-align: center; }
+
+      section { padding: 3.5rem 0; }
+      h2 { font-size: clamp(1.5rem, 3.5vw, 2.1rem); letter-spacing: -0.025em; margin: 0 0 0.6rem; }
+      .sub { color: var(--muted); margin: 0 0 2rem; }
+      .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+      .card { background: var(--surface); border: 1px solid var(--edge); border-radius: 14px; padding: 1.4rem; }
+      .card h3 { margin: 0 0 0.45rem; font-size: 1.05rem; }
+      .card p { margin: 0; color: var(--body); font-size: 0.97rem; }
+
+      .status { background: var(--surface); border: 1px solid var(--edge); border-radius: 16px; padding: 1.6rem; }
+      .status p { margin: 0; color: var(--body); }
+
+      footer { border-top: 1px solid var(--edge); padding: 2rem 0 3rem; color: var(--muted); font-size: 0.9rem; }
+      footer a { color: var(--muted); }
+      footer nav { margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 1.1rem; }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="bar">
+          <a class="brand" href="/">Payweek<span>.</span></a>
+          <a class="ghost" href="/app">Open the app</a>
+        </div>
+      </header>
+
+      <div class="hero">
+        <span class="eyebrow">Coming to Google Play</span>
+        <h1>Your payslip is <em>£30 short</em>.<br />Here's how to prove it.</h1>
+        <p class="lede">
+          Payweek prices every shift you work — night rates, weekend rates,
+          breaks, shifts that run past midnight — so you know what you're owed
+          before the money lands.
+        </p>
+
+        <form id="signup" novalidate>
+          <div class="row">
+            <label for="email" class="pot">Your email address</label>
+            <input id="email" name="email" type="email" inputmode="email"
+                   autocomplete="email" placeholder="you@example.com" required />
+            <!-- Honeypot. Bots fill every field they find; people never see it. -->
+            <input class="pot" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
+            <button type="submit" id="go">Tell me when it's out</button>
+          </div>
+          <p class="note" id="note" role="status" aria-live="polite"></p>
+          <p class="hint">One email when it launches. Nothing else, ever.</p>
+        </form>
+      </div>
+
+      <div class="shots">
+        <figure>
+          <img src="/shots/week.png" width="416" height="732" alt="The Payweek home screen showing £628.29 earned across 5 shifts this pay week." loading="lazy" />
+          <figcaption>Watch the week's total climb</figcaption>
+        </figure>
+        <figure>
+          <img src="/shots/breakdown.png" width="416" height="732" alt="A single shift broken down into rate bands with a subtotal for each." loading="lazy" />
+          <figcaption>Every band, every rate, no black box</figcaption>
+        </figure>
+        <figure>
+          <img src="/shots/check.png" width="416" height="732" alt="The payslip check screen reporting the payslip is £30.00 short of the hours logged." loading="lazy" />
+          <figcaption>Catch it when they get it wrong</figcaption>
+        </figure>
+      </div>
+
+      <section>
+        <h2>Built for agency work, not office work</h2>
+        <p class="sub">Weekly pay, several agencies, and rates that change depending on when you clocked in.</p>
+        <div class="grid">
+          <div class="card">
+            <h3>It knows your real rate</h3>
+            <p>Set each agency up once. Night rate between any two times, weekend rate, a one-off rate when you've done a deal.</p>
+          </div>
+          <div class="card">
+            <h3>Midnight doesn't break it</h3>
+            <p>A shift running 18:00 to 02:00 gets split across the right rates, and unpaid breaks come off the band they actually fall in.</p>
+          </div>
+          <div class="card">
+            <h3>Works in the car park</h3>
+            <p>No signal, no problem — shifts save on your phone and sync when you reconnect. Big numbers you can read one-handed.</p>
+          </div>
+          <div class="card">
+            <h3>No ads, no tracking</h3>
+            <p>No advertising, no analytics SDKs, nothing sold to anyone. Export everything to a spreadsheet or delete it, whenever you like.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="status">
+          <h2 style="font-size:1.25rem">Where it's up to</h2>
+          <p>
+            Payweek is finished and in closed testing on Google Play right now.
+            Google requires a two-week test before a new app can go public, so
+            it's a matter of weeks rather than months. Leave your email above
+            and you'll get one message the day it's live.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <div>Payweek · Know what's in your packet</div>
+        <nav>
+          <a href="mailto:privacy@payweek.app">privacy@payweek.app</a>
+          <a href="/privacy.html">Privacy policy</a>
+          <a href="/delete-account.html">Delete your account</a>
+          <a href="/app">Open the app</a>
+        </nav>
+        <p style="margin-top:1.2rem; max-width:44rem">
+          Payweek estimates gross pay from the hours and rates you enter. It
+          does not calculate tax or National Insurance, and it is not a
+          substitute for your payslip or advice from your agency.
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      // The publishable key is meant to be public. It is safe here because the
+      // launch_signups table has an insert policy and deliberately no select
+      // policy — this key can add an address and cannot read the list back.
+      var URL_ = 'https://jcwxxtimhrlzaojadmhx.supabase.co/rest/v1/launch_signups';
+      var KEY = 'sb_publishable_PXDZo1oea43av5x4lIj3lg_1vGP_8AI';
+
+      var form = document.getElementById('signup');
+      var note = document.getElementById('note');
+      var go = document.getElementById('go');
+
+      function say(text, cls) {
+        note.textContent = text;
+        note.className = 'note ' + (cls || '');
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var email = document.getElementById('email').value.trim();
+        // Bots fill the hidden field. Say thanks, do nothing.
+        if (form.company.value) { say('Thanks — you’re on the list.', 'ok'); return; }
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+          say('That doesn’t look like an email address.', 'bad');
+          return;
+        }
+
+        go.disabled = true;
+        say('');
+
+        fetch(URL_, {
+          method: 'POST',
+          headers: {
+            'apikey': KEY,
+            'Authorization': 'Bearer ' + KEY,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ email: email, source: 'landing' })
+        }).then(function (r) {
+          // 409 is the unique index doing its job: they already signed up.
+          // That is a success from where they are standing.
+          if (r.ok || r.status === 409) {
+            form.innerHTML =
+              '<p class="note ok" style="font-size:1.05rem">Thanks — you’re on the list. ' +
+              'You’ll get one email the day Payweek is live.</p>';
+            return;
+          }
+          throw new Error(String(r.status));
+        }).catch(function () {
+          go.disabled = false;
+          say('That didn’t save. Try again, or email privacy@payweek.app.', 'bad');
+        });
+      });
+    </script>
+  </body>
+</html>
