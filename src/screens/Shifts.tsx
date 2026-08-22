@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { ShiftSheet } from '../components/ShiftSheet'
 import {
   EmptyState,
   RateBands,
@@ -30,6 +30,9 @@ export function Shifts() {
   const insert = useInsertShift()
 
   const [selecting, setSelecting] = useState(false)
+  // Which row's sheet is open, by shift id — an id rather than the row
+  // itself so a background refetch can't leave the sheet showing stale money.
+  const [openId, setOpenId] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [undo, setUndo] = useState<{
     rows: Tables<'shifts'>[]
@@ -227,24 +230,20 @@ export function Shifts() {
                     i > 0 ? 'border-t border-edge' : ''
                   } ${picked ? 'bg-accent/10' : ''}`
 
-                  return selecting ? (
+                  return (
                     <button
                       key={entry.shift.id}
                       type="button"
-                      onClick={() => toggle(entry.shift.id)}
-                      aria-pressed={picked}
+                      onClick={() =>
+                        selecting
+                          ? toggle(entry.shift.id)
+                          : setOpenId(entry.shift.id)
+                      }
+                      {...(selecting ? { 'aria-pressed': picked } : {})}
                       className={cls}
                     >
                       {body}
                     </button>
-                  ) : (
-                    <Link
-                      key={entry.shift.id}
-                      to={`/shifts/${entry.shift.id}`}
-                      className={cls}
-                    >
-                      {body}
-                    </Link>
                   )
                 })}
               </div>
@@ -277,6 +276,24 @@ export function Shifts() {
           </div>
         </div>
       )}
+
+      <ShiftSheet
+        entry={(openId && priced.get(openId)) || null}
+        agencyName={
+          (openId &&
+            agencyName.get(priced.get(openId)?.shift.agency_id ?? '')) ||
+          '—'
+        }
+        onClose={() => setOpenId(null)}
+        onDuplicate={(entry) => {
+          const { id: _id, ...copy } = reinsertable(entry.shift)
+          insert.mutate({ ...copy, date: todayISO() })
+        }}
+        onDelete={(entry) => {
+          remove.mutate(entry.shift.id)
+          setUndo({ rows: [entry.shift], message: 'Shift deleted' })
+        }}
+      />
 
       {undo && (
         <UndoBar

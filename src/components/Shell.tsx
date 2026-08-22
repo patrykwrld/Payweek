@@ -1,12 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useIsOnline, useQueuedWriteCount } from '../lib/offline'
-import {
-  GearIcon,
-  ListIcon,
-  PlusIcon,
-  RatesIcon,
-  WalletIcon,
-} from './icons'
+import { GearIcon, ListIcon, PlusIcon, RatesIcon, WalletIcon } from './icons'
 
 // Five tabs is the most that stays tappable on a phone. "Check a payslip"
 // lives on Payday instead — it's the thing you do once the money lands, and
@@ -33,8 +27,10 @@ function OfflineBar() {
       {online
         ? `Syncing ${queued} ${queued === 1 ? 'change' : 'changes'}…`
         : queued > 0
-          ? `Offline — ${queued} ${queued === 1 ? 'change' : 'changes'} will sync when you reconnect`
-          : 'Offline — your shifts are saved on this device'}
+        ? `Offline — ${queued} ${
+            queued === 1 ? 'change' : 'changes'
+          } will sync when you reconnect`
+        : 'Offline — your shifts are saved on this device'}
     </div>
   )
 }
@@ -59,9 +55,19 @@ export function Shell() {
         className="
           fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-void
           pb-[env(safe-area-inset-bottom)]
+          supports-[backdrop-filter]:bg-void/72 supports-[backdrop-filter]:backdrop-blur-xl
           md:inset-y-0 md:right-auto md:w-60 md:border-r md:border-t-0 md:pb-0
+          md:bg-void md:backdrop-blur-none
         "
       >
+        {/* Content used to stop dead at the bar's top border. This fades the
+            last few millimetres out instead, so the list reads as continuing
+            underneath the blur rather than being cut off by it. Sidebar
+            layouts have nothing scrolling under them, so it goes away. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-full h-8 bg-gradient-to-t from-void to-transparent md:hidden"
+        />
         <div className="mx-auto flex max-w-md md:h-full md:max-w-none md:flex-col md:gap-1 md:p-4">
           <p className="mb-6 hidden px-3 pt-2 text-lg font-semibold tracking-tight md:block">
             Payweek<span className="text-accent">.</span>
