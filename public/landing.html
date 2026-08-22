@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0b0f14" />
+    <meta name="theme-color" content="#080b10" />
     <script>
       // Supabase sends confirmation and password-reset links back to the site
-      // root, and the root is now this page. Hand those straight to the app
-      // before anything renders, so nobody lands on marketing copy holding a
+      // root, and the root is this page. Hand those straight to the app before
+      // anything renders, so nobody lands on marketing copy holding a
       // one-time token.
       (function () {
         var q = window.location.search
@@ -21,9 +21,8 @@
     <meta name="description" content="Payweek works out what you're owed for the shifts you've worked, and tells you if your payslip is short. Built for UK agency workers paid weekly." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href="https://payweek.app/" />
+    <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
 
-    <!-- Link previews. Without these, a link pasted into Instagram, WhatsApp
-         or X renders as a bare URL, which converts terribly. -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://payweek.app/" />
     <meta property="og:title" content="Payweek — know what you're owed before payday" />
@@ -37,236 +36,311 @@
     <meta name="twitter:image" content="https://payweek.app/og.png" />
 
     <style>
+      /* Self-hosted, because this page is served on its own and never loads
+         the app's CSS bundle — where Inter is imported. Without this it fell
+         back to whatever the operating system's default sans-serif is. */
+      @font-face {
+        font-family: 'Inter var';
+        font-style: normal;
+        font-display: swap;
+        font-weight: 100 900;
+        src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
       :root {
-        --void: #0b0f14;
-        --surface: #131a22;
-        --edge: #242e3a;
+        --bg: #080b10;
+        --surface: rgba(255, 255, 255, 0.035);
+        --line: rgba(255, 255, 255, 0.08);
+        --line-2: rgba(255, 255, 255, 0.14);
         --accent: #5e9bff;
-        --ink: #eef3f8;
-        --body: #cdd6e2;
-        --muted: #8f9bab;
-        --warn: #ff6b6b;
+        --accent-2: #9bc4ff;
+        --ink: #f3f7fb;
+        --body: #a3b0c2;
+        --muted: #6f7d90;
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
       }
       * { box-sizing: border-box; }
-      html { -webkit-text-size-adjust: 100%; }
+      html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
       body {
         margin: 0;
-        background: var(--void);
+        background: var(--bg);
         color: var(--ink);
-        font: 17px/1.6 'Inter Variable', Inter, system-ui, -apple-system,
-          'Segoe UI', Roboto, sans-serif;
+        font-family: 'Inter var', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-size: 17px;
+        line-height: 1.6;
+        font-feature-settings: 'cv11', 'ss01';
         -webkit-font-smoothing: antialiased;
         overflow-x: hidden;
       }
-      .wrap { max-width: 66rem; margin: 0 auto; padding: 0 1.5rem; }
-      a { color: var(--accent); }
 
-      header { padding: 1.5rem 0; }
+      /* Ambient light. Two very soft washes rather than a flat black field —
+         this is most of what stops a dark page looking like a dead one. */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(60rem 40rem at 78% -8%, rgba(94, 155, 255, 0.16), transparent 60%),
+          radial-gradient(45rem 32rem at 8% 8%, rgba(94, 155, 255, 0.07), transparent 62%);
+      }
+
+      .wrap { position: relative; max-width: 70rem; margin: 0 auto; padding: 0 1.75rem; }
+      a { color: var(--accent); text-decoration: none; }
+
+      /* ── entrance ───────────────────────────────────────────────── */
+      .rise { opacity: 0; transform: translateY(14px); animation: rise 0.9s var(--ease) forwards; }
+      .d1 { animation-delay: 0.05s; }
+      .d2 { animation-delay: 0.13s; }
+      .d3 { animation-delay: 0.21s; }
+      .d4 { animation-delay: 0.29s; }
+      .d5 { animation-delay: 0.37s; }
+      @keyframes rise { to { opacity: 1; transform: none; } }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        .rise { animation: none; opacity: 1; transform: none; }
+      }
+
+      /* ── header ─────────────────────────────────────────────────── */
+      header { padding: 1.75rem 0; }
       .bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-      .brand { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.02em; text-decoration: none; color: var(--ink); }
+      .brand {
+        font-weight: 700; font-size: 1.2rem; letter-spacing: -0.03em; color: var(--ink);
+      }
       .brand span { color: var(--accent); }
       .ghost {
-        font-size: 0.9rem; text-decoration: none; color: var(--body);
-        border: 1px solid var(--edge); border-radius: 999px; padding: 0.5rem 1rem;
-        white-space: nowrap;
+        font-size: 0.9rem; color: var(--body);
+        border: 1px solid var(--line); border-radius: 999px; padding: 0.5rem 1.1rem;
+        transition: border-color 0.35s var(--ease), color 0.35s var(--ease), background 0.35s var(--ease);
       }
-      .ghost:hover { border-color: var(--accent); color: var(--ink); }
+      .ghost:hover { border-color: var(--line-2); color: var(--ink); background: var(--surface); }
 
-      .hero { padding: 2.5rem 0 3rem; text-align: center; }
-      .eyebrow {
-        display: inline-block; font-size: 0.72rem; font-weight: 650;
-        letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
-        border: 1px solid rgba(94,155,255,0.35); border-radius: 999px;
-        padding: 0.35rem 0.8rem; margin-bottom: 1.25rem;
+      /* ── hero ───────────────────────────────────────────────────── */
+      .hero { padding: 3rem 0 5rem; }
+      .pill {
+        display: inline-flex; align-items: center; gap: 0.55rem;
+        font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--accent-2);
+        background: rgba(94, 155, 255, 0.09);
+        border: 1px solid rgba(94, 155, 255, 0.22);
+        border-radius: 999px; padding: 0.4rem 0.9rem 0.4rem 0.7rem;
+        margin-bottom: 1.6rem;
       }
+      .dot {
+        width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+        box-shadow: 0 0 0 0 rgba(94, 155, 255, 0.55);
+        animation: pulse 2.6s var(--ease) infinite;
+      }
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(94, 155, 255, 0.5); }
+        70% { box-shadow: 0 0 0 9px rgba(94, 155, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(94, 155, 255, 0); }
+      }
+      @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
+
       h1 {
-        font-size: clamp(1.9rem, 4vw, 2.5rem); line-height: 1.14;
-        letter-spacing: -0.035em; font-weight: 700; margin: 0 0 1rem;
+        font-size: clamp(2.1rem, 4.6vw, 3.15rem);
+        line-height: 1.08;
+        letter-spacing: -0.045em;
+        font-weight: 700;
+        margin: 0 0 1.15rem;
       }
-      h1 em { font-style: normal; color: var(--accent); }
+      h1 em {
+        font-style: normal;
+        background: linear-gradient(100deg, var(--accent) 10%, var(--accent-2) 90%);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+      }
       .lede {
-        font-size: clamp(1rem, 1.6vw, 1.15rem); color: var(--body);
-        max-width: 38rem; margin: 0 auto 2rem;
+        font-size: 1.1rem; line-height: 1.65; color: var(--body);
+        max-width: 30rem; margin: 0 0 2.25rem;
       }
 
-      /* The phone shots are 416x732. Left unconstrained they render near full
-         size and get cut off by the fold, which reads as a broken image rather
-         than a screenshot. Capped and framed instead. */
-      .phone {
-        width: 100%; max-width: 300px; height: auto; display: block;
-        border: 1px solid var(--edge); border-radius: 20px;
-        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      /* ── the signup field ───────────────────────────────────────── */
+      form { max-width: 30rem; }
+      .field {
+        display: flex; align-items: center; gap: 0.5rem;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0.4rem 0.4rem 0.4rem 1.25rem;
+        transition: border-color 0.35s var(--ease), box-shadow 0.35s var(--ease), background 0.35s var(--ease);
       }
+      .field:focus-within {
+        border-color: rgba(94, 155, 255, 0.5);
+        background: rgba(94, 155, 255, 0.05);
+        box-shadow: 0 0 0 4px rgba(94, 155, 255, 0.1);
+      }
+      .field input {
+        flex: 1; min-width: 0; background: none; border: 0; outline: none;
+        color: var(--ink); font: inherit; font-size: 1rem; padding: 0.7rem 0;
+      }
+      .field input::placeholder { color: var(--muted); }
+      .field button {
+        flex: none; border: 0; cursor: pointer;
+        background: linear-gradient(180deg, #6ea6ff, #4e8cf5);
+        color: #06101f; font: inherit; font-weight: 650; font-size: 0.97rem;
+        border-radius: 999px; padding: 0.78rem 1.4rem;
+        box-shadow: 0 6px 18px rgba(78, 140, 245, 0.3);
+        transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), filter 0.3s var(--ease);
+      }
+      .field button:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(78, 140, 245, 0.4); filter: brightness(1.05); }
+      .field button:active { transform: translateY(0); }
+      .field button[disabled] { opacity: 0.55; cursor: default; transform: none; box-shadow: none; }
 
-      /* Desktop: two columns. A centred column of huge type with a screenshot
-         dumped underneath is what made this look unfinished. */
-      @media (min-width: 60rem) {
-        .hero {
-          display: grid; grid-template-columns: 1.15fr 0.85fr;
-          align-items: center; gap: 3.5rem; text-align: left;
-          padding: 2.5rem 0 4rem;
-        }
-        .hero .lede { margin-left: 0; margin-right: 0; }
-        .hero form { margin-left: 0; }
-        .hero-art { justify-content: flex-end; margin-top: 0; }
-        .hero-art .phone { max-width: 330px; }
-      }
-      /* Shown on every width: it is the screen the headline is talking about.
-         Beside the copy on desktop, under the form on a phone. */
-      .hero-art { display: flex; justify-content: center; margin-top: 2.5rem; }
-
-      form { max-width: 30rem; margin: 0 auto; }
-      .row { display: flex; gap: 0.6rem; }
-      input[type=email] {
-        flex: 1; min-width: 0; background: var(--surface); color: var(--ink);
-        border: 1px solid var(--edge); border-radius: 12px;
-        padding: 0.9rem 1rem; font: inherit; font-size: 1rem;
-      }
-      input[type=email]::placeholder { color: #6d7a8a; }
-      input[type=email]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
-      button {
-        background: var(--accent); color: #07101f; border: 0; border-radius: 12px;
-        padding: 0.9rem 1.3rem; font: inherit; font-weight: 650; font-size: 1rem;
-        cursor: pointer; white-space: nowrap;
-      }
-      button:hover { filter: brightness(1.08); }
-      button[disabled] { opacity: 0.6; cursor: default; }
-      .hint { font-size: 0.85rem; color: var(--muted); margin: 0.75rem 0 0; }
-      .note { margin: 0.8rem 0 0; font-size: 0.95rem; min-height: 1.4rem; }
-      .note.ok { color: #5fd39a; }
-      .note.bad { color: var(--warn); }
+      .hint { font-size: 0.86rem; color: var(--muted); margin: 0.95rem 0 0; }
+      .note { margin: 0.85rem 0 0; font-size: 0.95rem; min-height: 1.4rem; }
+      .note.ok { color: #62d6a0; }
+      .note.bad { color: #ff7b7b; }
       .pot { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-      @media (max-width: 30rem) {
-        .row { flex-direction: column; }
-        button { width: 100%; }
+
+      /* ── the phone ──────────────────────────────────────────────── */
+      .art { position: relative; display: flex; justify-content: center; margin-top: 3.5rem; }
+      .art::after {
+        content: '';
+        position: absolute; inset: 12% 18% 4%;
+        background: radial-gradient(closest-side, rgba(94, 155, 255, 0.3), transparent 70%);
+        filter: blur(46px);
+        z-index: 0;
+      }
+      .frame {
+        position: relative; z-index: 1;
+        width: 100%; max-width: 296px;
+        padding: 9px;
+        border-radius: 34px;
+        background: linear-gradient(160deg, rgba(255,255,255,0.16), rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.09));
+        box-shadow: 0 34px 70px rgba(0, 0, 0, 0.62), 0 2px 0 rgba(255,255,255,0.06) inset;
+      }
+      .frame img {
+        display: block; width: 100%; height: auto;
+        border-radius: 26px;
+        background: #0d1117;
+      }
+      /* The screenshot is a crop, so it ends mid-row. Fading it into the
+         screen's own background colour makes that read as the screen
+         continuing rather than as a picture that got cut off. */
+      .frame::after {
+        content: '';
+        position: absolute;
+        left: 9px; right: 9px; bottom: 9px; height: 24%;
+        border-radius: 0 0 26px 26px;
+        background: linear-gradient(180deg, rgba(13, 17, 23, 0), rgba(13, 17, 23, 0.94) 76%);
+        pointer-events: none;
       }
 
-      .shots {
-        display: grid; gap: 2rem; margin: 0 0 1rem;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        justify-items: center;
+      @media (min-width: 62rem) {
+        .hero {
+          display: grid;
+          grid-template-columns: 1.02fr 0.98fr;
+          align-items: center;
+          gap: 4.5rem;
+          padding: 4.5rem 0 6rem;
+        }
+        .art { margin-top: 0; justify-content: flex-end; }
+        .frame { max-width: 320px; }
       }
-      figure { margin: 0; max-width: 300px; }
-      figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.9rem; text-align: center; }
 
-      section { padding: 3.5rem 0; }
-      h2 { font-size: clamp(1.5rem, 3.5vw, 2.1rem); letter-spacing: -0.025em; margin: 0 0 0.6rem; }
-      .sub { color: var(--muted); margin: 0 0 2rem; }
-      .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
-      .card { background: var(--surface); border: 1px solid var(--edge); border-radius: 14px; padding: 1.4rem; }
-      .card h3 { margin: 0 0 0.45rem; font-size: 1.05rem; }
-      .card p { margin: 0; color: var(--body); font-size: 0.97rem; }
+      /* ── the three points ───────────────────────────────────────── */
+      .points {
+        display: grid; gap: 2.25rem;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+        padding: 0 0 5.5rem;
+      }
+      .point h3 {
+        font-size: 1.03rem; font-weight: 650; letter-spacing: -0.015em;
+        margin: 0 0 0.45rem; display: flex; align-items: center; gap: 0.6rem;
+      }
+      .point h3::before {
+        content: ''; width: 7px; height: 7px; border-radius: 2px;
+        background: linear-gradient(140deg, var(--accent), var(--accent-2));
+        flex: none;
+      }
+      .point p { margin: 0; color: var(--body); font-size: 0.97rem; line-height: 1.65; }
 
-      .status { background: var(--surface); border: 1px solid var(--edge); border-radius: 16px; padding: 1.6rem; }
-      .status p { margin: 0; color: var(--body); }
-
-      footer { border-top: 1px solid var(--edge); padding: 2rem 0 3rem; color: var(--muted); font-size: 0.9rem; }
-      footer a { color: var(--muted); }
-      footer nav { margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 1.1rem; }
+      /* ── footer ─────────────────────────────────────────────────── */
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 2.25rem 0 3.5rem;
+        color: var(--muted); font-size: 0.88rem;
+      }
+      footer a { color: var(--muted); transition: color 0.3s var(--ease); }
+      footer a:hover { color: var(--ink); }
+      .flinks { display: flex; flex-wrap: wrap; gap: 1.4rem; margin-top: 0.7rem; }
+      .small { margin-top: 1.5rem; max-width: 42rem; line-height: 1.6; }
     </style>
   </head>
 
   <body>
     <div class="wrap">
-      <header>
+      <header class="rise">
         <div class="bar">
           <a class="brand" href="/">Payweek<span>.</span></a>
           <a class="ghost" href="/app">Open the app</a>
         </div>
       </header>
 
-      <div class="hero">
-        <div class="hero-copy">
-          <span class="eyebrow">Coming to Google Play</span>
-          <h1>Your payslip is <em>£30 short</em>.<br />Here's how to prove it.</h1>
-          <p class="lede">
+      <main class="hero">
+        <div>
+          <span class="pill rise d1"><i class="dot"></i>Coming to Google Play</span>
+
+          <h1 class="rise d2">Know what you're owed <em>before payday</em>.</h1>
+
+          <p class="lede rise d3">
             Payweek prices every shift you work — night rates, weekend rates,
-            breaks, shifts that run past midnight — so you know what you're owed
-            before the money lands.
+            breaks, shifts that run past midnight — and tells you when a payslip
+            comes up short.
           </p>
 
-          <form id="signup" novalidate>
-            <div class="row">
+          <form id="signup" class="rise d4" novalidate>
+            <div class="field">
               <label for="email" class="pot">Your email address</label>
               <input id="email" name="email" type="email" inputmode="email"
                      autocomplete="email" placeholder="you@example.com" required />
               <!-- Honeypot. Bots fill every field they find; people never see it. -->
               <input class="pot" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
-              <button type="submit" id="go">Tell me when it's out</button>
+              <button type="submit" id="go">Notify me</button>
             </div>
             <p class="note" id="note" role="status" aria-live="polite"></p>
-            <p class="hint">One email when it launches. Nothing else, ever.</p>
+            <p class="hint">One email the day it launches. Nothing else, ever.</p>
           </form>
         </div>
 
-        <div class="hero-art">
-          <img class="phone" src="/shots/check.png" width="416" height="732"
-               alt="The payslip check screen reporting the payslip is £30.00 short of the hours logged." />
-        </div>
-      </div>
-
-      <section>
-        <h2>See exactly where the number came from</h2>
-        <p class="sub">No black box. Every band, every rate, every subtotal.</p>
-        <div class="shots">
-          <figure>
-            <img class="phone" src="/shots/week.png" width="416" height="732" alt="The Payweek home screen showing £628.29 earned across 5 shifts this pay week." loading="lazy" />
-            <figcaption>Watch the week's total climb</figcaption>
-          </figure>
-          <figure>
-            <img class="phone" src="/shots/breakdown.png" width="416" height="732" alt="A single shift broken down into rate bands with a subtotal for each." loading="lazy" />
-            <figcaption>Tap any shift for the full working</figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section>
-        <h2>Built for agency work, not office work</h2>
-        <p class="sub">Weekly pay, several agencies, and rates that change depending on when you clocked in.</p>
-        <div class="grid">
-          <div class="card">
-            <h3>It knows your real rate</h3>
-            <p>Set each agency up once. Night rate between any two times, weekend rate, a one-off rate when you've done a deal.</p>
-          </div>
-          <div class="card">
-            <h3>Midnight doesn't break it</h3>
-            <p>A shift running 18:00 to 02:00 gets split across the right rates, and unpaid breaks come off the band they actually fall in.</p>
-          </div>
-          <div class="card">
-            <h3>Works in the car park</h3>
-            <p>No signal, no problem — shifts save on your phone and sync when you reconnect. Big numbers you can read one-handed.</p>
-          </div>
-          <div class="card">
-            <h3>No ads, no tracking</h3>
-            <p>No advertising, no analytics SDKs, nothing sold to anyone. Export everything to a spreadsheet or delete it, whenever you like.</p>
+        <div class="art rise d5">
+          <div class="frame">
+            <img src="/shots/check.png" width="416" height="732"
+                 alt="The Payweek payslip check screen, reporting the payslip is £30.00 short of the hours logged." />
           </div>
         </div>
-      </section>
+      </main>
 
-      <section>
-        <div class="status">
-          <h2 style="font-size:1.25rem">Where it's up to</h2>
-          <p>
-            Payweek is finished and in closed testing on Google Play right now.
-            Google requires a two-week test before a new app can go public, so
-            it's a matter of weeks rather than months. Leave your email above
-            and you'll get one message the day it's live.
-          </p>
+      <section class="points">
+        <div class="point">
+          <h3>It knows your real rate</h3>
+          <p>Set each agency up once. A night rate between any two times, a weekend rate, a one-off rate when you've done a deal.</p>
+        </div>
+        <div class="point">
+          <h3>Midnight doesn't break it</h3>
+          <p>A shift running 18:00 to 02:00 is split across the right rates, and unpaid breaks come off the band they actually fall in.</p>
+        </div>
+        <div class="point">
+          <h3>Yours to take away</h3>
+          <p>No ads, no tracking, no analytics. Export everything to a spreadsheet or delete it, whenever you like.</p>
         </div>
       </section>
 
       <footer>
         <div>Payweek · Know what's in your packet</div>
-        <nav>
+        <nav class="flinks">
           <a href="mailto:privacy@payweek.app">privacy@payweek.app</a>
-          <a href="/privacy.html">Privacy policy</a>
+          <a href="/privacy.html">Privacy</a>
           <a href="/delete-account.html">Delete your account</a>
           <a href="/app">Open the app</a>
         </nav>
-        <p style="margin-top:1.2rem; max-width:44rem">
-          Payweek estimates gross pay from the hours and rates you enter. It
-          does not calculate tax or National Insurance, and it is not a
-          substitute for your payslip or advice from your agency.
+        <p class="small">
+          Payweek estimates gross pay from the hours and rates you enter. It does
+          not calculate tax or National Insurance, and it is not a substitute for
+          your payslip or advice from your agency.
         </p>
       </footer>
     </div>
@@ -275,55 +349,54 @@
       // The publishable key is meant to be public. It is safe here because the
       // launch_signups table has an insert policy and deliberately no select
       // policy — this key can add an address and cannot read the list back.
-      var URL_ = 'https://jcwxxtimhrlzaojadmhx.supabase.co/rest/v1/launch_signups';
-      var KEY = 'sb_publishable_PXDZo1oea43av5x4lIj3lg_1vGP_8AI';
+      var URL_ = 'https://jcwxxtimhrlzaojadmhx.supabase.co/rest/v1/launch_signups'
+      var KEY = 'sb_publishable_PXDZo1oea43av5x4lIj3lg_1vGP_8AI'
 
-      var form = document.getElementById('signup');
-      var note = document.getElementById('note');
-      var go = document.getElementById('go');
+      var form = document.getElementById('signup')
+      var note = document.getElementById('note')
+      var go = document.getElementById('go')
 
       function say(text, cls) {
-        note.textContent = text;
-        note.className = 'note ' + (cls || '');
+        note.textContent = text
+        note.className = 'note ' + (cls || '')
       }
 
       form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var email = document.getElementById('email').value.trim();
-        // Bots fill the hidden field. Say thanks, do nothing.
-        if (form.company.value) { say('Thanks — you’re on the list.', 'ok'); return; }
+        e.preventDefault()
+        var email = document.getElementById('email').value.trim()
+        if (form.company.value) { say('Thanks — you’re on the list.', 'ok'); return }
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-          say('That doesn’t look like an email address.', 'bad');
-          return;
+          say('That doesn’t look like an email address.', 'bad')
+          return
         }
 
-        go.disabled = true;
-        say('');
+        go.disabled = true
+        say('')
 
         fetch(URL_, {
           method: 'POST',
           headers: {
-            'apikey': KEY,
-            'Authorization': 'Bearer ' + KEY,
+            apikey: KEY,
+            Authorization: 'Bearer ' + KEY,
             'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
+            Prefer: 'return=minimal'
           },
           body: JSON.stringify({ email: email, source: 'landing' })
         }).then(function (r) {
           // 409 is the unique index doing its job: they already signed up.
-          // That is a success from where they are standing.
+          // From where they are standing that is a success.
           if (r.ok || r.status === 409) {
             form.innerHTML =
-              '<p class="note ok" style="font-size:1.05rem">Thanks — you’re on the list. ' +
-              'You’ll get one email the day Payweek is live.</p>';
-            return;
+              '<p class="note ok" style="font-size:1.05rem;margin:0">Thanks — you’re on the list. ' +
+              'You’ll get one email the day Payweek is live.</p>'
+            return
           }
-          throw new Error(String(r.status));
+          throw new Error(String(r.status))
         }).catch(function () {
-          go.disabled = false;
-          say('That didn’t save. Try again, or email privacy@payweek.app.', 'bad');
-        });
-      });
+          go.disabled = false
+          say('That didn’t save. Try again, or email privacy@payweek.app.', 'bad')
+        })
+      })
     </script>
   </body>
 </html>
