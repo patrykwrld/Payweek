@@ -327,17 +327,6 @@
         border-radius: 26px;
         background: #0d1117;
       }
-      /* The screenshot is a crop, so it ends mid-row. Fading it into the
-         screen's own background colour makes that read as the screen
-         continuing rather than as a picture that got cut off. */
-      .frame::after {
-        content: '';
-        position: absolute;
-        left: 9px; right: 9px; bottom: 9px; height: 24%;
-        border-radius: 0 0 26px 26px;
-        background: linear-gradient(180deg, rgba(13, 17, 23, 0), rgba(13, 17, 23, 0.94) 76%);
-        pointer-events: none;
-      }
 
       @media (min-width: 62rem) {
         .hero {
@@ -480,8 +469,8 @@
 
         <div class="art rise d5">
           <div class="frame">
-            <img src="/shots/check.png" width="416" height="732"
-                 alt="The Payweek payslip check screen, reporting the payslip is £30.00 short of the hours logged." />
+            <img src="/shots/week.png" width="416" height="732"
+                 alt="The Payweek home screen: £622.08 earned so far this pay week across 42h 45m, a bar for each day, and the note that it pays in 6 days." />
           </div>
         </div>
       </main>
