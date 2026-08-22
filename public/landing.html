@@ -74,16 +74,66 @@
         overflow-x: hidden;
       }
 
-      /* Ambient light. Two very soft washes rather than a flat black field —
-         this is most of what stops a dark page looking like a dead one. */
-      body::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
+      /* The backdrop, in three layers.
+
+         1. Aurora — two large blurred washes that drift on a slow loop. This
+            is what stops a dark page reading as a dead one, and it costs
+            nothing: transform only, one compositor layer.
+         2. Photograph — optional. Drop a file at public/hero.jpg and it
+            appears over the aurora, dimmed and blurred at the edges. If the
+            file is absent the rule simply paints nothing and the aurora
+            carries the page on its own, so this never breaks.
+         3. Scrim — a dark gradient over both, so headline contrast never
+            depends on what the photograph happens to be doing. */
+      .bg { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+
+      .aurora {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+        will-change: transform;
+      }
+      .aurora.a {
+        width: 46rem; height: 34rem; top: -14rem; right: -8rem;
+        background: radial-gradient(closest-side, rgba(94, 155, 255, 0.55), transparent 72%);
+        animation: driftA 26s ease-in-out infinite;
+      }
+      .aurora.b {
+        width: 38rem; height: 30rem; top: 4rem; left: -12rem;
+        background: radial-gradient(closest-side, rgba(120, 110, 255, 0.34), transparent 72%);
+        animation: driftB 34s ease-in-out infinite;
+      }
+      @keyframes driftA {
+        0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+        50% { transform: translate3d(-4rem, 3rem, 0) scale(1.12); }
+      }
+      @keyframes driftB {
+        0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+        50% { transform: translate3d(5rem, -2rem, 0) scale(1.08); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .aurora { animation: none; }
+      }
+
+      .photo {
+        position: absolute; inset: 0;
+        background-image: url('/hero.jpg');
+        background-size: cover;
+        background-position: 68% 40%;
+        opacity: 0.4;
+        mix-blend-mode: luminosity;
+        -webkit-mask-image: radial-gradient(120% 90% at 78% 22%, #000 20%, transparent 72%);
+        mask-image: radial-gradient(120% 90% at 78% 22%, #000 20%, transparent 72%);
+      }
+
+      /* Weighted to the left and to the bottom — where the words are — so the
+         glow survives top-right where there is nothing to read. Tuned by
+         measuring headline contrast, not by eye. */
+      .scrim {
+        position: absolute; inset: 0;
         background:
-          radial-gradient(60rem 40rem at 78% -8%, rgba(94, 155, 255, 0.16), transparent 60%),
-          radial-gradient(45rem 32rem at 8% 8%, rgba(94, 155, 255, 0.07), transparent 62%);
+          linear-gradient(180deg, transparent 0%, rgba(8, 11, 16, 0.35) 58%, var(--bg) 97%),
+          linear-gradient(100deg, rgba(8, 11, 16, 0.92) 0%, rgba(8, 11, 16, 0.42) 34%, transparent 66%);
       }
 
       body::after {
@@ -332,6 +382,13 @@
   </head>
 
   <body>
+    <div class="bg" aria-hidden="true">
+      <div class="aurora a"></div>
+      <div class="aurora b"></div>
+      <div class="photo"></div>
+      <div class="scrim"></div>
+    </div>
+
     <div class="wrap">
       <header class="rise">
         <div class="bar">
