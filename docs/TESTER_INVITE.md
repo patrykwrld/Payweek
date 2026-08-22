@@ -124,3 +124,71 @@ one at a time rather than blasting all fourteen at once.
 ⚠️ **The count has to stay at 12 or above for 14 continuous days.** If someone
 uninstalls at day 9 you drop to 11 and the clock stalls until you are back up.
 That is what the two spare testers are for.
+
+---
+
+# When you run out of people you know
+
+The iPhone problem is real and it is arithmetic: an iPhone user cannot opt in,
+so they are worth zero no matter how willing they are. Count the Androids on
+your list first. If that number is under 12, no amount of following up moves
+the counter and you need more names.
+
+## The one thing to understand before using swap communities
+
+**Twelve people who install and never open the app can still get the
+production application rejected.** Step F asks, in writing, how you recruited
+testers and what feedback you got. A wall of silence is a thin answer, and a
+thin answer costs days.
+
+So the mix matters:
+
+| Source | Gets you past the counter | Gives you something to write in Step F |
+| --- | --- | --- |
+| People you work with | Slowly | **Yes — they are your actual users** |
+| Family with an Android | Yes | Rarely |
+| Swap communities | **Fast** | Almost never |
+
+Use swaps to make up the number, not to make up the whole twelve.
+
+## Where the swaps are
+
+These communities exist specifically because every solo developer hits this
+wall. Real people, real devices, usually same-day.
+
+- **Reddit** — r/AndroidAppTesters, r/alphaandbetausers, r/testerscommunity,
+  r/androidapptesting. Post the opt-in link and offer to test theirs back.
+- **Discord and Telegram** — several servers run closed-testing exchange
+  channels. Faster than Reddit because it is conversational.
+- **Credit-based exchange platforms** — test other people's apps to earn
+  credits, spend credits to get testers on yours.
+
+Reciprocate properly. These run on people actually doing it back, and the
+regulars remember who did not.
+
+## What to post
+
+```
+[Closed testing] Payweek — UK agency shift & pay tracker (Android)
+
+Need a few more testers to finish the 14-day closed test. Happy to
+reciprocate — drop your link and I'll opt into yours today.
+
+What it does: works out what you're owed for the shifts you've worked and
+tells you if your payslip is short. Night rates, weekend rates, shifts past
+midnight.
+
+Opt-in: <LINK>
+
+Please leave it installed for the full 14 days — the count has to stay above
+12 continuously.
+```
+
+## Churn is the thing that bites
+
+Swap testers opt in and drift off far more than people you know. The
+requirement is 12 **continuously** — one uninstall on day 9 stalls the clock
+until you are back above 12.
+
+So: recruit to **15 or 16** if a chunk of them came from swaps, and check the
+count every day rather than at the end.
