@@ -56,7 +56,9 @@
         --accent-2: #9bc4ff;
         --ink: #f3f7fb;
         --body: #a3b0c2;
-        --muted: #6f7d90;
+        /* Was #6f7d90, which measured 4.4:1 on the page's own background —
+           under AA before any backdrop was involved. */
+        --muted: #8b98a9;
         --ease: cubic-bezier(0.22, 1, 0.36, 1);
       }
       * { box-sizing: border-box; }
@@ -72,6 +74,7 @@
         font-feature-settings: 'cv11', 'ss01';
         -webkit-font-smoothing: antialiased;
         overflow-x: hidden;
+        position: relative;
       }
 
       /* The backdrop.
@@ -85,8 +88,8 @@
 
          Three layers, in order:
 
-         1. Two washes at opposite temperatures — cold blue high right, warm
-            amber low left. One hue cannot make a dark page feel warm, and
+         1. Two washes at opposite temperatures — cold blue high right, pale
+            warm gold low left. One hue cannot make a dark page feel warm, and
             warmth is the whole point: this gets opened at the end of a night
             shift, and it should feel like the sun coming up rather than like
             a bank statement.
@@ -98,7 +101,19 @@
 
          All motion is transform-only on its own compositor layer, and all of
          it stops under prefers-reduced-motion. */
-      .bg { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+      /* Anchored to the hero, not to the viewport. A fixed backdrop keeps
+         its bright areas in the same place while the page scrolls past, so
+         sooner or later every dim line of text ends up sitting on the glow —
+         measured at 1.3:1 for the footer, which is unreadable. Bounded to the
+         first screen and faded out at the bottom, the light stays where there
+         is nothing to read and the footer sits on plain dark. */
+      .bg {
+        position: absolute; top: 0; left: 0; right: 0;
+        height: 100vh; min-height: 46rem;
+        pointer-events: none; overflow: hidden;
+        -webkit-mask-image: linear-gradient(180deg, #000 68%, transparent 100%);
+        mask-image: linear-gradient(180deg, #000 68%, transparent 100%);
+      }
 
       .aurora {
         position: absolute;
@@ -106,25 +121,38 @@
         will-change: transform;
       }
       .aurora.a {
-        width: 60rem; height: 42rem; top: -18rem; right: -14rem;
+        width: 58rem; height: 40rem; top: -19rem; left: 12%;
         background: radial-gradient(closest-side, rgba(94, 155, 255, 0.95), rgba(94, 155, 255, 0.28) 55%, transparent 76%);
         filter: blur(70px);
         animation: driftA 26s ease-in-out infinite;
       }
+      /* Screen, not normal. A pale colour at low alpha over near-black just
+         desaturates into grey haze — it reads as dirt on the screen rather
+         than as light. Screen blending adds instead of covering, which is
+         what actual light does, and it keeps the warmth at this lightness. */
       .aurora.b {
-        width: 54rem; height: 34rem; bottom: -16rem; left: -14rem;
-        background: radial-gradient(closest-side, rgba(255, 150, 64, 0.72), rgba(255, 120, 40, 0.2) 55%, transparent 76%);
+        width: 48rem; height: 32rem; bottom: -8rem; right: -10rem;
+        background: radial-gradient(closest-side, rgba(255, 220, 170, 1), rgba(255, 202, 150, 0.42) 46%, transparent 74%);
         filter: blur(80px);
+        mix-blend-mode: screen;
         animation: driftB 32s ease-in-out infinite;
       }
       /* The warm light spread along the bottom edge, so the glow reads as
          something rising rather than as a second blob. */
       .horizon {
         position: absolute;
-        left: -10%; right: -10%; bottom: -6%; height: 42%;
-        background: linear-gradient(0deg, rgba(255, 168, 86, 0.34) 0%, rgba(255, 140, 70, 0.1) 44%, transparent 84%);
+        left: 38%; right: -10%; bottom: -6%; height: 46%;
+        background: linear-gradient(0deg, rgba(255, 228, 186, 0.5) 0%, rgba(255, 214, 170, 0.18) 46%, transparent 84%);
         filter: blur(30px);
+        mix-blend-mode: screen;
       }
+      /* Stacked layout: the copy runs the full width, so the warm light has
+         to drop below it rather than sit beside it. */
+      @media (max-width: 62rem) {
+        .aurora.b { bottom: -14rem; right: -16rem; width: 40rem; height: 26rem; }
+        .horizon { left: 20%; height: 34%; }
+      }
+
       @keyframes driftA {
         0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
         50% { transform: translate3d(-4rem, 3rem, 0) scale(1.12); }
