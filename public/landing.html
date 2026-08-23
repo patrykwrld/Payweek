@@ -554,6 +554,23 @@
       var note = document.getElementById('note')
       var go = document.getElementById('go')
 
+      // Which channel sent them. Every signup used to record 'landing', so a
+      // week of posting produced one undifferentiated list and no way to tell
+      // which platform was worth the effort. Links go out as
+      // payweek.app/?s=fb-nights, and the tag lands in the row.
+      // Kept to [a-z0-9-] and 32 chars: it goes straight into a table whose
+      // insert policy caps source at 64, and there is no reason to accept
+      // anything a person would not type into a link themselves.
+      var SOURCE = (function () {
+        try {
+          var raw = new URLSearchParams(location.search).get('s') || ''
+          var clean = raw.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32)
+          return clean || 'direct'
+        } catch (e) {
+          return 'direct'
+        }
+      })()
+
       function say(text, cls) {
         note.textContent = text
         note.className = 'note ' + (cls || '')
@@ -579,7 +596,7 @@
             'Content-Type': 'application/json',
             Prefer: 'return=minimal'
           },
-          body: JSON.stringify({ email: email, source: 'landing' })
+          body: JSON.stringify({ email: email, source: SOURCE })
         }).then(function (r) {
           // 409 is the unique index doing its job: they already signed up.
           // From where they are standing that is a success.
