@@ -74,34 +74,56 @@
         overflow-x: hidden;
       }
 
-      /* The backdrop, in three layers.
+      /* The backdrop.
 
-         1. Aurora — two large blurred washes that drift on a slow loop. This
-            is what stops a dark page reading as a dead one, and it costs
-            nothing: transform only, one compositor layer.
-         2. Photograph — optional. Drop a file at public/hero.jpg and it
-            appears over the aurora, dimmed and blurred at the edges. If the
-            file is absent the rule simply paints nothing and the aurora
-            carries the page on its own, so this never breaks.
-         3. Scrim — a dark gradient over both, so headline contrast never
-            depends on what the photograph happens to be doing. */
+         What was here before was a near-opaque scrim laid over everything,
+         added to protect headline contrast against a photograph that never
+         arrived. It was painting out whatever sat underneath it, which is why
+         two rounds of new artwork "looked the same" — the artwork was fine,
+         it was being covered up. There is no full-page scrim now, only a
+         vignette at the very bottom where the footer sits.
+
+         Three layers, in order:
+
+         1. Two washes at opposite temperatures — cold blue high right, warm
+            amber low left. One hue cannot make a dark page feel warm, and
+            warmth is the whole point: this gets opened at the end of a night
+            shift, and it should feel like the sun coming up rather than like
+            a bank statement.
+         2. A ruled grid, masked so it fades out towards the edges. Structure
+            rather than atmosphere — a faint sheet of squared paper under the
+            words, because "the numbers add up" is what this product sells.
+         3. Grain over the lot (on body::after), which stops large dark fields
+            banding on cheap screens.
+
+         All motion is transform-only on its own compositor layer, and all of
+         it stops under prefers-reduced-motion. */
       .bg { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
 
       .aurora {
         position: absolute;
         border-radius: 50%;
-        filter: blur(90px);
         will-change: transform;
       }
       .aurora.a {
-        width: 46rem; height: 34rem; top: -14rem; right: -8rem;
-        background: radial-gradient(closest-side, rgba(94, 155, 255, 0.55), transparent 72%);
+        width: 60rem; height: 42rem; top: -18rem; right: -14rem;
+        background: radial-gradient(closest-side, rgba(94, 155, 255, 0.95), rgba(94, 155, 255, 0.28) 55%, transparent 76%);
+        filter: blur(70px);
         animation: driftA 26s ease-in-out infinite;
       }
       .aurora.b {
-        width: 38rem; height: 30rem; top: 4rem; left: -12rem;
-        background: radial-gradient(closest-side, rgba(120, 110, 255, 0.34), transparent 72%);
-        animation: driftB 34s ease-in-out infinite;
+        width: 54rem; height: 34rem; bottom: -16rem; left: -14rem;
+        background: radial-gradient(closest-side, rgba(255, 150, 64, 0.72), rgba(255, 120, 40, 0.2) 55%, transparent 76%);
+        filter: blur(80px);
+        animation: driftB 32s ease-in-out infinite;
+      }
+      /* The warm light spread along the bottom edge, so the glow reads as
+         something rising rather than as a second blob. */
+      .horizon {
+        position: absolute;
+        left: -10%; right: -10%; bottom: -6%; height: 42%;
+        background: linear-gradient(0deg, rgba(255, 168, 86, 0.34) 0%, rgba(255, 140, 70, 0.1) 44%, transparent 84%);
+        filter: blur(30px);
       }
       @keyframes driftA {
         0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
@@ -115,63 +137,20 @@
         .aurora { animation: none; }
       }
 
-      /* The artwork: the icon's ascending bars, blown up into a field of
-         light. Seven beams, one per day of a pay week, heights following a
-         plausible week rather than a tidy ramp — two heavy nights, a quiet
-         Wednesday, a big Saturday. Read another way they are light between
-         warehouse racking, which is where the app gets used.
-
-         One SVG with the blur baked into it, not seven CSS-filtered layers:
-         the browser rasterises it once, and the slow breathing afterwards is
-         a transform on a single element, so it stays on the compositor. */
-      .beams {
-        position: absolute;
-        right: -2%; bottom: -8%;
-        width: min(66rem, 92%); aspect-ratio: 820 / 620;
-        background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22820%22%20height%3D%22620%22%20viewBox%3D%220%200%20820%20620%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%221%22%20x2%3D%220%22%20y2%3D%220%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%235e9bff%22%20stop-opacity%3D%22.85%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%237aa8ff%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a9c8ff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3Cfilter%20id%3D%22b%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22160%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2226%22%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Cg%20filter%3D%22url%28%23b%29%22%3E%3Crect%20x%3D%2240%22%20y%3D%22335%22%20width%3D%2258%22%20height%3D%22285%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22150%22%20y%3D%22230%22%20width%3D%2258%22%20height%3D%22390%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22260%22%20y%3D%22410%22%20width%3D%2258%22%20height%3D%22210%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22370%22%20y%3D%22174%22%20width%3D%2258%22%20height%3D%22446%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22480%22%20y%3D%22298%22%20width%3D%2258%22%20height%3D%22322%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22590%22%20y%3D%2250%22%20width%3D%2258%22%20height%3D%22570%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%22700%22%20y%3D%22447%22%20width%3D%2258%22%20height%3D%22173%22%20rx%3D%2229%22%20fill%3D%22url%28%23g%29%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") no-repeat center / contain;
-        opacity: 1;
-        transform-origin: 50% 100%;
-        animation: breathe 19s ease-in-out infinite;
-        will-change: transform;
-      }
-      @keyframes breathe {
-        0%, 100% { transform: scaleY(1) translate3d(0, 0, 0); opacity: 0.95; }
-        50% { transform: scaleY(1.07) translate3d(-1.5rem, 0, 0); opacity: 1; }
-      }
-
-      /* Hairlines, fading as they rise. Just enough structure to stop the
-         beams floating in nothing. */
       .grid {
         position: absolute; inset: 0;
         background-image:
-          repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 5.5rem);
-        -webkit-mask-image: linear-gradient(0deg, #000 0%, transparent 58%);
-        mask-image: linear-gradient(0deg, #000 0%, transparent 58%);
+          repeating-linear-gradient(0deg, rgba(255,255,255,0.055) 0 1px, transparent 1px 3.25rem),
+          repeating-linear-gradient(90deg, rgba(255,255,255,0.055) 0 1px, transparent 1px 3.25rem);
+        -webkit-mask-image: radial-gradient(120% 88% at 58% 32%, #000 6%, transparent 74%);
+        mask-image: radial-gradient(120% 88% at 58% 32%, #000 6%, transparent 74%);
       }
 
-      @media (prefers-reduced-motion: reduce) {
-        .beams { animation: none; opacity: 0.95; }
-      }
-
-      .photo {
-        position: absolute; inset: 0;
-        background-image: url('/hero.jpg');
-        background-size: cover;
-        background-position: 68% 40%;
-        opacity: 0.4;
-        mix-blend-mode: luminosity;
-        -webkit-mask-image: radial-gradient(120% 90% at 78% 22%, #000 20%, transparent 72%);
-        mask-image: radial-gradient(120% 90% at 78% 22%, #000 20%, transparent 72%);
-      }
-
-      /* Weighted to the left and to the bottom — where the words are — so the
-         glow survives top-right where there is nothing to read. Tuned by
-         measuring headline contrast, not by eye. */
+      /* Only the bottom edge, so the footer has something to sit against.
+         Everywhere else the background is left alone deliberately. */
       .scrim {
         position: absolute; inset: 0;
-        background:
-          linear-gradient(180deg, transparent 0%, rgba(8, 11, 16, 0.22) 62%, rgba(8, 11, 16, 0.75) 99%),
-          linear-gradient(100deg, rgba(8, 11, 16, 0.92) 0%, rgba(8, 11, 16, 0.42) 34%, transparent 66%);
+        background: linear-gradient(180deg, transparent 62%, rgba(6, 9, 13, 0.55) 100%);
       }
 
       body::after {
@@ -412,13 +391,9 @@
     <div class="bg" aria-hidden="true">
       <div class="aurora a"></div>
       <div class="aurora b"></div>
+      <div class="horizon"></div>
       <div class="grid"></div>
-      <div class="photo"></div>
       <div class="scrim"></div>
-      <!-- Above the scrim, not under it. Below it the bottom of the gradient
-           is solid background and the beams simply disappeared. They sit
-           bottom-right where no text does, so nothing needs protecting. -->
-      <div class="beams"></div>
     </div>
 
     <div class="wrap">
