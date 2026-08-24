@@ -175,6 +175,18 @@ are done.
 Written to be used, not adapted. Change the details to your own — they work
 better in your words.
 
+### Video 0 — the one that already exists
+
+`scripts/film-demo.mjs` films a 1080×1920, 32-second walk through the real
+app: the week total, a day tapped, a shift that runs past midnight split
+across two rates, and the payslip check landing on "You're £30.00 short".
+Captions are burned in. It ends on a card with the address.
+
+Post it as-is, or talk over it — a screen recording with your own voice over
+the top is the format that works here, and it saves you filming a screen with
+a second phone. Re-run the script after any UI change and the advert matches
+the app again.
+
 ### Video 1 — the hook that needs no explanation
 
 > *[Phone showing a payslip]* "Right, so this is my payslip from last week.
