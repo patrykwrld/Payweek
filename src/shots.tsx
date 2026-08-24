@@ -13,6 +13,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { addDays, format, parseISO, startOfWeek } from 'date-fns'
 import './index.css'
 import { Shell } from './components/Shell'
+import { Agencies } from './screens/Agencies'
 import { Payday } from './screens/Payday'
 import { PayslipCheck } from './screens/PayslipCheck'
 import { QuickAdd } from './screens/QuickAdd'
@@ -189,6 +190,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/shifts" element={<Shifts />} />
           <Route path="/payday" element={<Payday />} />
           <Route path="/check" element={<PayslipCheck />} />
+          <Route path="/agencies" element={<Agencies />} />
         </Route>
       </Routes>
     </MemoryRouter>
