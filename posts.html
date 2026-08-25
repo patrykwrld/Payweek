@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Payweek post graphics</title>
+    <style>
+      @font-face {
+        font-family: 'Inter var'; font-style: normal; font-weight: 100 900;
+        src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+      }
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        background: #222; padding: 40px; display: flex; flex-wrap: wrap; gap: 40px;
+        font-family: 'Inter var', Inter, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .post {
+        width: 1080px; background: #0b0f14; color: #f3f7fb;
+        position: relative; overflow: hidden; flex: none;
+      }
+      .p45 { height: 1350px; }
+      .p11 { height: 1080px; }
+      /* Same two-temperature backdrop as the site, so the posts and the
+         landing page read as one thing. */
+      .glow-a, .glow-b {
+        position: absolute; border-radius: 50%; pointer-events: none;
+      }
+      .glow-a {
+        width: 900px; height: 640px; top: -280px; right: -220px;
+        background: radial-gradient(closest-side, rgba(94,155,255,.85), rgba(94,155,255,.2) 55%, transparent 76%);
+        filter: blur(70px);
+      }
+      .glow-b {
+        width: 800px; height: 520px; bottom: -220px; left: -200px;
+        background: radial-gradient(closest-side, rgba(255,214,158,.75), rgba(255,198,146,.2) 52%, transparent 76%);
+        filter: blur(80px); mix-blend-mode: screen;
+      }
+      .grid {
+        position: absolute; inset: 0; pointer-events: none;
+        background-image:
+          repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 72px),
+          repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 72px);
+        -webkit-mask-image: radial-gradient(120% 88% at 58% 32%, #000 6%, transparent 74%);
+      }
+      .inner { position: relative; padding: 76px 72px; height: 100%; display: flex; flex-direction: column; }
+      .kicker {
+        font-size: 26px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+        color: #5e9bff;
+      }
+      h1 { font-size: 82px; line-height: 1.04; letter-spacing: -.035em; font-weight: 800; }
+      h2 { font-size: 62px; line-height: 1.1; letter-spacing: -.03em; font-weight: 800; }
+      .sub { font-size: 31px; line-height: 1.45; color: #a3b0c2; font-weight: 500; }
+      .foot {
+        margin-top: auto; display: flex; align-items: center; justify-content: space-between;
+        border-top: 1px solid rgba(255,255,255,.11); padding-top: 30px;
+      }
+      .brand { font-size: 36px; font-weight: 800; letter-spacing: -.03em; }
+      .brand span { color: #5e9bff; }
+      .url { font-size: 27px; font-weight: 700; color: #5e9bff; }
+      .tag { font-size: 23px; color: #8b98a9; font-weight: 500; }
+
+      /* the money comparison */
+      .rows { display: flex; flex-direction: column; gap: 22px; margin: 54px 0; }
+      .row {
+        display: flex; align-items: baseline; justify-content: space-between; gap: 24px;
+        background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.09);
+        border-radius: 26px; padding: 34px 38px;
+      }
+      .row .lab { font-size: 31px; color: #a3b0c2; font-weight: 600; }
+      .row .val { font-size: 54px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+      .row.bad { background: rgba(255,107,107,.1); border-color: rgba(255,107,107,.34); }
+      .row.bad .val, .row.bad .lab { color: #ff6b6b; }
+
+      /* the breakdown */
+      .bd { display: flex; flex-direction: column; gap: 0; margin: 46px 0 0; }
+      .bd .line {
+        display: flex; align-items: baseline; justify-content: space-between; gap: 20px;
+        padding: 28px 0; border-bottom: 1px solid rgba(255,255,255,.1);
+      }
+      .bd .line:last-child { border-bottom: 0; }
+      .bd .n { font-size: 33px; font-weight: 700; }
+      .bd .d { font-size: 27px; color: #8b98a9; font-weight: 500; }
+      .bd .v { font-size: 40px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+      .bar { display: flex; gap: 5px; height: 12px; margin: 34px 0 8px; }
+      .bar i { border-radius: 6px; display: block; }
+      .total {
+        display: flex; align-items: baseline; justify-content: space-between;
+        margin-top: 34px; padding-top: 30px; border-top: 2px solid rgba(255,255,255,.16);
+      }
+      .total .l { font-size: 34px; font-weight: 700; color: #a3b0c2; }
+      .total .v { font-size: 66px; font-weight: 800; letter-spacing: -.03em; }
+
+      .shot {
+        margin-top: 48px; border-radius: 34px; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.13);
+        box-shadow: 0 40px 90px rgba(0,0,0,.6);
+      }
+      .shot img { display: block; width: 100%; }
+
+      .pill {
+        display: inline-flex; align-items: center; gap: 14px; align-self: flex-start;
+        border: 1px solid rgba(94,155,255,.42); background: rgba(94,155,255,.12);
+        border-radius: 999px; padding: 16px 30px; font-size: 26px; font-weight: 700; color: #9bc4ff;
+      }
+      .dot { width: 13px; height: 13px; border-radius: 50%; background: #5e9bff; display: block; }
+    </style>
+  </head>
+  <body>
+    <!-- A · the short payslip -->
+    <div class="post p45" id="a">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="inner">
+        <div class="kicker">Week ending Sun 1 Mar</div>
+        <h1 style="margin-top:26px">Would you<br>have noticed?</h1>
+        <div class="rows">
+          <div class="row">
+            <span class="lab">What the payslip said</span>
+            <span class="val">£437.53</span>
+          </div>
+          <div class="row">
+            <span class="lab">What the hours came to</span>
+            <span class="val">£467.53</span>
+          </div>
+          <div class="row bad">
+            <span class="lab">Short by</span>
+            <span class="val">£30.00</span>
+          </div>
+        </div>
+        <p class="sub">
+          Four shifts, two of them running past midnight. Thirty pounds is
+          easy to lose in a week like that, and almost impossible to spot
+          unless you have added the hours up yourself.
+        </p>
+        <div class="foot">
+          <div>
+            <div class="brand">Payweek<span>.</span></div>
+            <div class="tag">Free · No ads · No tracking</div>
+          </div>
+          <div class="url">payweek.app</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B · what a night shift actually pays -->
+    <div class="post p45" id="b">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="inner">
+        <div class="kicker">Friday · 18:00 – 02:00</div>
+        <h2 style="margin-top:26px">What does a shift<br>past midnight<br>actually pay?</h2>
+        <div class="bar">
+          <i style="flex:1;background:#5e9bff"></i>
+          <i style="flex:1;background:#34d69a"></i>
+        </div>
+        <div class="bd">
+          <div class="line">
+            <span><span class="n">Base rate</span><br><span class="d">3h 45m @ £13.50/h</span></span>
+            <span class="v">£50.63</span>
+          </div>
+          <div class="line">
+            <span><span class="n">Night rate</span><br><span class="d">3h 45m @ £16.20/h</span></span>
+            <span class="v">£60.75</span>
+          </div>
+          <div class="line">
+            <span><span class="n">Unpaid break</span><br><span class="d">30 min, off the band it actually fell in</span></span>
+            <span class="v" style="color:#8b98a9">not paid</span>
+          </div>
+        </div>
+        <div class="total">
+          <span class="l">8h on the clock · 7.5h paid</span>
+          <span class="v">£111.38</span>
+        </div>
+        <p class="sub" style="margin-top:40px">
+          Most people guess. Guessing is how thirty quid goes missing and
+          nobody argues about it.
+        </p>
+        <div class="foot">
+          <div>
+            <div class="brand">Payweek<span>.</span></div>
+            <div class="tag">Prices every shift you work</div>
+          </div>
+          <div class="url">payweek.app</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C · the tester ask -->
+    <div class="post p11" id="c">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="inner">
+        <div class="pill"><i class="dot"></i>Android · 30 seconds</div>
+        <h1 style="margin-top:38px;font-size:76px">Can you<br>tap a link?</h1>
+        <p class="sub" style="margin-top:32px">
+          Google won't let me release Payweek until <strong style="color:#f3f7fb">12 people</strong>
+          have joined the test.<br><br>
+          You don't have to use it. Tap the link, tap
+          <strong style="color:#f3f7fb">Become a tester</strong>, and that's it —
+          it counts.
+        </p>
+        <div class="foot">
+          <div>
+            <div class="brand">Payweek<span>.</span></div>
+            <div class="tag">Free shift &amp; pay tracker for UK agency workers</div>
+          </div>
+          <div class="url">payweek.app</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
