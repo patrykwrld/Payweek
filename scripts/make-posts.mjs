@@ -15,8 +15,14 @@ p.on('pageerror', e => errs.push(String(e)))
 p.on('requestfailed', r => errs.push('failed: ' + r.url().split('/').pop()))
 await p.goto('http://localhost:5199/posts.html', { waitUntil: 'networkidle' })
 await p.waitForTimeout(1200)
-for (const [id, name] of [['a', 'post-short-payslip'], ['b', 'post-night-shift'], ['c', 'post-tester-ask']]) {
-  await p.locator('#' + id).screenshot({ path: `${name}.png` })
+const names = {
+  p1: '1-would-you-have-noticed', p2: '2-night-shift', p3: '3-tester-ask',
+  p4: '4-holiday-pay', p5: '5-the-week', p6: '6-what-it-doesnt-do',
+  p7: '7-not-rare',
+}
+for (const [id, name] of Object.entries(names)) {
+  await p.locator('#' + id).screenshot({ path: `post-${name}.png` })
+}
   const box = await p.locator('#' + id).boundingBox()
   console.log(name, box.width + 'x' + box.height)
 }

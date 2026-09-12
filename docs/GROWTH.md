@@ -5,6 +5,48 @@ deck. Day 1 is the next day you sit down with it.
 
 ---
 
+## Where things actually stand — 12 September 2026
+
+Read from the database rather than assumed, because three weeks passed
+between writing this plan and starting it:
+
+| | |
+| --- | --- |
+| Accounts | **22** |
+| Of those, logged at least one shift | **10** |
+| Logged five or more | **5** |
+| Active in the last 7 days | **2** |
+| Shifts logged, all time | **70** |
+| Payslips checked, all time | **0** |
+| Waitlist signups | **1** |
+| Newest account | **22 August** |
+
+Four things follow from that table.
+
+**Nobody has joined in three weeks.** The newest account predates the landing
+page going live. That is not a product problem — it is the direct consequence
+of no promotion having started. Every number here is what "build it and tell
+nobody" looks like.
+
+**The people who did try it, used it properly.** Ten of twenty-two logged a
+shift and five logged five or more, averaging seven shifts each. For a
+pre-launch app with no onboarding help, that is a real signal — the thing
+works and people who reach it keep going for a while.
+
+**Retention has gone.** Two people used it in the last week. Some of that is
+having nothing new to come back for; most of it is that a tracker is only worth
+opening if you are being reminded it exists.
+
+**Not one payslip has ever been checked.** Zero, out of twenty-two accounts —
+and the payslip check is what every post, every screenshot and the whole film
+leads with. Either people never reach it, or they log shifts and stop opening
+the app before payday comes round. It does not change what to advertise: the
+check is still the reason to install. But it does mean the promise made in the
+advertising is not yet being kept inside the app, and that gap will show up in
+reviews eventually. Worth an in-app nudge on Payday before launch.
+
+---
+
 ## The fact that decides everything else
 
 **Nobody can install Payweek right now.** It is on a closed track, so the only

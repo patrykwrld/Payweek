@@ -4,221 +4,343 @@
     <meta charset="UTF-8" />
     <title>Payweek post graphics</title>
     <style>
+      /* ═══ Ledger Light ═══════════════════════════════════════════════
+         See docs/DESIGN_PHILOSOPHY.md. Ruled ground, cold above, warm
+         beneath, tabular figures throughout, one red per surface.
+         Single family worked hard — weight and scale do the work a second
+         typeface would do worse. */
       @font-face {
         font-family: 'Inter var'; font-style: normal; font-weight: 100 900;
         src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
       }
       * { box-sizing: border-box; margin: 0; }
       body {
-        background: #333; padding: 40px; display: flex; flex-wrap: wrap; gap: 40px;
+        background: #1a1a1a; padding: 44px; display: flex; flex-wrap: wrap; gap: 44px;
         font-family: 'Inter var', Inter, system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
+        font-variant-numeric: tabular-nums;
       }
-      .post { width: 1080px; position: relative; overflow: hidden; flex: none; color: #f3f7fb; }
-      .p45 { height: 1350px; }
-      .p11 { height: 1080px; }
-      .dark { background: #0b0f14; }
+      .post {
+        width: 1080px; background: #0b0f14; color: #f3f7fb;
+        position: relative; overflow: hidden; flex: none;
+      }
+      .p45 { height: 1350px }
+      .p11 { height: 1080px }
 
-      .glow {
-        position: absolute; border-radius: 50%; pointer-events: none;
-        width: 900px; height: 640px; top: -300px; right: -240px;
-        background: radial-gradient(closest-side, rgba(94,155,255,.8), rgba(94,155,255,.18) 55%, transparent 76%);
+      .glow-a, .glow-b { position: absolute; border-radius: 50%; pointer-events: none }
+      .glow-a {
+        width: 900px; height: 640px; top: -280px; right: -220px;
+        background: radial-gradient(closest-side, rgba(94,155,255,.85), rgba(94,155,255,.2) 55%, transparent 76%);
         filter: blur(70px);
       }
-      .warm {
-        position: absolute; border-radius: 50%; pointer-events: none;
-        width: 820px; height: 520px; bottom: -240px; left: -220px;
-        background: radial-gradient(closest-side, rgba(255,214,158,.7), rgba(255,198,146,.18) 52%, transparent 76%);
+      .glow-b {
+        width: 800px; height: 520px; bottom: -220px; left: -200px;
+        background: radial-gradient(closest-side, rgba(255,214,158,.75), rgba(255,198,146,.2) 52%, transparent 76%);
         filter: blur(80px); mix-blend-mode: screen;
       }
       .grid {
         position: absolute; inset: 0; pointer-events: none;
         background-image:
-          repeating-linear-gradient(0deg, rgba(255,255,255,.045) 0 1px, transparent 1px 72px),
-          repeating-linear-gradient(90deg, rgba(255,255,255,.045) 0 1px, transparent 1px 72px);
+          repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 72px),
+          repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 72px);
         -webkit-mask-image: radial-gradient(120% 88% at 58% 32%, #000 6%, transparent 74%);
       }
-      .inner { position: relative; height: 100%; display: flex; flex-direction: column; padding: 72px 68px; }
-      .body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
 
-      .brandbar {
-        margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between;
-        gap: 24px;
+      .inner { position: relative; padding: 76px 72px; height: 100%; display: flex; flex-direction: column }
+      /* Weight collects top and bottom; the middle breathes. */
+      .body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 52px 0 }
+
+      .kicker {
+        font-size: 25px; font-weight: 700; letter-spacing: .17em; text-transform: uppercase;
+        color: #5e9bff;
       }
-      .brand { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1 }
-      .brand span { color: #5e9bff; }
-      .tag { font-size: 22px; color: #8b98a9; font-weight: 500; margin-top: 4px }
+      h1 { font-size: 82px; line-height: 1.04; letter-spacing: -.036em; font-weight: 800 }
+      h2 { font-size: 64px; line-height: 1.1; letter-spacing: -.032em; font-weight: 800 }
+      .sub { font-size: 30px; line-height: 1.5; color: #a3b0c2; font-weight: 500 }
+      .sub em { color: #f3f7fb; font-style: normal; font-weight: 600 }
+
+      .foot {
+        display: flex; align-items: flex-end; justify-content: space-between; gap: 28px;
+        border-top: 1px solid rgba(255,255,255,.11); padding-top: 30px;
+      }
+      .brand { font-size: 35px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1 }
+      .brand span { color: #5e9bff }
+      .tag { font-size: 22px; color: #8b98a9; font-weight: 500; margin-top: 5px }
       .url { font-size: 26px; font-weight: 700; color: #5e9bff; white-space: nowrap }
 
-      /* ══ A · the loss, as one number ══════════════════════════════ */
+      /* rows — entries in a book, equal height, shared edges */
+      .rows { display: flex; flex-direction: column; gap: 20px }
+      .row {
+        display: flex; align-items: baseline; justify-content: space-between; gap: 26px;
+        background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.09);
+        border-radius: 24px; padding: 32px 36px;
+      }
+      .row .lab { font-size: 30px; color: #a3b0c2; font-weight: 600 }
+      .row .val { font-size: 52px; font-weight: 800; letter-spacing: -.03em }
+      .row.bad { background: rgba(255,95,95,.1); border-color: rgba(255,95,95,.34) }
+      .row.bad .val, .row.bad .lab { color: #ff5f5f }
+      .row.good { background: rgba(52,214,154,.09); border-color: rgba(52,214,154,.3) }
+      .row.good .val, .row.good .lab { color: #34d69a }
+
+      /* ledger lines */
+      .bd { display: flex; flex-direction: column }
+      .bd .line {
+        display: flex; align-items: baseline; justify-content: space-between; gap: 22px;
+        padding: 27px 0; border-bottom: 1px solid rgba(255,255,255,.1);
+      }
+      .bd .line:last-child { border-bottom: 0 }
+      .n { font-size: 32px; font-weight: 700 }
+      .d { font-size: 26px; color: #8b98a9; font-weight: 500 }
+      .v { font-size: 39px; font-weight: 800; letter-spacing: -.02em }
+      .total {
+        display: flex; align-items: baseline; justify-content: space-between; gap: 24px;
+        margin-top: 30px; padding-top: 28px; border-top: 2px solid rgba(255,255,255,.17);
+      }
+      .total .l { font-size: 32px; font-weight: 700; color: #a3b0c2 }
+      .total .v2 { font-size: 68px; font-weight: 800; letter-spacing: -.035em }
+
+      .band { display: flex; gap: 5px; height: 11px; margin: 30px 0 4px }
+      .band i { border-radius: 6px; display: block }
+
       .huge {
-        font-size: 400px; font-weight: 800; letter-spacing: -.06em; line-height: .82;
-        color: #ff5f5f; font-variant-numeric: tabular-nums;
-        text-shadow: 0 0 120px rgba(255,80,80,.34);
+        font-size: 250px; font-weight: 800; letter-spacing: -.055em; line-height: .86;
+        text-shadow: 0 0 110px rgba(94,155,255,.24);
       }
-      .huge small { font-size: .46em; letter-spacing: -.04em }
-      .aline { font-size: 46px; font-weight: 700; line-height: 1.25; letter-spacing: -.02em }
-      .amuted { font-size: 30px; color: #a3b0c2; line-height: 1.5; font-weight: 500 }
-      .rule { height: 1px; background: rgba(255,255,255,.14); margin: 44px 0 }
+      .huge small { font-size: .45em; letter-spacing: -.035em }
 
-      /* ══ B · annotated screenshot ═════════════════════════════════ */
-      .shotwrap { position: relative; flex: 1; display: flex; justify-content: center; align-items: flex-start }
-      .phone {
-        position: relative; width: 560px; border-radius: 46px; padding: 12px;
-        background: linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.04) 45%, rgba(255,255,255,.12));
-        box-shadow: 0 50px 110px rgba(0,0,0,.66);
+      /* week bars — the app's own shape, its own numbers */
+      .week { display: flex; align-items: flex-end; gap: 14px; height: 320px; margin-top: 8px }
+      .week .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100% }
+      .week i { display: block; width: 100%; border-radius: 12px; background: rgba(94,155,255,.5) }
+      .week i.hi { background: #5e9bff; box-shadow: 0 0 40px rgba(94,155,255,.5) }
+      .week i.nil { background: rgba(255,255,255,.1) }
+      .days { display: flex; gap: 14px; margin-top: 16px }
+      .days b {
+        flex: 1; text-align: center; font-size: 24px; font-weight: 700; color: #6f7d90;
+        letter-spacing: .04em;
       }
-      .phone img { display: block; width: 100%; border-radius: 36px; }
-      .ring {
-        position: absolute; border: 7px solid #ff5f5f; border-radius: 999px;
-        box-shadow: 0 0 44px rgba(255,80,80,.55);
-      }
-      .callout {
-        position: absolute; font-size: 34px; font-weight: 800; color: #ff5f5f;
-        letter-spacing: -.02em; line-height: 1.2; text-align: right;
-      }
+      .days b.hi { color: #5e9bff }
 
-      /* ══ C · the maths myth ═══════════════════════════════════════ */
-      .mono { font-variant-numeric: tabular-nums }
-      .wrong {
-        font-size: 76px; font-weight: 800; letter-spacing: -.03em; color: #6f7d90;
-        position: relative; display: inline-block;
-      }
-      .wrong::after {
-        content: ''; position: absolute; left: -12px; right: -12px; top: 52%; height: 7px;
-        background: #ff5f5f; border-radius: 4px; transform: rotate(-1.1deg);
-      }
-      .right { font-size: 108px; font-weight: 800; letter-spacing: -.04em; color: #34d69a }
-      .lbl { font-size: 27px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8b98a9 }
+      .stats { display: flex; flex-direction: column; gap: 40px }
+      .stat .fig { font-size: 92px; font-weight: 800; letter-spacing: -.04em; line-height: 1 }
+      .stat .cap { font-size: 27px; color: #a3b0c2; font-weight: 500; margin-top: 10px; line-height: 1.42 }
+      .src { font-size: 21px; color: #6f7d90; font-weight: 500; line-height: 1.5 }
 
-      /* ══ D · tester ask, inverted ═════════════════════════════════ */
-      .invert { background: #5e9bff; color: #061018 }
-      .invert .brand span { color: #061018 }
-      .invert .tag { color: rgba(6,16,24,.66) }
-      .invert .url { color: #061018 }
-      .bignum {
-        font-size: 260px; font-weight: 800; letter-spacing: -.06em; line-height: .84;
-        color: #061018; font-variant-numeric: tabular-nums;
+      .ticks { display: flex; flex-direction: column; gap: 26px }
+      .tick { display: flex; align-items: flex-start; gap: 22px }
+      .tick .x {
+        width: 46px; height: 46px; border-radius: 14px; flex: none;
+        border: 1px solid rgba(255,95,95,.4); background: rgba(255,95,95,.1);
+        color: #ff5f5f; display: grid; place-items: center; font-size: 26px; font-weight: 800;
       }
-      .isub { font-size: 42px; font-weight: 800; line-height: 1.24; letter-spacing: -.025em; color: #061018 }
-      .ismall { font-size: 29px; font-weight: 600; line-height: 1.5; color: rgba(6,16,24,.76) }
-      .steps { display: flex; flex-direction: column; gap: 16px; margin-top: 34px }
-      .step { display: flex; align-items: center; gap: 20px; font-size: 30px; font-weight: 700; color: #061018 }
-      .num {
-        width: 52px; height: 52px; border-radius: 50%; background: #061018; color: #5e9bff;
-        display: grid; place-items: center; font-size: 26px; font-weight: 800; flex: none;
-      }
+      .tick .t { font-size: 34px; font-weight: 700; padding-top: 4px }
     </style>
   </head>
   <body>
 
-    <!-- ═══ A · £30 ═══ -->
-    <div class="post p45 dark" id="a">
-      <div class="glow"></div><div class="grid"></div>
+    <!-- 1 · the short payslip -->
+    <div class="post p45" id="p1">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
       <div class="inner">
+        <div class="kicker">Week ending Sun 1 Mar · four shifts</div>
         <div class="body">
-<div class="lbl">One week · four shifts</div>
-        <div class="huge" style="margin-top:36px"><small>£</small>30</div>
-        <div class="aline" style="margin-top:34px">
-          missing from a payslip,<br>and nobody noticed.
-        </div>
-        <div class="rule"></div>
-        <div class="amuted">
-          Two of those shifts ran past midnight. Once hours are split across a
-          night rate and breaks come off the band they fell in, working out what
-          a week <em>should</em> have paid is genuinely hard.
-          <br><br>
-          So most of us don't. That is the whole reason it goes unnoticed.
-        </div>
-        </div>
-        <div class="brandbar">
-          <div>
-            <div class="brand">Payweek<span>.</span></div>
-            <div class="tag">Free · No ads · No tracking</div>
+          <h1>Would you<br>have noticed?</h1>
+          <div class="rows" style="margin-top:52px">
+            <div class="row"><span class="lab">The payslip said</span><span class="val">£437.53</span></div>
+            <div class="row"><span class="lab">The hours came to</span><span class="val">£467.53</span></div>
+            <div class="row bad"><span class="lab">Short by</span><span class="val">£30.00</span></div>
           </div>
+          <p class="sub" style="margin-top:48px">
+            Two of those shifts ran past midnight. Once hours split across a
+            night rate and the break comes off the band it fell in, working out
+            what a week <em>should</em> have paid is genuinely hard — so most of
+            us never do.
+          </p>
+        </div>
+        <div class="foot">
+          <div><div class="brand">Payweek<span>.</span></div>
+               <div class="tag">Free · No ads · No tracking</div></div>
           <div class="url">payweek.app</div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ B · annotated screenshot ═══ -->
-    <div class="post p45 dark" id="b">
-      <div class="glow"></div><div class="warm"></div><div class="grid"></div>
-      <div class="inner" style="padding-bottom:56px">
+    <!-- 2 · the night shift -->
+    <div class="post p45" id="p2">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="inner">
+        <div class="kicker">Friday · 18:00 – 02:00</div>
         <div class="body">
-<div class="aline" style="font-size:56px;letter-spacing:-.03em">
-          I typed in what<br>they paid me.
-        </div>
-        <div class="shotwrap" style="margin-top:40px">
-          <div class="phone">
-            <img src="/shots/check.png" alt="" />
-            <div class="ring" style="left:24px;right:24px;top:598px;height:116px"></div>
+          <h2>What does a shift<br>past midnight<br>actually pay?</h2>
+          <div class="band">
+            <i style="flex:1;background:#5e9bff"></i><i style="flex:1;background:#34d69a"></i>
           </div>
-          <div class="callout" style="right:0;top:498px;">this bit<br>is the point ↙</div>
-        </div>
-        </div>
-        <div class="brandbar" style="margin-top:36px">
-          <div>
-            <div class="brand">Payweek<span>.</span></div>
-            <div class="tag">Checks the payslip against your own hours</div>
+          <div class="bd" style="margin-top:22px">
+            <div class="line">
+              <span><span class="n">Base rate</span><br><span class="d">3h 45m @ £13.50/h</span></span>
+              <span class="v">£50.63</span>
+            </div>
+            <div class="line">
+              <span><span class="n">Night rate</span><br><span class="d">3h 45m @ £16.20/h</span></span>
+              <span class="v">£60.75</span>
+            </div>
+            <div class="line">
+              <span><span class="n">Unpaid break</span><br><span class="d">30 min, off the band it fell in</span></span>
+              <span class="v" style="color:#6f7d90">not paid</span>
+            </div>
           </div>
+          <div class="total">
+            <span class="l">8h on the clock · 7.5h paid</span>
+            <span class="v2">£111.38</span>
+          </div>
+          <p class="sub" style="margin-top:42px">
+            Eight times your hourly rate would say £108.00. It is almost never
+            eight times your hourly rate.
+          </p>
+        </div>
+        <div class="foot">
+          <div><div class="brand">Payweek<span>.</span></div>
+               <div class="tag">Prices every shift you work</div></div>
           <div class="url">payweek.app</div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ C · the maths myth ═══ -->
-    <div class="post p11 dark" id="c">
-      <div class="glow"></div><div class="warm"></div><div class="grid"></div>
+    <!-- 3 · the tester ask -->
+    <div class="post p11" id="p3">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
       <div class="inner">
+        <div class="kicker">Android · thirty seconds</div>
         <div class="body">
-<div class="lbl">18:00 – 02:00 · 30 min unpaid</div>
-        <div style="margin-top:44px">
-          <div class="lbl" style="font-size:23px;color:#6f7d90">What most people work out</div>
-          <div class="wrong mono" style="margin-top:14px">8 × £13.50 = £108.00</div>
+          <h1 style="font-size:76px">Can you<br>tap a link?</h1>
+          <p class="sub" style="margin-top:34px">
+            Google won't let me release Payweek until <em>12 people</em> have
+            joined the test.
+          </p>
+          <p class="sub" style="margin-top:20px">
+            You don't have to use it. Tap the link, tap <em>Become a tester</em>,
+            and that's it — it counts.
+          </p>
         </div>
-        <div style="margin-top:56px">
-          <div class="lbl" style="font-size:23px;color:#34d69a">What it actually pays</div>
-          <div class="right mono" style="margin-top:10px">£111.38</div>
-          <div class="amuted" style="margin-top:22px;font-size:28px">
-            3h 45m at £13.50 · 3h 45m at the £16.20 night rate ·
-            break off the band it fell in
-          </div>
-        </div>
-        </div>
-        <div class="brandbar">
-          <div>
-            <div class="brand">Payweek<span>.</span></div>
-            <div class="tag">Prices every shift you work</div>
-          </div>
+        <div class="foot">
+          <div><div class="brand">Payweek<span>.</span></div>
+               <div class="tag">Free shift &amp; pay tracker for UK agency workers</div></div>
           <div class="url">payweek.app</div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ D · tester ask, inverted ═══ -->
-    <div class="post p11 invert" id="d">
+    <!-- 4 · holiday pay -->
+    <div class="post p45" id="p4">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
       <div class="inner">
+        <div class="kicker">The bit nobody checks</div>
         <div class="body">
-<div class="lbl" style="color:rgba(6,16,24,.62)">Android · 30 seconds</div>
-        <div class="bignum" style="margin-top:18px">12</div>
-        <div class="isub" style="margin-top:20px">
-          people have to join the test<br>before Google lets me<br>release it.
-        </div>
-        <div class="steps">
-          <div class="step"><span class="num">1</span>Tap the link</div>
-          <div class="step"><span class="num">2</span>Tap “Become a tester”</div>
-          <div class="step"><span class="num">3</span>That's it. It counts.</div>
-        </div>
-        <div class="ismall" style="margin-top:26px">
-          You don't have to use the app. Free, no ads, no tracking.
-        </div>
-        </div>
-        <div class="brandbar">
-          <div>
-            <div class="brand">Payweek<span>.</span></div>
-            <div class="tag">Shift &amp; pay tracker for UK agency workers</div>
+          <div class="huge">12.07<small>%</small></div>
+          <h2 style="margin-top:34px;font-size:56px">is the holiday pay<br>you accrue on<br>every hour worked.</h2>
+          <div class="rows" style="margin-top:46px">
+            <div class="row"><span class="lab">A £622.08 week earns you</span><span class="val">£75.09</span></div>
           </div>
+          <p class="sub" style="margin-top:40px">
+            Roughly seven minutes of paid holiday for every hour on the clock.
+            It builds up whether anyone tells you about it or not — and it is
+            far easier to claim when you have your own record of the hours.
+          </p>
+        </div>
+        <div class="foot">
+          <div><div class="brand">Payweek<span>.</span></div>
+               <div class="tag">Tracks accrual as you log</div></div>
+          <div class="url">payweek.app</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 · the shape of a week -->
+    <div class="post p45" id="p5">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="inner">
+        <div class="kicker">Mon 2 – Sun 8 March · 42h 45m</div>
+        <div class="body">
+          <div style="font-size:120px;font-weight:800;letter-spacing:-.05em;line-height:1">£622.08</div>
+          <div class="week" style="margin-top:46px">
+            <div class="col"><i style="height:69.7%"></i></div>
+            <div class="col"><i style="height:78.4%"></i></div>
+            <div class="col"><i class="nil" style="height:6px"></i></div>
+            <div class="col"><i style="height:71.2%"></i></div>
+            <div class="col"><i style="height:71.4%"></i></div>
+            <div class="col"><i class="hi" style="height:100%"></i></div>
+            <div class="col"><i class="nil" style="height:6px"></i></div>
+          </div>
+          <div class="days">
+            <b>M</b><b>T</b><b>W</b><b>T</b><b>F</b><b class="hi">S</b><b>S</b>
+          </div>
+          <p class="sub" style="margin-top:52px">
+            Five shifts, two agencies, one Wednesday off. That Saturday is
+            worth over half as much again as the Monday — which you can see in
+            a second here, and cannot see at all on a payslip.
+          </p>
+        </div>
+        <div class="foot">
+          <div><div class="brand">Payweek<span>.</span></div>
+               <div class="tag">Your week, priced as you work it</div></div>
+          <div class="url">payweek.app</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 · what it doesn't do -->
+    <div class="post p11" id="p6">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="inner">
+        <div class="kicker">What Payweek doesn't do</div>
+        <div class="body">
+          <div class="ticks">
+            <div class="tick"><span class="x">✕</span><span class="t">No adverts</span></div>
+            <div class="tick"><span class="x">✕</span><span class="t">No tracking, no analytics</span></div>
+            <div class="tick"><span class="x">✕</span><span class="t">Doesn't sell anything to your agency</span></div>
+            <div class="tick"><span class="x">✕</span><span class="t">Doesn't share your hours with anyone</span></div>
+          </div>
+          <p class="sub" style="margin-top:44px">
+            Export the lot to a spreadsheet, or delete it, whenever you like.
+          </p>
+        </div>
+        <div class="foot">
+          <div><div class="brand">Payweek<span>.</span></div>
+               <div class="tag">Built by an agency worker, for agency workers</div></div>
+          <div class="url">payweek.app</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 · it isn't rare -->
+    <div class="post p45" id="p7">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="inner">
+        <div class="kicker">You are not being paranoid</div>
+        <div class="body">
+          <div class="stats">
+            <div class="stat">
+              <div class="fig" style="color:#ff5f5f">445,000</div>
+              <div class="cap">jobs paid below the minimum wage in 2025</div>
+            </div>
+            <div class="stat">
+              <div class="fig">1.4 million</div>
+              <div class="cap">workers reported getting no payslip at all in 2023–24</div>
+            </div>
+            <div class="stat">
+              <div class="fig">2.2 million</div>
+              <div class="cap">jobs came with no paid annual leave in 2025</div>
+            </div>
+          </div>
+          <p class="src" style="margin-top:46px">
+            Since April 2026 the Fair Work Agency is the single body enforcing
+            this. But you cannot report what you cannot prove — and you cannot
+            prove it without your own record of the hours.
+          </p>
+        </div>
+        <div class="foot">
+          <div><div class="brand">Payweek<span>.</span></div>
+               <div class="tag">Keep your own count</div></div>
           <div class="url">payweek.app</div>
         </div>
       </div>
