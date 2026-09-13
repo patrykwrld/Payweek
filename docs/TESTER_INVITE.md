@@ -3,7 +3,101 @@
 Copy for getting 14 people through the three taps that Play counts. Written to
 do one job and no other: remove every reason to not tap.
 
-## Before you send anything
+## First: the one-tap flow only works if you set it up for it
+
+Closed testing is invite-only, and Play decides who is invited by looking at a
+**tester list**. There are two kinds of list, and which one you pick decides
+whether a stranger can join by themselves.
+
+| | Email list | **Google Group** |
+| --- | --- | --- |
+| Who can join | only addresses you typed in | anyone who joins the group |
+| Works for a Facebook stranger | **no** | **yes** |
+| You need their Gmail first | yes | no |
+| Adding someone | you, in Play Console | them, on their own |
+| Good for | the 14 people you know | posting in public |
+
+**With an email list, "just tap the link and become a tester" does not work
+for someone you have never met.** Their address is not on the list, so the
+opt-in page tells them *"item not found"*, and you have spent your one good
+ask. That is the flow written in the Facebook posts, and it only holds up if
+you use a Google Group.
+
+Use both: the email list for people you know, and the group for anything
+posted in public.
+
+---
+
+## Route B — the Google Group, so strangers can join themselves
+
+Do this once. It takes about ten minutes and it is what makes the group posts
+work at three in the morning without you.
+
+### 1. Make the group
+
+<https://groups.google.com> → **Create group**
+
+- **Name:** Payweek Testers
+- **Group email:** `payweek-testers@googlegroups.com` (whatever is free)
+- **Who can join group:** **Anyone on the web can join**
+
+That last setting is the whole point — it is what makes this self-serve. The
+alternative, *Anyone can ask to join*, means every single person waits on you
+to approve them, which is the same bottleneck as the email list with extra
+steps. Only choose it if you start getting junk.
+
+Also set **Who can post** to *Group owners and managers*, or you have
+accidentally created a public mailing list that anyone can spam.
+
+### 2. Point Play Console at it
+
+Play Console → **Test and release → Testing → Closed testing** → your track →
+**Testers** tab → choose **Google Groups** → enter
+`payweek-testers@googlegroups.com` → **Save**.
+
+### 3. Copy the opt-in link
+
+Same **Testers** tab, at the bottom. It looks like
+`https://play.google.com/apps/testing/app.payweek` — copy the real one rather
+than typing that, in case Play has given the track a different form.
+
+### 4. Share both links, in this order
+
+There are two taps, not one, and pretending otherwise is what generates
+confused replies:
+
+> **1.** Join the group: `https://groups.google.com/g/payweek-testers`
+> **2.** Then open this and tap *Become a tester*: *(opt-in link)*
+> **3.** Then tap the Google Play link on that page to install.
+
+Put them in that order every time. Someone who opens the opt-in link before
+joining the group sees *"item not found"* and usually gives up rather than
+scrolling back for step one.
+
+### What people get wrong
+
+- **The Google account has to match.** They must join the group with the same
+  Google account their phone's Play Store is signed in to. This is the single
+  most common failure, and it is worth saying in the message.
+- **Joining the group is not opting in.** The group only grants permission to
+  see the app. Play counts people who then tapped **Become a tester**. Someone
+  can be in the group and count for nothing.
+- **Membership can take a few minutes to reach Play.** If a tester gets *"item
+  not found"* immediately after joining, have them wait ten minutes and try
+  again before you start debugging.
+- **Installing has to happen through Play.** An APK sent over WhatsApp counts
+  for zero.
+
+### Checking the count
+
+Play Console → Closed testing → your track. The number that matters is the
+count of testers who have **opted in**, and the requirement is **12,
+continuously, for 14 days**. Recruit 15 so one person uninstalling does not
+reset the clock.
+
+---
+
+## Before you send anything (Route A — the email list)
 
 **Add all 14 addresses to the tester list first.** Play Console → Test and
 release → Testing → Closed testing → **Testers** → your email list → paste →

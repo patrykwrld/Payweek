@@ -68,12 +68,17 @@ what earns the right to post the rest.
 > *is* a split, and "hours × rate" is almost never the right answer.
 
 ## 3 · The tester ask
-`post-3-tester-ask.png` · 1080×1080 · **Link:** the **Play closed-testing
-link**, not payweek.app — this one has to land on the opt-in page.
+`post-3-tester-ask.png` · 1080×1080 · **Links:** the Google Group, then the
+Play opt-in link. Not payweek.app.
 
 The only post aimed at the blocker. Post it last in any group.
 
-> Anyone here on Android and up for a 30-second favour?
+> ⚠️ **This post does not work until you have set up the Google Group.** With
+> a plain email list, a stranger who taps the opt-in link gets *"item not
+> found"*, because their address was never on your list. Ten-minute setup in
+> `docs/TESTER_INVITE.md` → *Route B*. Do that first.
+
+> Anyone here on Android and up for a 60-second favour?
 >
 > I work agency and got sick of never knowing whether my payslip was right, so
 > I built a free app that works out what each shift should pay — nights,
@@ -81,9 +86,14 @@ The only post aimed at the blocker. Post it last in any group.
 > comes up short.
 >
 > Google won't let me release it until 12 people have joined the test. **You
-> don't have to use it.** Tap the link, tap "Become a tester", done — it counts.
+> don't have to actually use it** — joining is what counts.
 >
-> No ads, no tracking, and it stays free. Happy to answer anything.
+> Two steps, and they have to be in this order:
+> 1. Join this group → *(group link)*
+> 2. Then open this and tap "Become a tester" → *(opt-in link)*
+>
+> Use the same Google account your Play Store is signed in to, or it won't
+> find it. No ads, no tracking, and it stays free. Happy to answer anything.
 
 ## 4 · Holiday pay
 `post-4-holiday-pay.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-holiday`
