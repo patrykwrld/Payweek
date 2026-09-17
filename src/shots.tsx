@@ -179,6 +179,8 @@ const path =
     ? '/payday'
     : screen === 'check'
     ? '/check'
+    : screen === 'rates'
+    ? '/agencies'
     : '/'
 
 createRoot(document.getElementById('root')!).render(
