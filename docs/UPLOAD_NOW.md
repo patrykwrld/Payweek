@@ -3,17 +3,20 @@
 Everything needed for one session at the Windows machine. Follow it top to
 bottom; nothing here needs a decision made on the spot.
 
-**What's being uploaded:** version **1.1.0**, versionCode **3**. The bundle
-currently sitting on Play is versionCode 1 from August, and it predates the
-week hero, the rate bands, the Payday timeline, the shift sheet and the tab
-bar. Everything you have shown anybody in a screenshot is newer than what a
-tester can install.
+**What's being uploaded:** version **1.1.0**, versionCode **3**.
 
-> **versionCode 3, not 2.** 2 was built and verified in August and never
-> uploaded. Skipping it costs nothing and avoids "version code has already
-> been used" on a track nobody can remember the state of. If Play still
-> refuses it, bump to 4 in `android/app/build.gradle` and rebuild — that is
-> the only thing that error ever means.
+Corrected 21 Sep from a screenshot of the Play Console release screen: the
+bundle live on the closed track is **versionCode 2 (1.0.1), target SDK 36** —
+not versionCode 1, and not a stale target. So this upload is a UI update
+rather than a compliance fix, and it is **not urgent**. The four reworked
+screens are not in front of testers yet, but nothing is broken or blocked by
+that.
+
+> **versionCode 3 is required, not just cautious.** I had assumed 2 was built
+> but never uploaded; the release screen shows version 2 (1.0.1) sitting in
+> the previous release, so 2 is used and 3 is the first free number. If Play
+> refuses 3 as well, bump to 4 in `android/app/build.gradle` and rebuild —
+> that is the only thing that error ever means.
 
 ---
 
@@ -92,6 +95,13 @@ adb install -r android\app\build\outputs\apk\release\app-release.apk
 ```
 
 No adb? Copy the APK to the phone and tap it.
+
+> **Never confirm a closed-testing release with no bundle in it.** The create
+> screen lists the previous release's bundle under *Not included* and will let
+> you proceed with nothing attached, which takes the app away from the testers
+> you already have. Either upload the new `.aab`, or use **Add from library**
+> to carry version 2 forward — or discard the draft. An empty release is the
+> one destructive thing on that page.
 
 ## Step 3 · Upload the bundle
 
