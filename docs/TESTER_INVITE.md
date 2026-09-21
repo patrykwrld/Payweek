@@ -30,10 +30,17 @@ posted in public.
 
 ## Route B — the Google Group, so strangers can join themselves
 
-Do this once. It takes about ten minutes and it is what makes the group posts
-work at three in the morning without you.
+> **Status: the group exists.** `payweek-testers@googlegroups.com` —
+> <https://groups.google.com/g/payweek-testers>. Who-can-join is set to
+> *anyone*, posting and member visibility are owners-only. That address is
+> already wired into `public/test.html`, so step 1 of payweek.app/test works
+> as it stands.
+>
+> **Still outstanding:** Play Console has not been pointed at the group yet,
+> and until it is, group membership grants nothing. See *Point Play Console at
+> it* below.
 
-### 1. Make the group
+### 1. Make the group — done, kept for the record
 
 <https://groups.google.com> → **Create group**
 

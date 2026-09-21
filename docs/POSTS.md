@@ -73,10 +73,12 @@ Play opt-in link. Not payweek.app.
 
 The only post aimed at the blocker. Post it last in any group.
 
-> ⚠️ **This post does not work until you have set up the Google Group.** With
-> a plain email list, a stranger who taps the opt-in link gets *"item not
-> found"*, because their address was never on your list. Ten-minute setup in
-> `docs/TESTER_INVITE.md` → *Route B*. Do that first.
+> ⚠️ **Do not post this until Play Console is pointed at the Google Group.**
+> The group itself now exists, but until it is set as the tester source in
+> Play Console → Closed testing → Testers, membership grants nothing and a
+> stranger who taps the opt-in link gets *"item not found"*. That is one tap
+> in Play Console, and it is the difference between this post working and
+> burning every person who reads it. `docs/TESTER_INVITE.md` → *Route B*.
 
 > Anyone here on Android and up for a 60-second favour?
 >
