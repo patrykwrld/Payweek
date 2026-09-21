@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#080b10" />
+    <title>Become a Payweek tester</title>
+    <meta name="description" content="Two steps, about a minute. Join the tester group, then opt in on Google Play." />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+
+    <script>
+      /* ─────────────────────────────────────────────────────────────
+         THE ONLY TWO LINES YOU EVER NEED TO EDIT.
+
+         GROUP  — the Google Group people join. Must be set to "Anyone on
+                  the web can join" or this page cannot work.
+         OPTIN  — copied from Play Console → Closed testing → Testers tab,
+                  at the bottom. Use the real one; do not assume the form
+                  below is right for your track.
+         ───────────────────────────────────────────────────────────── */
+      var GROUP = 'https://groups.google.com/g/payweek-testers'
+      var OPTIN = 'https://play.google.com/apps/testing/app.payweek'
+    </script>
+
+    <style>
+      @font-face {
+        font-family: 'Inter var';
+        font-style: normal; font-display: swap; font-weight: 100 900;
+        src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+      }
+      :root {
+        --bg: #080b10; --ink: #f3f7fb; --body: #a3b0c2; --muted: #8b98a9;
+        --line: rgba(255,255,255,.1); --accent: #5e9bff; --good: #34d69a;
+      }
+      * { box-sizing: border-box; margin: 0; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        background: var(--bg); color: var(--ink);
+        font-family: 'Inter var', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+        min-height: 100dvh; overflow-x: hidden;
+      }
+      /* Cold above, warm beneath — the same two temperatures as the site. */
+      .bg { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+      .bg i {
+        position: absolute; border-radius: 50%; display: block;
+      }
+      .bg .a {
+        width: 40rem; height: 28rem; top: -14rem; left: 50%; margin-left: -20rem;
+        background: radial-gradient(closest-side, rgba(94,155,255,.85), rgba(94,155,255,.2) 55%, transparent 76%);
+        filter: blur(70px);
+      }
+      .bg .b {
+        width: 34rem; height: 22rem; bottom: -12rem; right: -10rem;
+        background: radial-gradient(closest-side, rgba(255,214,158,.7), transparent 72%);
+        filter: blur(80px); mix-blend-mode: screen;
+      }
+
+      .wrap {
+        position: relative; max-width: 30rem; margin: 0 auto;
+        padding: calc(2.2rem + env(safe-area-inset-top)) 1.35rem
+                 calc(2.5rem + env(safe-area-inset-bottom));
+      }
+
+      .brand { display: flex; align-items: center; gap: .55rem; font-size: 1.32rem; font-weight: 800; letter-spacing: -.03em; }
+      .brand svg { width: 1.7rem; height: 1.7rem; border-radius: .42rem; flex: none; }
+      /* The word and its full stop are one flex child, or the gap that
+         separates the mark from the wordmark also separates the stop and it
+         reads "Payweek ." */
+      .brand .word { white-space: nowrap; }
+      .brand .word span { color: var(--accent); }
+
+      h1 { font-size: 2.05rem; line-height: 1.12; letter-spacing: -.035em; font-weight: 800; margin-top: 1.5rem; }
+      .lede { color: var(--body); margin-top: .8rem; font-size: 1.02rem; }
+      .lede b { color: var(--ink); font-weight: 650; }
+
+      .steps { margin-top: 1.9rem; display: flex; flex-direction: column; gap: .85rem; }
+      .step {
+        display: block; text-decoration: none; color: inherit;
+        border: 1px solid var(--line); border-radius: 1.1rem;
+        background: rgba(255,255,255,.04);
+        padding: 1.05rem 1.1rem; position: relative;
+        transition: border-color .2s ease, background .2s ease, transform .12s ease;
+      }
+      .step:active { transform: scale(.985); }
+      .step .row { display: flex; align-items: center; gap: .85rem; }
+      .num {
+        width: 2rem; height: 2rem; border-radius: 50%; flex: none;
+        display: grid; place-items: center; font-weight: 800; font-size: .95rem;
+        background: rgba(94,155,255,.15); color: var(--accent);
+        border: 1px solid rgba(94,155,255,.35);
+      }
+      .step h2 { font-size: 1.12rem; font-weight: 750; letter-spacing: -.02em; }
+      .step p { color: var(--muted); font-size: .92rem; margin-top: .2rem; }
+      .go { margin-left: auto; color: var(--accent); font-weight: 800; font-size: 1.3rem; flex: none; }
+
+      /* Step 2 is dimmed until step 1 has been opened. The single most
+         common failure is doing them in the wrong order — someone opens the
+         Play link first, is not in the group yet, gets "item not found" and
+         gives up. */
+      .step.locked { opacity: .45; }
+      .step.locked .num { background: rgba(255,255,255,.06); color: var(--muted); border-color: var(--line); }
+      .step.done { border-color: rgba(52,214,154,.4); background: rgba(52,214,154,.07); }
+      .step.done .num { background: rgba(52,214,154,.16); color: var(--good); border-color: rgba(52,214,154,.4); }
+
+      .cta {
+        display: block; margin-top: 1.4rem; text-align: center; text-decoration: none;
+        background: var(--accent); color: #061018; font-weight: 800; font-size: 1.06rem;
+        border-radius: 999px; padding: 1.05rem 1rem;
+        box-shadow: 0 12px 30px rgba(94,155,255,.22);
+      }
+      .cta:active { transform: scale(.985); }
+
+      .note {
+        margin-top: 1.5rem; border: 1px solid rgba(255,190,110,.28);
+        background: rgba(255,190,110,.08); border-radius: .9rem;
+        padding: .85rem 1rem; font-size: .93rem; color: #ffd9a8;
+      }
+      .note b { color: #fff0d8; }
+
+      .what { margin-top: 2.1rem; border-top: 1px solid var(--line); padding-top: 1.4rem; }
+      .what h3 { font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+      .what p { color: var(--body); margin-top: .6rem; font-size: .97rem; }
+      .what ul { margin: .8rem 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .45rem; }
+      .what li { color: var(--body); font-size: .95rem; padding-left: 1.35rem; position: relative; }
+      .what li::before { content: '✓'; position: absolute; left: 0; color: var(--good); font-weight: 800; }
+
+      .ios { display: none; margin-top: 1.6rem; }
+      .ios.on { display: block; }
+      .ios .box {
+        border: 1px solid var(--line); border-radius: 1.1rem; padding: 1.1rem;
+        background: rgba(255,255,255,.04);
+      }
+      .ios h3 { font-size: 1.05rem; font-weight: 750; }
+      .ios p { color: var(--muted); font-size: .93rem; margin-top: .35rem; }
+      .ios a { display: inline-block; margin-top: .8rem; color: var(--accent); font-weight: 700; text-decoration: none; }
+
+      footer { margin-top: 2.4rem; color: var(--muted); font-size: .84rem; line-height: 1.6; }
+      footer a { color: var(--muted); }
+      footer .links { display: flex; flex-wrap: wrap; gap: .9rem; margin-bottom: .7rem; }
+      footer .links a { font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div class="bg" aria-hidden="true"><i class="a"></i><i class="b"></i></div>
+
+    <main class="wrap">
+      <div class="brand">
+        <svg viewBox="0 0 512 512" aria-hidden="true">
+          <rect width="512" height="512" rx="112" fill="#0d1117"/>
+          <g stroke-linecap="round" stroke-width="46" fill="none">
+            <path d="M136 372 V 318" stroke="#3d5a86"/>
+            <path d="M204 372 V 280" stroke="#46679b"/>
+            <path d="M272 372 V 236" stroke="#4d78b8"/>
+            <path d="M340 372 V 190" stroke="#5489dc"/>
+            <path d="M408 372 V 140" stroke="#5e9bff"/>
+          </g>
+        </svg>
+        <span class="word">Payweek<span>.</span></span>
+      </div>
+
+      <h1>Two taps and you're a tester.</h1>
+      <p class="lede">
+        Google won't let me release Payweek until <b>12 people</b> have joined
+        the test. <b>You don't have to use the app</b> — joining is what counts.
+        Takes about a minute.
+      </p>
+
+      <div class="steps">
+        <a class="step" id="s1" href="#" target="_blank" rel="noopener">
+          <div class="row">
+            <span class="num" id="n1">1</span>
+            <span>
+              <h2>Join the tester group</h2>
+              <p id="p1">Tap, then tap “Join group”</p>
+            </span>
+            <span class="go" aria-hidden="true">›</span>
+          </div>
+        </a>
+
+        <a class="step locked" id="s2" href="#" target="_blank" rel="noopener">
+          <div class="row">
+            <span class="num">2</span>
+            <span>
+              <h2>Then opt in on Google Play</h2>
+              <p>Tap “Become a tester”, then install</p>
+            </span>
+            <span class="go" aria-hidden="true">›</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="note">
+        <b>Use the same Google account</b> your Play Store is signed in to, or
+        Play won't find the app. If step 2 says “item not found”, give it ten
+        minutes after joining the group and try again.
+      </div>
+
+      <section class="what">
+        <h3>What you're installing</h3>
+        <p>
+          A free app that works out what each shift should actually pay —
+          night rates, weekend rates, unpaid breaks, shifts running past
+          midnight — and tells you when a payslip comes up short.
+        </p>
+        <ul>
+          <li>Free, and no adverts</li>
+          <li>No tracking, no analytics</li>
+          <li>Nothing shared with your agency</li>
+          <li>Export or delete everything whenever you like</li>
+        </ul>
+      </section>
+
+      <div class="ios" id="ios">
+        <div class="box">
+          <h3>On an iPhone?</h3>
+          <p>
+            Then you can't test it — this part is Android only. Leave your
+            email and I'll tell you the day it's out properly.
+          </p>
+          <a href="/?s=qr-ios">Get the launch email →</a>
+        </div>
+      </div>
+
+      <footer>
+        <div class="links">
+          <a href="/">payweek.app</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/delete-account.html">Delete your account</a>
+        </div>
+        Payweek estimates gross pay from the hours and rates you enter. It does
+        not calculate tax or National Insurance, and it is not a substitute for
+        your payslip or advice from your agency.
+      </footer>
+    </main>
+
+    <script>
+      ;(function () {
+        var s1 = document.getElementById('s1')
+        var s2 = document.getElementById('s2')
+        s1.href = GROUP
+        s2.href = OPTIN
+
+        var KEY = 'payweek-tester-step1'
+        function markDone() {
+          s1.classList.add('done')
+          document.getElementById('n1').textContent = '✓'
+          document.getElementById('p1').textContent = 'Joined — now do step 2'
+          s2.classList.remove('locked')
+        }
+        // Survives the trip out to Google Groups and back, which is the whole
+        // point: they come back to this tab and step 2 is the lit one.
+        try {
+          if (localStorage.getItem(KEY) === '1') markDone()
+        } catch (e) {}
+
+        s1.addEventListener('click', function () {
+          try { localStorage.setItem(KEY, '1') } catch (e) {}
+          setTimeout(markDone, 400)
+        })
+
+        // Opening step 2 before step 1 is the one failure worth intercepting.
+        s2.addEventListener('click', function (ev) {
+          if (!s2.classList.contains('locked')) return
+          ev.preventDefault()
+          alert('Join the group first (step 1) — Google Play won’t find the app until you have.')
+        })
+
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          document.getElementById('ios').classList.add('on')
+        }
+      })()
+    </script>
+  </body>
+</html>
