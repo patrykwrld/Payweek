@@ -12,16 +12,18 @@
 
     <script>
       /* ─────────────────────────────────────────────────────────────
-         THE ONLY TWO LINES YOU EVER NEED TO EDIT.
+         All three confirmed against Play Console and Google Groups on
+         21 Sep 2026. Only edit these if the track or the group changes.
 
-         GROUP  — the Google Group people join. Must be set to "Anyone on
-                  the web can join" or this page cannot work.
-         OPTIN  — copied from Play Console → Closed testing → Testers tab,
-                  at the bottom. Use the real one; do not assume the form
-                  below is right for your track.
+         GROUP  — set to anyone-can-join; posting and member visibility
+                  are owners-only.
+         OPTIN  — the Testers tab opt-in URL.
+         STORE  — only resolves for somebody who has already opted in,
+                  which is why it is step 3 and not step 1.
          ───────────────────────────────────────────────────────────── */
       var GROUP = 'https://groups.google.com/g/payweek-testers'
       var OPTIN = 'https://play.google.com/apps/testing/app.payweek'
+      var STORE = 'https://play.google.com/store/apps/details?id=app.payweek'
     </script>
 
     <style>
@@ -161,7 +163,7 @@
         <span class="word">Payweek<span>.</span></span>
       </div>
 
-      <h1>Two taps and you're a tester.</h1>
+      <h1>Two taps to join.<br>One to install.</h1>
       <p class="lede">
         Google won't let me release Payweek until <b>12 people</b> have joined
         the test. <b>You don't have to use the app</b> — joining is what counts.
@@ -182,10 +184,24 @@
 
         <a class="step locked" id="s2" href="#" target="_blank" rel="noopener">
           <div class="row">
-            <span class="num">2</span>
+            <span class="num" id="n2">2</span>
             <span>
               <h2>Then opt in on Google Play</h2>
-              <p>Tap “Become a tester”, then install</p>
+              <p id="p2">Tap “Become a tester” on that page</p>
+            </span>
+            <span class="go" aria-hidden="true">›</span>
+          </div>
+        </a>
+
+        <!-- The opt-in page does carry a download link, but it is easy to
+             miss and people close the tab thinking they are done. An install
+             is worth more than an opt-in, so it gets its own step. -->
+        <a class="step locked" id="s3" href="#" target="_blank" rel="noopener">
+          <div class="row">
+            <span class="num">3</span>
+            <span>
+              <h2>Install it</h2>
+              <p>Opens Google Play like any other app</p>
             </span>
             <span class="go" aria-hidden="true">›</span>
           </div>
@@ -240,32 +256,52 @@
       ;(function () {
         var s1 = document.getElementById('s1')
         var s2 = document.getElementById('s2')
+        var s3 = document.getElementById('s3')
         s1.href = GROUP
         s2.href = OPTIN
+        s3.href = STORE
 
-        var KEY = 'payweek-tester-step1'
-        function markDone() {
+        // Each step remembers itself, so the trips out to Google Groups and
+        // Play and back leave the next one lit and the finished ones ticked.
+        var K1 = 'payweek-tester-step1'
+        var K2 = 'payweek-tester-step2'
+
+        function done1() {
           s1.classList.add('done')
           document.getElementById('n1').textContent = '✓'
           document.getElementById('p1').textContent = 'Joined — now do step 2'
           s2.classList.remove('locked')
         }
-        // Survives the trip out to Google Groups and back, which is the whole
-        // point: they come back to this tab and step 2 is the lit one.
+        function done2() {
+          s2.classList.add('done')
+          document.getElementById('n2').textContent = '✓'
+          document.getElementById('p2').textContent = 'Opted in — last one'
+          s3.classList.remove('locked')
+        }
         try {
-          if (localStorage.getItem(KEY) === '1') markDone()
+          if (localStorage.getItem(K1) === '1') done1()
+          if (localStorage.getItem(K2) === '1') done2()
         } catch (e) {}
 
         s1.addEventListener('click', function () {
-          try { localStorage.setItem(KEY, '1') } catch (e) {}
-          setTimeout(markDone, 400)
+          try { localStorage.setItem(K1, '1') } catch (e) {}
+          setTimeout(done1, 400)
         })
-
-        // Opening step 2 before step 1 is the one failure worth intercepting.
         s2.addEventListener('click', function (ev) {
-          if (!s2.classList.contains('locked')) return
+          // Opening step 2 before step 1 is the one failure worth intercepting:
+          // Play cannot see the app until the group membership exists.
+          if (s2.classList.contains('locked')) {
+            ev.preventDefault()
+            alert('Join the group first (step 1) — Google Play won’t find the app until you have.')
+            return
+          }
+          try { localStorage.setItem(K2, '1') } catch (e) {}
+          setTimeout(done2, 400)
+        })
+        s3.addEventListener('click', function (ev) {
+          if (!s3.classList.contains('locked')) return
           ev.preventDefault()
-          alert('Join the group first (step 1) — Google Play won’t find the app until you have.')
+          alert('Do step 2 first — Play only shows the app to testers who have opted in.')
         })
 
         if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
