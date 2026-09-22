@@ -20,6 +20,25 @@ that.
 
 ---
 
+## Compatibility — checked 22 Sep 2026, nothing to do
+
+Every current Play requirement was verified against the project rather than
+assumed. None of them needs a change, so this release is purely the UI work.
+
+| Requirement | Status | Why |
+| --- | --- | --- |
+| **Target API level** | ✅ met | versionCode 2 already ships target SDK 36. The "update by 31 August" warning was answered three weeks before the deadline. |
+| **16 KB memory page size** | ✅ met by construction | The requirement only bites apps with native code. `find` across `node_modules/@capacitor` and `android/` returns **no `.so` files**, and there is no `ndk`, `externalNativeBuild`, `jniLibs` or CMake config anywhere in the Gradle files. All four plugins — app, browser, filesystem, share — are Java/Kotlin wrappers over platform APIs. An app with no native libraries is 16 KB compliant by default. Corroborated by the fact that versionCode 2 uploaded fine in August, months after the deadline. |
+| **Secure device migration / backup** | ✅ handled deliberately | `allowBackup="false"`, `fullBackupContent="false"`, and a `dataExtractionRules` resource. Auto Backup would otherwise copy the WebView's storage — the Supabase session token and a cached copy of every shift — into the user's Google Drive. Nothing needs to be there: a restored phone signs in and syncs. |
+| **Android developer verification** | ✅ registered | `app.payweek`, 3 keys, 3 Aug 2026. Ahead of the 30 September deadline. |
+| **Permissions** | ✅ minimal | `INTERNET` and nothing else. |
+
+Re-check the 16 KB position if a plugin is ever added that ships native code —
+camera, SQLite, Bluetooth and biometrics all commonly do. The test is the same
+one: `find node_modules -name "*.so"`.
+
+---
+
 ## Before you start — the one that actually breaks builds
 
 **`.env` must exist in the project root before you run `npm run build`.**
