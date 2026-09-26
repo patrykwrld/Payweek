@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Payweek — Instagram stories</title>
+    <style>
+      /* ═══ Stories ════════════════════════════════════════════════
+         A story gets about two seconds, so each of these carries one
+         idea and no more: an eyebrow, a headline you can read at a
+         glance, one line underneath, and the app itself doing the
+         thing. The app is the argument — a wall of text is not.
+
+         No QR anywhere. Nobody can scan the screen they are holding,
+         so the call to action is Instagram's link sticker, dropped on
+         by hand after export. It needs somewhere legible to sit, which
+         is what the scrim at the bottom is for: the phone runs off the
+         edge of the canvas behind it, so the gap reads as depth rather
+         than as an unfinished image.
+
+         Instagram's own chrome takes the top ~290px (progress bars,
+         profile chip, close button) and the bottom ~180px (reply bar).
+         Nothing that matters goes in either. */
+      @font-face {
+        font-family: 'Inter var'; font-style: normal; font-weight: 100 900;
+        src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+      }
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        background: #1a1a1a; padding: 44px; display: flex; flex-wrap: wrap; gap: 44px;
+        font-family: 'Inter var', Inter, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
+      }
+      .screen {
+        width: 1080px; height: 1920px; flex: none; position: relative;
+        overflow: hidden; background: #0b0f14; color: #f3f7fb;
+      }
+
+      /* Backdrop: cool glow behind the headline, warm one raking across
+         the phone so it is lit rather than pasted on. */
+      .glow-a, .glow-b { position: absolute; border-radius: 50%; pointer-events: none; }
+      .glow-a {
+        width: 1180px; height: 760px; top: -330px; left: 50%; margin-left: -590px;
+        background: radial-gradient(closest-side, rgba(94,155,255,.9), rgba(94,155,255,.22) 55%, transparent 76%);
+        filter: blur(84px);
+      }
+      .glow-b {
+        width: 1000px; height: 900px; top: 780px; right: -420px;
+        background: radial-gradient(closest-side, rgba(255,206,150,.5), rgba(255,190,140,.14) 52%, transparent 74%);
+        filter: blur(110px); mix-blend-mode: screen;
+      }
+      .grid {
+        position: absolute; inset: 0; pointer-events: none;
+        background-image:
+          repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 80px),
+          repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 80px);
+        -webkit-mask-image: radial-gradient(120% 70% at 50% 30%, #000 8%, transparent 74%);
+      }
+
+      /* The text block owns 290–780; the phone is anchored below it at a
+         fixed y so all three frames line up exactly when they are flicked
+         through one after another. */
+      .inner {
+        position: absolute; inset: 0 0 auto; z-index: 1;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 290px 70px 0; text-align: center;
+      }
+
+      .brand { display: flex; align-items: center; gap: 16px; }
+      .brand svg { width: 56px; height: 56px; border-radius: 14px; flex: none; }
+      .brand .word { font-size: 38px; font-weight: 800; letter-spacing: -.03em; white-space: nowrap; }
+      .brand .word span { color: #5e9bff; }
+
+      .eyebrow {
+        margin-top: 46px; font-size: 30px; font-weight: 650; letter-spacing: .01em;
+        color: #8fb6ef;
+      }
+      h1 {
+        margin-top: 12px; font-size: 104px; line-height: .98;
+        letter-spacing: -.045em; font-weight: 850;
+      }
+      h1 em { font-style: normal; color: #5e9bff; }
+      h1 .bad { color: #ff8f7a; }
+      .sub {
+        margin-top: 24px; font-size: 33px; line-height: 1.42; font-weight: 500;
+        color: #a9b6c7; max-width: 920px;
+      }
+      .sub b { color: #e7eef7; font-weight: 700; }
+
+      /* A window onto the app rather than a whole handset. A full screen at
+         this width shows about 40% of itself, and on three of these screens
+         the part worth showing is not the top — so the script measures where
+         the payoff actually sits and offsets the image to put it here. The
+         outer ring does the work of a bezel without pretending to be a phone. */
+      .phone {
+        position: absolute; top: 790px; left: 150px; z-index: 1;
+        width: 780px; height: 566px; overflow: hidden; border-radius: 46px;
+        box-shadow:
+          0 0 0 1.5px rgba(255,255,255,.2),
+          0 0 0 13px rgba(255,255,255,.045),
+          0 60px 120px -26px rgba(0,0,0,.9);
+      }
+      .phone img { display: block; position: absolute; top: 0; left: 0; width: 100%; }
+
+      /* Everything below here is for the link sticker to sit on. */
+      /* Below the phone, so the link sticker has somewhere legible to sit.
+         It starts where the phone ends rather than across it. */
+      .scrim {
+        position: absolute; left: 0; right: 0; bottom: 0; height: 560px; z-index: 2;
+        pointer-events: none;
+        background: linear-gradient(to bottom,
+          rgba(11,15,20,0) 0%, rgba(11,15,20,.8) 22%, #0b0f14 38%);
+      }
+      .tapline {
+        position: absolute; left: 0; right: 0; bottom: 452px; z-index: 3;
+        display: flex; align-items: center; justify-content: center; gap: 18px;
+        color: #9bc4ff; font-size: 38px; font-weight: 750; letter-spacing: -.01em;
+      }
+      .tapline .arrow { font-size: 44px; line-height: 1; }
+    </style>
+  </head>
+  <body>
+    <script type="text/template" id="brand-tpl">
+      <div class="brand">
+        <svg viewBox="0 0 512 512" aria-hidden="true">
+          <rect width="512" height="512" rx="112" fill="#0d1117"/>
+          <g stroke-linecap="round" stroke-width="46" fill="none">
+            <path d="M136 372 V 318" stroke="#3d5a86"/>
+            <path d="M204 372 V 280" stroke="#46679b"/>
+            <path d="M272 372 V 236" stroke="#4d78b8"/>
+            <path d="M340 372 V 190" stroke="#5489dc"/>
+            <path d="M408 372 V 140" stroke="#5e9bff"/>
+          </g>
+        </svg>
+        <span class="word">Payweek<span>.</span></span>
+      </div>
+    </script>
+
+    <!-- ═══ 1 · the hook ══════════════════════════════════════════
+         £467.53 − £437.53 = £30.00, which is the app's own arithmetic
+         from the same fixture as the store screenshots. -->
+    <div class="screen" id="short">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="inner">
+        <div data-brand></div>
+        <div class="eyebrow">My payslip last week</div>
+        <h1>Came up<br><span class="bad">£30 short.</span></h1>
+        <p class="sub">I only knew because something was adding it up.</p>
+        <div class="phone"><img data-shot="check" alt="" /></div>
+      </div>
+      <div class="scrim"></div>
+      <div class="tapline">Tap the link <span class="arrow">&#8595;</span></div>
+    </div>
+
+    <!-- ═══ 2 · the useful one ════════════════════════════════════ -->
+    <div class="screen" id="week">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="inner">
+        <div data-brand></div>
+        <div class="eyebrow">Same job, same week</div>
+        <h1>Which nights<br>are <em>worth it?</em></h1>
+        <p class="sub">Every shift priced — nights, weekends, past midnight.</p>
+        <div class="phone"><img data-shot="week" alt="" /></div>
+      </div>
+      <div class="scrim"></div>
+      <div class="tapline">Tap the link <span class="arrow">&#8595;</span></div>
+    </div>
+
+    <!-- ═══ 3 · the favour ════════════════════════════════════════
+         For your own profile. The audience is people who know you, not
+         agency workers, and the twelve-tester gate counts Android
+         accounts rather than users — so the ask says so outright. -->
+    <div class="screen" id="ask">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="inner">
+        <div data-brand></div>
+        <div class="eyebrow">Built this. Need a hand.</div>
+        <h1><em>12 people</em><br>and it&rsquo;s out.</h1>
+        <p class="sub">
+          Google won&rsquo;t release it until 12 join the test.
+          <b>You don&rsquo;t have to use it.</b> Android, one minute, free.
+        </p>
+        <div class="phone"><img data-shot="payday" alt="" /></div>
+      </div>
+      <div class="scrim"></div>
+      <div class="tapline">Tap the link <span class="arrow">&#8595;</span></div>
+    </div>
+
+    <script>
+      var tpl = document.getElementById('brand-tpl').innerHTML
+      for (var el of document.querySelectorAll('[data-brand]')) el.outerHTML = tpl
+    </script>
+  </body>
+</html>
