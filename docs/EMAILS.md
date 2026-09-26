@@ -50,6 +50,61 @@ group by 1, 3 having count(s.id) >= 5 order by 2 desc;
 
 ---
 
+# The graphic version
+
+`public/email/invite.html` — the tester ask as a designed email rather than
+plain text. Rebuild it with:
+
+```sh
+npx vite --port 5199
+node scripts/make-email.mjs
+```
+
+That regenerates `public/email/hero.png` from a live capture of the app and
+writes a full preview to `assets/social/email-preview.png`.
+
+## How to send it
+
+Gmail has no "import HTML" button, so:
+
+1. **Deploy first.** The hero lives at `https://payweek.app/email/hero.png`
+   and an email cannot load an image off your laptop. Push, let Vercel build,
+   then check that URL opens in a browser.
+2. Open `public/email/invite.html` in Chrome
+3. **Ctrl+A, Ctrl+C**
+4. New Gmail message → click in the body → **Ctrl+V**
+5. Put your own address in **To**, everyone else in **BCC**
+6. Send one to yourself first and open it on your phone
+
+## Things that are true of email and not of web pages
+
+The template is built around these, so don't "tidy" them away:
+
+- **Tables, not divs.** Outlook renders through Word and throws away flex and
+  grid. Every layout row here is a `<table>` on purpose.
+- **Styles inline on each element.** Gmail strips the `<style>` block when you
+  paste into a compose window — which is exactly how you are sending this — so
+  the layout is built to work with it gone. Verified at 360px wide with the
+  block removed. The media queries are a bonus for clients that keep them.
+- **Nothing that matters is inside the image.** Many clients block images by
+  default. The £30 is spelled out in an HTML table underneath the picture, so
+  a recipient with images off still gets the whole argument.
+- **Every link absolute.** A relative `href` in an email goes nowhere. The
+  build fails if one creeps in.
+- **Under 102KB.** Gmail clips a longer message behind a "View entire message"
+  link and hides everything below the cut, including the button. The template
+  is ~10KB; the build fails past 60.
+
+## The one thing it costs you
+
+A designed email from a personal Gmail reads as a mailout, and a mailout from
+somebody you half-remember gets less response than four plain sentences from a
+bloke. **For the 14 from work, and for the five real users, still send plain
+text** — those are the ones where a reply is the point. This template is for
+the 22 account holders, where you are announcing rather than asking a mate.
+
+---
+
 # 1 · The ask — to all 22, BCC
 
 Send this now. It leads with the favour because, as of today, that is the only

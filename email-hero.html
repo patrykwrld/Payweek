@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Payweek — email hero</title>
+    <style>
+      /* The one image in the email. Everything that has to be read is in the
+         HTML below it — plenty of clients block images by default, and an
+         email whose argument is inside a blocked image has no argument. */
+      @font-face {
+        font-family: 'Inter var'; font-style: normal; font-weight: 100 900;
+        src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+      }
+      * { box-sizing: border-box; margin: 0; }
+      body { background: #1a1a1a; padding: 40px; font-family: 'Inter var', Inter, system-ui, sans-serif; }
+      #hero {
+        width: 1200px; height: 752px; position: relative; overflow: hidden;
+        background: #0b0f14;
+      }
+      .glow {
+        position: absolute; border-radius: 50%; pointer-events: none;
+        width: 1300px; height: 620px; top: -260px; left: 50%; margin-left: -650px;
+        background: radial-gradient(closest-side, rgba(94,155,255,.62), rgba(94,155,255,.16) 56%, transparent 76%);
+        filter: blur(80px);
+      }
+      .warm {
+        position: absolute; border-radius: 50%; pointer-events: none;
+        width: 900px; height: 760px; bottom: -340px; right: -300px;
+        background: radial-gradient(closest-side, rgba(255,206,150,.4), transparent 72%);
+        filter: blur(100px); mix-blend-mode: screen;
+      }
+      .grid {
+        position: absolute; inset: 0; pointer-events: none;
+        background-image:
+          repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 80px),
+          repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 80px);
+        -webkit-mask-image: radial-gradient(110% 80% at 50% 26%, #000 10%, transparent 76%);
+      }
+      .window {
+        position: absolute; top: 120px; left: 80px; width: 1040px; height: 512px;
+        overflow: hidden; border-radius: 40px;
+        box-shadow:
+          0 0 0 1.5px rgba(255,255,255,.2),
+          0 0 0 12px rgba(255,255,255,.045),
+          0 50px 100px -24px rgba(0,0,0,.9);
+      }
+      .window img { display: block; position: absolute; top: 0; left: 0; width: 100%; }
+    </style>
+  </head>
+  <body>
+    <div id="hero">
+      <div class="glow"></div><div class="warm"></div><div class="grid"></div>
+      <div class="window"><img data-shot="check" alt="" /></div>
+    </div>
+  </body>
+</html>

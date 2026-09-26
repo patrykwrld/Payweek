@@ -9,6 +9,7 @@
 // changes, the next story changes with it and cannot quietly go stale.
 import { readFileSync, mkdirSync } from 'node:fs'
 import { PNG } from 'pngjs'
+import { appShot, SCREENS } from './lib/app-shot.mjs'
 
 const { chromium } = await import('playwright').catch(() =>
   import('/opt/node22/lib/node_modules/playwright/index.mjs'),
@@ -24,57 +25,15 @@ const b = await chromium.launch()
 // ── the app screens ────────────────────────────────────────────────────
 // 432x768 at 3x. Wider than the story window needs, so scaling down into the
 // frame keeps the app's own text crisp rather than soft.
-//
-// `focus` names the thing the story is actually about. The window in the
-// story shows ~313 CSS px of a 768 px screen, and on two of these three the
-// payoff is nowhere near the top — so rather than hard-coding offsets that
-// rot the moment a screen gains a row, measure where that element sits and
-// let the story scroll the image to it.
-const SCALE = 780 / 432
-const PAD = 20 // app px of breathing room above the focused element
-
-const grab = async (screen, file, { act, focus } = {}) => {
-  const p = await b.newPage({
-    viewport: { width: 432, height: 768 },
-    deviceScaleFactor: 3,
-  })
-  // Pin the clock so "this week" is the same week every run.
-  await p.clock.setFixedTime(new Date('2026-03-07T18:30:00'))
-  await p.goto(`http://localhost:5199/shots.html?s=${screen}`, { waitUntil: 'load' })
-  await p.waitForTimeout(2200)
-  if (act) await act(p)
-
-  let y = 0
-  if (focus) {
-    const box = await focus(p).first().boundingBox().catch(() => null)
-    if (box) y = Math.max(0, box.y - PAD)
-    else console.warn(`${screen}: focus not found, showing the top of the screen`)
-  }
-  await p.screenshot({ path: `${TMP}/${file}.png` })
-  await p.close()
-  return {
-    src: `data:image/png;base64,${readFileSync(`${TMP}/${file}.png`).toString('base64')}`,
-    top: -Math.round(y * SCALE),
-  }
-}
-
-const shots = {
-  // Skip the app's own wordmark — the story already has one directly above
-  // it, and two in a row looks like a mistake.
-  week: await grab('week', 'week', { focus: (p) => p.getByText(/this pay week/i) }),
-  payday: await grab('payday', 'payday', { focus: (p) => p.locator('main :is(h2,h3)') }),
-  // The £30 only exists once a payslip figure is entered, same as the store
-  // screenshot — and the verdict is below the form, so focus on it.
-  check: await grab('check', 'check', {
-    act: async (p) => {
-      await p.locator('select').nth(1).selectOption({ index: 1 })
-      await p.waitForTimeout(500)
-      await p.locator('main input').first().fill('437.53')
-      await p.waitForTimeout(1200)
-    },
-    focus: (p) => p.getByText(/short/i),
-  }),
-}
+const WIDTH = 780
+const shots = Object.fromEntries(
+  await Promise.all(
+    ['week', 'payday', 'check'].map(async (k) => [
+      k,
+      await appShot(b, { ...SCREENS[k], file: k, dir: TMP, width: WIDTH }),
+    ]),
+  ),
+)
 
 // ── the stories ────────────────────────────────────────────────────────
 const page = await b.newPage({ viewport: { width: 1200, height: 2000 } })

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
+<title>Payweek — a one-minute favour</title>
+<!--
+  Email, not a web page. The rules are different and older:
+  tables for layout, styles inline on every element, absolute URLs
+  everywhere, and nothing that matters locked inside the image — plenty of
+  clients block images by default, so the £30 is spelled out in HTML below
+  it rather than only drawn in the picture.
+
+  Regenerate the hero with: node scripts/make-email.mjs
+-->
+<style>
+  /* Progressive enhancement only. If a client drops this block the email
+     still reads correctly, because everything critical is inline. */
+  @media only screen and (max-width: 620px) {
+    .sm-pad { padding-left: 20px !important; padding-right: 20px !important; }
+    .sm-h1 { font-size: 32px !important; line-height: 1.12 !important; }
+  }
+  a { color: #7fb0ff; }
+</style>
+</head>
+<body style="margin:0;padding:0;width:100%;background-color:#0b0f14;color:#e9eff7;-webkit-font-smoothing:antialiased;">
+
+<!-- Preview line: what shows next to the subject in the inbox. -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">
+  Twelve people and Payweek can go in the Play Store properly. Two steps, about a minute.
+  &#8203;&#847;&#8203;&#847;&#8203;&#847;&#8203;&#847;&#8203;&#847;&#8203;&#847;&#8203;&#847;&#8203;&#847;
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0b0f14" style="background-color:#0b0f14;">
+<tr>
+<td align="center" style="padding:30px 10px 46px 10px;">
+
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:#0e141c;border:1px solid #1d2733;border-radius:16px;">
+
+  <!-- ── wordmark ─────────────────────────────────────────────── -->
+  <tr>
+    <td class="sm-pad" align="center" style="padding:34px 34px 0 34px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:21px;font-weight:700;letter-spacing:-0.02em;color:#f3f7fb;">
+      Payweek<span style="color:#5e9bff;">.</span>
+    </td>
+  </tr>
+
+  <!-- ── the ask ──────────────────────────────────────────────── -->
+  <tr>
+    <td class="sm-pad" align="center" style="padding:30px 34px 0 34px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <div class="sm-h1" style="font-size:38px;line-height:1.08;letter-spacing:-0.035em;font-weight:800;color:#f3f7fb;mso-line-height-rule:exactly;">
+        Twelve people,<br>and it&rsquo;s out.
+      </div>
+      <div style="padding-top:18px;font-size:16px;line-height:1.55;color:#a3b1c3;mso-line-height-rule:exactly;">
+        You made a Payweek account over the summer. I need one small favour
+        before Google will let me release it properly &mdash; and it costs
+        about a minute.
+      </div>
+    </td>
+  </tr>
+
+  <!-- ── button ───────────────────────────────────────────────── -->
+  <tr>
+    <td align="center" style="padding:28px 40px 0 40px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td bgcolor="#2f6fe0" style="background-color:#2f6fe0;border-radius:10px;">
+            <a href="https://payweek.app/test" style="display:inline-block;padding:16px 34px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;font-weight:700;color:#ffffff;text-decoration:none;">
+              Join the test &rarr;
+            </a>
+          </td>
+        </tr>
+      </table>
+      <div style="padding-top:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;color:#7f8da0;">
+        or paste <a href="https://payweek.app/test" style="color:#7fb0ff;text-decoration:none;">payweek.app/test</a> into your browser
+      </div>
+    </td>
+  </tr>
+
+  <!-- ── the app ──────────────────────────────────────────────── -->
+  <tr>
+    <td align="center" style="padding:32px 20px 0 20px;">
+      <img src="https://payweek.app/email/hero.png" width="560" alt="Payweek showing a week that came up thirty pounds short of what the hours were worth" style="display:block;width:100%;max-width:560px;height:auto;border:0;border-radius:12px;">
+    </td>
+  </tr>
+
+  <!-- ── what it is ───────────────────────────────────────────── -->
+  <tr>
+    <td class="sm-pad" style="padding:30px 34px 0 34px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#a3b1c3;mso-line-height-rule:exactly;">
+      Payweek works out what every shift <em style="font-style:normal;color:#e9eff7;">should</em>
+      pay &mdash; night rates, weekend rates, breaks, hours that run past
+      midnight &mdash; and tells you when a payslip comes up short.
+    </td>
+  </tr>
+
+  <!-- ── the arithmetic, in text so it survives blocked images ── -->
+  <tr>
+    <td class="sm-pad" style="padding:22px 34px 0 34px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #1d2733;border-radius:12px;background-color:#111925;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;">
+        <tr>
+          <td style="padding:15px 20px;color:#9aa8ba;border-bottom:1px solid #1d2733;">What the week should have paid</td>
+          <td align="right" style="padding:15px 20px;color:#f3f7fb;font-weight:700;border-bottom:1px solid #1d2733;white-space:nowrap;">&pound;467.53</td>
+        </tr>
+        <tr>
+          <td style="padding:15px 20px;color:#9aa8ba;border-bottom:1px solid #1d2733;">What the payslip said</td>
+          <td align="right" style="padding:15px 20px;color:#f3f7fb;font-weight:700;border-bottom:1px solid #1d2733;white-space:nowrap;">&pound;437.53</td>
+        </tr>
+        <tr>
+          <td style="padding:15px 20px;color:#ff8f7a;font-weight:700;">Short</td>
+          <td align="right" style="padding:15px 20px;color:#ff8f7a;font-weight:700;white-space:nowrap;">&pound;30.00</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ── three honest notes ───────────────────────────────────── -->
+  <tr>
+    <td class="sm-pad" style="padding:30px 34px 0 34px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8fb6ef;">Three honest notes</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;font-size:15px;line-height:1.55;color:#a3b1c3;">
+        <tr>
+          <td width="22" valign="top" style="padding:14px 0 0 0;color:#5e9bff;">&bull;</td>
+          <td valign="top" style="padding:14px 0 0 0;mso-line-height-rule:exactly;"><strong style="color:#e9eff7;font-weight:650;">You don&rsquo;t have to use it.</strong> Joining the test is the bit Google counts. No hard feelings either way.</td>
+        </tr>
+        <tr>
+          <td width="22" valign="top" style="padding:12px 0 0 0;color:#5e9bff;">&bull;</td>
+          <td valign="top" style="padding:12px 0 0 0;mso-line-height-rule:exactly;"><strong style="color:#e9eff7;font-weight:650;">Please leave it installed a fortnight.</strong> If the number drops below twelve the clock starts again from zero.</td>
+        </tr>
+        <tr>
+          <td width="22" valign="top" style="padding:12px 0 0 0;color:#5e9bff;">&bull;</td>
+          <td valign="top" style="padding:12px 0 0 0;mso-line-height-rule:exactly;"><strong style="color:#e9eff7;font-weight:650;">Android only.</strong> On iPhone there&rsquo;s a button on that page to be told when it&rsquo;s out.</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ── button, again ────────────────────────────────────────── -->
+  <tr>
+    <td align="center" style="padding:32px 40px 0 40px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td bgcolor="#2f6fe0" style="background-color:#2f6fe0;border-radius:10px;">
+            <a href="https://payweek.app/test" style="display:inline-block;padding:16px 34px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;font-weight:700;color:#ffffff;text-decoration:none;">
+              Join the test &rarr;
+            </a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ── sign-off ─────────────────────────────────────────────── -->
+  <tr>
+    <td class="sm-pad" style="padding:30px 34px 36px 34px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#a3b1c3;mso-line-height-rule:exactly;">
+      Thanks for reading this far.<br>
+      <span style="color:#e9eff7;">Patryk</span>
+    </td>
+  </tr>
+
+</table>
+
+<!-- ── footer, outside the card ───────────────────────────────── -->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
+  <tr>
+    <td align="center" style="padding:22px 30px 0 30px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.7;color:#75839a;">
+      Free &middot; No adverts &middot; No tracking &middot; Your hours stay yours<br>
+      <a href="https://payweek.app" style="color:#75839a;text-decoration:underline;">payweek.app</a>
+      &nbsp;&middot;&nbsp;
+      Don&rsquo;t want emails from me? Just reply with &ldquo;stop&rdquo;.
+    </td>
+  </tr>
+</table>
+
+</td>
+</tr>
+</table>
+</body>
+</html>
