@@ -1,5 +1,6 @@
-// Renders the scan overlays — the screen you hold up to somebody, and a lock
-// screen version — then decodes the QR back out of the finished PNG.
+// Renders every invite graphic that is a whole phone screen: the two scan
+// overlays (the one you hold up, and a lock screen) and the two Instagram
+// stories — then decodes the QR back out of the finished PNGs.
 //
 //   npx vite --port 5199
 //   node scripts/make-overlay.mjs
@@ -22,6 +23,7 @@ const { chromium } = await import('playwright').catch(() =>
 )
 const URL_ = 'https://payweek.app/test'
 mkdirSync('assets/qr', { recursive: true })
+mkdirSync('assets/social', { recursive: true })
 
 // Error correction H: these get photographed at an angle, in bad light, and H
 // survives roughly 30% of the code being unreadable.
@@ -43,28 +45,37 @@ await page.evaluate((s) => {
 }, svg)
 await page.waitForTimeout(700)
 
+// `qr: false` is the stories. A QR is worse than useless on a story —
+// nobody can scan the screen they are holding — so those carry a link
+// sticker instead, and there is nothing in them to decode.
 const out = [
-  ['show', 'assets/qr/overlay-show.png'],
-  ['lock', 'assets/qr/overlay-lock.png'],
+  { id: 'show', path: 'assets/qr/overlay-show.png', qr: true },
+  { id: 'lock', path: 'assets/qr/overlay-lock.png', qr: true },
+  { id: 'story-ask', path: 'assets/social/story-ask.png', qr: false },
+  { id: 'story-short', path: 'assets/social/story-short.png', qr: false },
 ]
-for (const [id, path] of out) {
+for (const { id, path } of out) {
   await page.locator('#' + id).screenshot({ path })
 }
 if (errs.length) console.log('page errors:', errs.slice(0, 3))
 await b.close()
 
-// Read each one back the way a camera would.
+// Check the size of every one, and read the QRs back the way a camera would.
 let ok = true
-for (const [, path] of out) {
+for (const { path, qr } of out) {
   const png = PNG.sync.read(readFileSync(path))
-  const res = jsQR(new Uint8ClampedArray(png.data), png.width, png.height)
-  const good = res && res.data === URL_
-  if (!good) ok = false
-  console.log(
-    `${path} ${png.width}x${png.height} → ${good ? 'scans OK' : 'DOES NOT SCAN'}`,
-  )
+  const sized = png.width === 1080 && png.height === 1920
+  if (!sized) ok = false
+  let note = sized ? 'size OK' : 'WRONG SIZE'
+  if (qr) {
+    const res = jsQR(new Uint8ClampedArray(png.data), png.width, png.height)
+    const good = res && res.data === URL_
+    if (!good) ok = false
+    note += good ? ', scans OK' : ', DOES NOT SCAN'
+  }
+  console.log(`${path} ${png.width}x${png.height} → ${note}`)
 }
 if (!ok) {
-  console.error('\nA QR in one of these does not decode. Do not ship it.')
+  console.error('\nOne of these is wrong. Do not ship it.')
   process.exit(1)
 }
