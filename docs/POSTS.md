@@ -31,7 +31,7 @@ person who adds it up in the comments will be right and you will be wrong.
 # Part 1 — the seven posts
 
 ## 1 · "Would you have noticed?"
-`post-1-would-you-have-noticed.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-30`
+`assets/posts/post-1-would-you-have-noticed.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-30`
 
 The scroll-stopper. Three rows, one red.
 
@@ -49,7 +49,7 @@ The scroll-stopper. Three rows, one red.
 > anything — I'm not making money off this, I just got sick of not knowing.
 
 ## 2 · The night shift
-`post-2-night-shift.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-nights`
+`assets/posts/post-2-night-shift.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-nights`
 
 **Post this first in any group you're new to.** It asks for nothing, which is
 what earns the right to post the rest.
@@ -68,7 +68,7 @@ what earns the right to post the rest.
 > *is* a split, and "hours × rate" is almost never the right answer.
 
 ## 3 · The tester ask
-`post-3-tester-ask.png` · 1080×1080 · **Links:** the Google Group, then the
+`assets/posts/post-3-tester-ask.png` · 1080×1080 · **Links:** the Google Group, then the
 Play opt-in link. Not payweek.app.
 
 The only post aimed at the blocker. Post it last in any group.
@@ -98,7 +98,7 @@ The only post aimed at the blocker. Post it last in any group.
 > find it. No ads, no tracking, and it stays free. Happy to answer anything.
 
 ## 4 · Holiday pay
-`post-4-holiday-pay.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-holiday`
+`assets/posts/post-4-holiday-pay.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-holiday`
 
 The most *useful* post in the set. Most agency workers have never had 12.07%
 explained to them, and this is the one people tag each other in.
@@ -113,7 +113,7 @@ explained to them, and this is the one people tag each other in.
 > because then it's arithmetic rather than an argument.
 
 ## 5 · The shape of a week
-`post-5-the-week.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-week`
+`assets/posts/post-5-the-week.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-week`
 
 Shows the product doing something a payslip can't. Good for Instagram.
 
@@ -128,7 +128,7 @@ Shows the product doing something a payslip can't. Good for Instagram.
 > which nights were worth doing.
 
 ## 6 · What it doesn't do
-`post-6-what-it-doesnt-do.png` · 1080×1080 · **Link:** `payweek.app/?s=fb-trust`
+`assets/posts/post-6-what-it-doesnt-do.png` · 1080×1080 · **Link:** `payweek.app/?s=fb-trust`
 
 Handles the objection before it's raised. Post it after someone in the
 comments asks "what's the catch".
@@ -143,7 +143,7 @@ comments asks "what's the catch".
 > advance, loudly, and the free version stays.
 
 ## 7 · You're not being paranoid
-`post-7-not-rare.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-stats`
+`assets/posts/post-7-not-rare.png` · 1080×1350 · **Link:** `payweek.app/?s=fb-stats`
 
 The credibility post. Real published figures, stated plainly. **Don't round
 them up** — the accuracy is the whole point.
