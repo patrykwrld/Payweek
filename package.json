@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -b",
-    "vercel-build": "tsc -b && vite build && node scripts/postbuild-web.mjs"
+    "vercel-build": "tsc -b && vite build && node scripts/postbuild-web.mjs",
+    "check:csp": "node scripts/check-csp.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",
