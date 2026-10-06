@@ -1,154 +1,296 @@
-# Upload to Play — the whole sitting, in order
+# Upload to Play — the whole sitting, in PowerShell
 
-Everything needed for one session at the Windows machine. Follow it top to
-bottom; nothing here needs a decision made on the spot.
+Everything needed for one session at the Windows machine, top to bottom.
+Nothing here needs a decision made on the spot.
 
-**What's being uploaded:** version **1.1.0**, versionCode **3**.
+**What's being uploaded:** version **1.2.0**, versionCode **3**.
 
-Corrected 21 Sep from a screenshot of the Play Console release screen: the
-bundle live on the closed track is **versionCode 2 (1.0.1), target SDK 36** —
-not versionCode 1, and not a stale target. So this upload is a UI update
-rather than a compliance fix, and it is **not urgent**. The four reworked
-screens are not in front of testers yet, but nothing is broken or blocked by
-that.
+**What Play currently has:** versionCode **2 (1.0.1)**, target SDK 36, on the
+closed track. So 3 is the first free number and this is a UI update rather
+than a compliance fix. If Play rejects 3 as already used, bump to 4 in
+`android/app/build.gradle` and rebuild — that is the only thing that error
+ever means.
 
-> **versionCode 3 is required, not just cautious.** I had assumed 2 was built
-> but never uploaded; the release screen shows version 2 (1.0.1) sitting in
-> the previous release, so 2 is used and 3 is the first free number. If Play
-> refuses 3 as well, bump to 4 in `android/app/build.gradle` and rebuild —
-> that is the only thing that error ever means.
+> **PowerShell 5.1 does not support `&&`.** Windows ships 5.1 by default.
+> Every block below is written as separate lines for that reason. Run each
+> block and look at the output before the next one; do not paste the whole
+> document in at once. Check with `$PSVersionTable.PSVersion`.
 
 ---
 
-## Compatibility — checked 22 Sep 2026, nothing to do
+# Part 0 · The keystore, before anything else
 
-Every current Play requirement was verified against the project rather than
-assumed. None of them needs a change, so this release is purely the UI work.
+Without this file you cannot ship an update to `app.payweek` — not now, not
+ever, by any means. Do this part even if you are not going to build today.
 
-| Requirement | Status | Why |
-| --- | --- | --- |
-| **Target API level** | ✅ met | versionCode 2 already ships target SDK 36. The "update by 31 August" warning was answered three weeks before the deadline. |
-| **16 KB memory page size** | ✅ met by construction | The requirement only bites apps with native code. `find` across `node_modules/@capacitor` and `android/` returns **no `.so` files**, and there is no `ndk`, `externalNativeBuild`, `jniLibs` or CMake config anywhere in the Gradle files. All four plugins — app, browser, filesystem, share — are Java/Kotlin wrappers over platform APIs. An app with no native libraries is 16 KB compliant by default. Corroborated by the fact that versionCode 2 uploaded fine in August, months after the deadline. |
-| **Secure device migration / backup** | ✅ handled deliberately | `allowBackup="false"`, `fullBackupContent="false"`, and a `dataExtractionRules` resource. Auto Backup would otherwise copy the WebView's storage — the Supabase session token and a cached copy of every shift — into the user's Google Drive. Nothing needs to be there: a restored phone signs in and syncs. |
-| **Android developer verification** | ✅ registered | `app.payweek`, 3 keys, 3 Aug 2026. Ahead of the 30 September deadline. |
-| **Permissions** | ✅ minimal | `INTERNET` and nothing else. |
+## 0.1 · Find it
 
-Re-check the 16 KB position if a plugin is ever added that ships native code —
-camera, SQLite, Bluetooth and biometrics all commonly do. The test is the same
-one: `find node_modules -name "*.so"`.
+```powershell
+Get-ChildItem -Path C:\ -Include *.jks,*.keystore -Recurse -File -ErrorAction SilentlyContinue |
+  Select-Object FullName, Length, LastWriteTime | Format-Table -AutoSize
+```
+
+That sweeps the whole drive and takes a few minutes. The one you want is
+almost certainly `payweek-upload.jks`. Also check the places a file gets
+parked and forgotten:
+
+```powershell
+Get-ChildItem "$env:USERPROFILE\Downloads","$env:USERPROFILE\Desktop","$env:USERPROFILE\Documents" `
+  -Include *.jks,*.keystore -Recurse -File -ErrorAction SilentlyContinue | Select-Object FullName
+```
+
+## 0.2 · Prove it is the right key
+
+A keystore that is not the one Play knows about is no better than no keystore,
+and the two look identical on disk. `keytool` ships with the JDK:
+
+```powershell
+$keytool = "$env:JAVA_HOME\bin\keytool.exe"
+if (-not (Test-Path $keytool)) {
+  $keytool = (Get-ChildItem "$env:LOCALAPPDATA\Programs\Android Studio\jbr\bin\keytool.exe" -ErrorAction SilentlyContinue).FullName
+}
+& $keytool -list -v -keystore C:\dev\Payweek\android\payweek-upload.jks -alias payweek-upload
+```
+
+It asks for the store password. Copy the **SHA-256** fingerprint it prints.
+
+Then open **Play Console → your app → Test and release → Setup → App
+signing**, and compare it against the **Upload key certificate** SHA-256.
+
+- **They match** → this is the right file. Back it up now.
+- **They don't** → it is a different key. Keep looking before you build.
+
+## 0.3 · Back it up properly
+
+Three copies, two of them not on this machine. The `.jks` is useless without
+the passwords, so they travel together.
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\Payweek-keystore-backup" | Out-Null
+Copy-Item C:\dev\Payweek\android\payweek-upload.jks "$env:USERPROFILE\Payweek-keystore-backup\"
+Copy-Item C:\dev\Payweek\android\keystore.properties "$env:USERPROFILE\Payweek-keystore-backup\"
+```
+
+A keystore is binary, which password managers will not take. Base64 turns it
+into text you can paste into one:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\dev\Payweek\android\payweek-upload.jks")) |
+  Set-Clipboard
+```
+
+That is now on your clipboard. Paste it into a password manager entry called
+*Payweek upload key*, together with the store password, the key password and
+the alias (`payweek-upload`). To restore it later:
+
+```powershell
+[IO.File]::WriteAllBytes("C:\dev\Payweek\android\payweek-upload.jks",
+  [Convert]::FromBase64String((Get-Clipboard)))
+```
+
+Then put a copy on a USB stick or an encrypted drive. **Never email it, never
+put it in the repo, never paste it into a chat** — anyone holding it and the
+password can publish an update as you.
+
+## 0.4 · If it is genuinely gone
+
+Not fatal, *provided Play App Signing is on* — check the same App signing page.
+
+- **Play App Signing enabled** → Google holds the real app signing key; yours
+  was only the upload key. Play Console → Setup → App signing → **Request
+  upload key reset**. Generate a new key with the `keytool` command in
+  `docs/RELEASE.md` §1, send them the new certificate, and carry on. Takes a
+  couple of days.
+- **Not enabled** → `app.payweek` can never be updated by anyone. The only
+  route is a new package name, which is a new listing with zero installs and
+  no testers. This is why Part 0 comes first.
 
 ---
 
-## Before you start — the one that actually breaks builds
+# Part 1 · Get the machine ready
 
-**`.env` must exist in the project root before you run `npm run build`.**
-
-Vite bakes `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` into the bundle at
-build time. Without the file the build still **succeeds** — it just produces an
-app that throws on launch and shows a blank screen. There is no warning, no
-failed step, and you would not find out until a tester opened it.
-
-Check it:
+## 1.1 · The repo
 
 ```powershell
 cd C:\dev\Payweek
-type .env
+git fetch origin claude/payweek-app-zk4tcb
+git checkout claude/payweek-app-zk4tcb
+git pull origin claude/payweek-app-zk4tcb
 ```
 
-You want to see all three lines:
+No `C:\dev\Payweek`? Clone it:
 
+```powershell
+New-Item -ItemType Directory -Force -Path C:\dev | Out-Null
+cd C:\dev
+git clone https://github.com/patrykwrld/Payweek.git Payweek
+cd C:\dev\Payweek
+git checkout claude/payweek-app-zk4tcb
 ```
+
+## 1.2 · `.env` — the one that breaks builds silently
+
+Vite bakes these into the bundle at build time. **Without the file the build
+still succeeds** — it just produces an app that throws on launch and shows a
+blank screen. No warning, no failed step, and you would not find out until a
+tester opened it.
+
+```powershell
+Get-Content C:\dev\Payweek\.env
+```
+
+Nothing there? Create it:
+
+```powershell
+@"
 VITE_SUPABASE_URL=https://jcwxxtimhrlzaojadmhx.supabase.co
 VITE_SUPABASE_ANON_KEY=sb_publishable_PXDZo1oea43av5x4lIj3lg_1vGP_8AI
 VITE_PRIVACY_URL=https://payweek.app/privacy.html
+"@ | Set-Content -Encoding utf8 C:\dev\Payweek\.env
 ```
 
-If it's missing, create it with exactly those three lines. The publishable key
-is safe in the client — RLS is what protects the data.
+The publishable key is safe in the client — RLS is what protects the data.
+
+## 1.3 · `keystore.properties`
+
+Only if missing. It sits in `android\`, beside `gradlew.bat`:
+
+```powershell
+@"
+storeFile=payweek-upload.jks
+storePassword=YOUR_STORE_PASSWORD
+keyAlias=payweek-upload
+keyPassword=YOUR_KEY_PASSWORD
+"@ | Set-Content -Encoding utf8 C:\dev\Payweek\android\keystore.properties
+```
+
+## 1.4 · Check the tools are there
+
+```powershell
+node --version      # want v22.x
+java -version       # want 21
+$PSVersionTable.PSVersion
+```
 
 ---
 
-## Step 1 · Build (about 10 minutes)
+# Part 2 · Build
 
 ```powershell
 cd C:\dev\Payweek
-git pull origin claude/payweek-app-zk4tcb
-npm install
+npm ci
+```
+
+Then the checks. **If any of these fail, stop** — do not ship it:
+
+```powershell
+npm run typecheck
+npm test
+npm run lint
+```
+
+Then the build:
+
+```powershell
 npm run build
 npx cap sync android
-cd android
+```
+
+> **`npm run build`, never `npm run vercel-build`.** The vercel one swaps the
+> landing page over `index.html`, and Capacitor loads `index.html` from the
+> bundle — you would ship the marketing page as the app.
+
+Verify that, before Gradle touches it:
+
+```powershell
+Select-String -Path android\app\src\main\assets\public\index.html -Pattern "<title>"
+```
+
+Want *"Payweek — Hours & Pay Tracker"*. If it says *"know what you're owed
+before payday"* you ran the wrong build; redo from `npm run build`.
+
+Then compile:
+
+```powershell
+cd C:\dev\Payweek\android
 .\gradlew.bat clean
 .\gradlew.bat bundleRelease
 .\gradlew.bat assembleRelease
 ```
 
-**`npm run build`, never `npm run vercel-build`.** The vercel one swaps the
-landing page over `index.html`, and Capacitor loads `index.html` from the
-bundle — you would ship the marketing page as the app. Verified on this side:
-after `cap sync`, `android\app\src\main\assets\public\index.html` has the title
-*"Payweek — Hours & Pay Tracker"*. If it says *"know what you're owed before
-payday"* you ran the wrong build; redo from `npm run build`.
+✅ **`BUILD SUCCESSFUL` twice**, and both files exist:
 
-✅ **`BUILD SUCCESSFUL` twice**, and two files exist:
-
-```
-android\app\build\outputs\bundle\release\app-release.aab
-android\app\build\outputs\apk\release\app-release.apk
+```powershell
+Get-ChildItem app\build\outputs\bundle\release\app-release.aab,
+              app\build\outputs\apk\release\app-release.apk |
+  Select-Object Name, Length, LastWriteTime
 ```
 
 ❌ *Keystore was tampered with, or password was incorrect* → the password in
-`android\keystore.properties` doesn't match the key. Rewrite that file and
-rerun.
+`android\keystore.properties` doesn't match the key. Rewrite it and rerun.
 
 ❌ *A file called `app-release-unsigned.apk`* → `keystore.properties` is in the
 wrong folder. It goes in `C:\dev\Payweek\android\`, beside `gradlew.bat`.
 
-## Step 2 · Check it runs before Play sees it
+---
+
+# Part 3 · Run it before Play sees it
 
 Install the APK on your own phone and open it. You are checking one thing:
-**does it get past the sign-in screen**. A blank or instantly-closing app is
+**does it get past the sign-in screen.** A blank or instantly-closing app is
 the missing-`.env` failure, and it is far better to find it here.
 
 ```powershell
-adb install -r android\app\build\outputs\apk\release\app-release.apk
+adb install -r C:\dev\Payweek\android\app\build\outputs\apk\release\app-release.apk
 ```
 
 No adb? Copy the APK to the phone and tap it.
+
+While it is open, check the four things that changed:
+
+- the tab bar has **four** tabs — Week, Shifts, Payday, Setup
+- the week bars carry **£ figures** above them
+- **Payday** leads with a week to check, if one is due
+- **Shifts** has the colour legend **above** the list
+
+---
+
+# Part 4 · Upload
 
 > **Never confirm a closed-testing release with no bundle in it.** The create
 > screen lists the previous release's bundle under *Not included* and will let
 > you proceed with nothing attached, which takes the app away from the testers
 > you already have. Either upload the new `.aab`, or use **Add from library**
-> to carry version 2 forward — or discard the draft. An empty release is the
-> one destructive thing on that page.
-
-## Step 3 · Upload the bundle
+> to carry version 2 forward — or discard the draft.
 
 Play Console → **Test and release → Testing → Closed testing** → your track →
 **Create new release**.
 
-1. Upload `app-release.aab`
-2. **Release name:** `1.1.0 (3)`
-3. **Release notes** — paste this into the `en-GB` box:
+1. Upload `android\app\build\outputs\bundle\release\app-release.aab`
+2. **Release name:** `1.2.0 (3)`
+3. **Release notes**, into the `en-GB` box:
 
 ```
 What's new
 
-• The home screen now shows what each day of the week earned, not just the week total — tap any bar to see that day.
-• Tap a shift to see exactly how its pay was worked out: base rate, nights, weekends, and where the break came off.
-• Payday is now a timeline — what's coming, what's landed, and what came up short.
-• Faster shift logging, and a clock-in that survives closing the app.
+• Four tabs instead of five, and the home screen is down to one main button.
+• Every day of the week now shows what it earned, right on the bars — you can see which nights were worth doing without tapping anything.
+• Payday now asks about the week that's just been paid, with the figure already worked out. Type in what you actually got and it tells you the difference.
+• The colours under each shift have a key now, so you can see which hours were paid at which rate.
+• Setting up for the first time is one screen instead of three.
 
 Found something wrong? Reply to the tester email — it all gets read.
 ```
 
 4. **Review release → Start rollout to Closed testing**
 
-## Step 4 · Refresh the store listing while you're in there
+---
 
-Three of the six screenshots on the listing still show the August UI. All six
-have been regenerated at exactly 1080×1920 and are in
-`assets\play\screenshots\` after the `git pull`.
+# Part 5 · Refresh the store listing
+
+All six screenshots were regenerated against the new UI and are in
+`assets\play\screenshots\` after the `git pull`. The listing is currently
+showing a five-tab app that no longer exists.
 
 Play Console → **Grow → Store presence → Main store listing** → **Phone
 screenshots** → remove the old six, upload these in this order:
@@ -162,34 +304,30 @@ screenshots** → remove the old six, upload these in this order:
 | 5 | `5-payday.png` | the Payday timeline |
 | 6 | `6-payslip-check.png` | "You're £30.00 short" |
 
-Order matters — Play shows the first two or three in search results, so
-somebody scrolling past learns what it is from tile 1 and why it is different
-from tile 2.
+Order matters — Play shows the first two or three in search results.
 
 **Save** at the bottom, or nothing you just did is kept.
 
-## Step 5 · Tell the testers
+---
 
-The ones who installed in August are sitting on a build that looks nothing like
-this. Play updates them automatically, but most people won't notice unless told:
+# Part 6 · Tell the testers
 
-> Pushed a fairly big update — the home screen shows what each day earned now,
-> and you can tap any shift to see exactly how the pay was worked out. Should
-> update itself within a few hours. Let me know if anything looks wrong.
+```
+Pushed a fairly big update. The home screen shows what each day earned now,
+Payday asks about the week that's just been paid so checking a payslip is two
+taps, and setting up is one screen. Should update itself within a few hours —
+let me know if anything looks wrong.
+```
 
 ---
 
 ## What this does not fix
 
-**The 12-tester gate is unchanged.** Uploading a new build doesn't add testers
-and doesn't restart anything — the count is people opted in, and the clock is
-14 continuous days. Check where that number actually stands while you're in
-Play Console: there are 22 accounts in the database, so it is genuinely
-possible you are already past twelve and the tester post can come out of the
-rota entirely.
+**The 12-tester gate is unchanged.** Uploading doesn't add testers and doesn't
+restart anything — the count is people opted in, and the clock is 14
+continuous days. Check where that number actually stands while you are in Play
+Console.
 
-**Nothing has been checked against a real payslip yet.** Zero payslip checks
-across 22 accounts. The screenshot you are about to make tile 6 of the listing
-shows a feature no real user has ever reached. It is still the right thing to
-lead with — it is the reason to install — but it is worth a nudge on the Payday
-screen before this goes public.
+**Growth is the real blocker.** 24 accounts, one new in the last fortnight,
+two active in the last week. This release makes the app better for whoever
+arrives; it does not make anyone arrive.
