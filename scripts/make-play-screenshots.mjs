@@ -1,4 +1,10 @@
-import { chromium } from 'playwright'
+import { mkdirSync } from 'node:fs'
+
+const { chromium } = await import('playwright').catch(() =>
+  import('/opt/node22/lib/node_modules/playwright/index.mjs'),
+)
+const OUT = 'assets/play/screenshots'
+mkdirSync(OUT, { recursive: true })
 // page.screenshot() renders at the context's deviceScaleFactor, not at the
 // launch flag (that one is for video capture). 432x768 is exactly 9:16, so
 // 2.5x lands on Play's required 1080x1920 with no resampling.
@@ -11,8 +17,8 @@ const shot = async (name, screen, fn) => {
   await p.goto(`http://localhost:5199/shots.html?s=${screen}`, { waitUntil: 'load' })
   await p.waitForTimeout(2200)
   if (fn) await fn(p)
-  await p.screenshot({ path: name })
-  console.log(name, errs.length ? errs[0] : 'ok')
+  await p.screenshot({ path: `${OUT}/${name}` })
+  console.log(`${OUT}/${name}`, errs.length ? errs[0] : 'ok')
   await p.close()
 }
 

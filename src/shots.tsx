@@ -165,16 +165,24 @@ const client = new QueryClient({
     },
   },
 })
-client.setQueryData(['agencies'], agencies)
+const bare = new URLSearchParams(location.search).get('s') === 'firstrun'
+client.setQueryData(['agencies'], bare ? [] : agencies)
 client.setQueryData(['rate_rules'], rules)
-client.setQueryData(['shifts'], shifts)
+client.setQueryData(['shifts'], bare ? [] : shifts)
 client.setQueryData(['profiles'], profile)
-client.setQueryData(['payslips'], payslips)
+// ?s=tocheck leaves last week unconfirmed, which is what the Needs
+// checking card and the home-screen prompt are for.
+const unchecked = ['tocheck', 'homecheck'].includes(
+  new URLSearchParams(location.search).get('s') ?? '',
+)
+client.setQueryData(['payslips'], unchecked ? [] : payslips)
 
 const screen = new URLSearchParams(location.search).get('s') ?? 'week'
 const path =
   screen === 'shifts'
     ? '/shifts'
+    : screen === 'tocheck'
+    ? '/payday'
     : screen === 'payday'
     ? '/payday'
     : screen === 'check'

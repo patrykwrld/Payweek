@@ -13,7 +13,7 @@ import { useIsOnline } from '../lib/offline'
 import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence } from '../lib/money'
 import { priceShifts, type PricedShift } from '../lib/pricing'
-import { useDeleteShift, useInsertShift } from '../lib/queries'
+import { useBandColours, useDeleteShift, useInsertShift } from '../lib/queries'
 import { formatDay, formatWeekRange, todayISO } from '../lib/weeks'
 
 /** Re-insert keeps the original id, so an undone delete restores the same
@@ -25,6 +25,7 @@ function reinsertable(shift: Tables<'shifts'>) {
 
 export function Shifts() {
   const data = useAppData()
+  const bandColours = useBandColours()
   const online = useIsOnline()
   const remove = useDeleteShift()
   const insert = useInsertShift()
@@ -126,15 +127,19 @@ export function Shifts() {
       </ScreenTitle>
 
       {shifts.length > 0 && !selecting && (
-        <p className="-mt-4 mb-6 font-mono text-xs text-muted">
+        <p className="-mt-4 mb-3 font-mono text-xs text-muted">
           {shifts.length} logged
         </p>
+      )}
+
+      {ordered.length > 0 && !selecting && (
+        <RateBandsLegend colours={bandColours} />
       )}
 
       {ordered.length === 0 && (
         <EmptyState
           title="No shifts logged"
-          hint="Add your first shift from the Add tab."
+          hint="Add your first shift from the Week screen."
         />
       )}
 
@@ -220,6 +225,7 @@ export function Shifts() {
                           was nights and weekends. */}
                       <div className="mt-[9px]">
                         <RateBands
+                          colours={bandColours}
                           breakdown={entry.pricing.breakdown}
                           paidMinutes={entry.pricing.paidMinutes}
                         />
@@ -252,7 +258,7 @@ export function Shifts() {
         })}
       </div>
 
-      {ordered.length > 0 && <RateBandsLegend />}
+      
 
       {/* Bulk actions sit above the tab bar while anything is picked. */}
       {selecting && totalSelected > 0 && (

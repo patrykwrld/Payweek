@@ -5,6 +5,7 @@ import { formatMinutes, formatPence, formatRate } from '../lib/money'
 import { breaksFromJson } from '../lib/rateEngine'
 import type { PricedShift } from '../lib/pricing'
 import { formatDay } from '../lib/weeks'
+import { useBandColours } from '../lib/queries'
 
 /**
  * A shift, opened where you tapped it.
@@ -32,6 +33,7 @@ export function ShiftSheet({
   onDelete: (entry: PricedShift) => void
 }) {
   const navigate = useNavigate()
+  const bandColours = useBandColours()
   // Reset per open, so a sheet closed mid-confirm doesn't reopen armed.
   const [confirming, setConfirming] = useState(false)
 
@@ -72,6 +74,7 @@ export function ShiftSheet({
 
       <div className="mt-3.5">
         <RateBands
+          colours={bandColours}
           breakdown={pricing.breakdown}
           paidMinutes={pricing.paidMinutes}
           height={5}

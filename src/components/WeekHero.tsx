@@ -72,9 +72,26 @@ export function WeekHero({ pulse }: { pulse: WeekPulse }) {
         )}
       </div>
 
-      {/* Bars, not a chart: no axis, no gridlines, no numbers. It is read as a
-          shape at a glance and only interrogated by tapping. */}
-      <div className="relative mt-5 flex h-[70px] items-end gap-1.5">
+      {/* Bars carried no numbers for a long time, on the reasoning that the
+          shape is what you read at a glance and a tap would fetch the detail.
+          The shape still is — but "which night was actually worth doing" is
+          the question the whole app exists to answer, and leaving it behind a
+          tap on a hint line nobody reads was answering it badly. Whole pounds
+          only: the pennies are a tap away and would turn a glance into a
+          reading exercise. */}
+      <div className="relative mt-5 flex gap-1.5" aria-hidden>
+        {perDay.map((day) => (
+          <span
+            key={day.date}
+            className={`flex-1 text-center text-[9.5px] font-bold tabular-nums ${
+              day.isToday ? 'text-accent' : 'text-faint'
+            }`}
+          >
+            {day.pence === 0 ? '' : `£${Math.round(day.pence / 100)}`}
+          </span>
+        ))}
+      </div>
+      <div className="relative mt-1 flex h-[70px] items-end gap-1.5">
         {perDay.map((day, i) => {
           const height =
             day.pence === 0
@@ -128,7 +145,7 @@ export function WeekHero({ pulse }: { pulse: WeekPulse }) {
                   ? 'nothing logged'
                   : formatPence(chosen.pence)
               }`
-            : `Day ${days} of 7 · tap a bar`}
+            : `Day ${days} of 7`}
         </p>
         <span className="flex-none whitespace-nowrap rounded-lg bg-accent-soft px-2.5 py-1 font-mono text-[11.5px] font-semibold text-accent">
           {chosen

@@ -2,20 +2,17 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { ShiftForm } from '../components/ShiftForm'
+import { FirstRun } from './FirstRun'
 import { WeekHero } from '../components/WeekHero'
-import {
-  EmptyState,
-  RateBands,
-  ScreenTitle,
-  Sheet,
-  SheetHeader,
-} from '../components/ui'
+import { Sheet, SheetHeader } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { useIsOnline } from '../lib/offline'
 import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence } from '../lib/money'
 import { priceShifts } from '../lib/pricing'
-import { useInsertShift } from '../lib/queries'
+import { useInsertPayslip, useInsertShift, usePayslips } from '../lib/queries'
+import { buildAgencyWeeks } from '../lib/payday'
+import { nextWeekToCheck } from '../lib/payslipCheck'
 import { weekPulse } from '../lib/weekPulse'
 import { formatDay, todayISO } from '../lib/weeks'
 import type { Tables } from '../lib/database.types'
@@ -32,6 +29,8 @@ export function QuickAdd() {
   const data = useAppData()
   const online = useIsOnline()
   const insert = useInsertShift()
+  const payslips = usePayslips()
+  const confirmPayslip = useInsertPayslip()
 
   const [nudgeHidden, setNudgeHidden] = useState(
     () => localStorage.getItem(NUDGE_DISMISSED) === '1',
@@ -76,27 +75,7 @@ export function QuickAdd() {
 
   const { agencies, shifts, rules } = data
   const active = agencies.filter((a) => !a.archived)
-  if (active.length === 0) {
-    return (
-      <>
-        <ScreenTitle>
-          Payweek<span className="text-accent">.</span>
-        </ScreenTitle>
-        <EmptyState
-          title="One thing first"
-          hint="Tell Payweek who you work for and what they pay you. After that, logging a shift takes seconds."
-        />
-        <div className="mt-4">
-          <Link
-            to="/agencies/new"
-            className="block w-full rounded-lg bg-accent px-4 py-3 text-center text-base font-semibold text-void"
-          >
-            Add who you work for
-          </Link>
-        </div>
-      </>
-    )
-  }
+  if (active.length === 0) return <FirstRun />
 
   const noRates = active.filter(
     (a) => !rules.some((r) => r.agency_id === a.id && r.active),
@@ -105,11 +84,15 @@ export function QuickAdd() {
   const today = todayISO()
   const priced = priceShifts(shifts, agencies, rules)
   const pulse = weekPulse(shifts, agencies, rules, today)
-  const agencyName = new Map(agencies.map((a) => [a.id, a.name]))
+
+  // Only ask once the payslips are in hand; asking about a week that has
+  // already been checked is worse than not asking at all.
+  const toCheck = payslips.data
+    ? nextWeekToCheck(buildAgencyWeeks(shifts, agencies, rules), payslips.data, today)
+    : null
 
   const last = shifts[0]
   const lastPriced = last ? priced.get(last.id) : undefined
-  const latest = shifts.slice(0, 3)
 
   /** Price a row that hasn't been saved yet, so the toast can name the money. */
   function grossOf(row: Tables<'shifts'>): number {
@@ -205,9 +188,22 @@ export function QuickAdd() {
 
       <WeekHero pulse={pulse} />
 
-      {/* Two taps that cover most of what actually happens: the same shift
-          again, or start one now and log it when it ends. */}
-      <div className="mt-3.5 grid grid-cols-2 gap-2.5">
+      {/* One thing to tap, then two shortcuts for the shapes a week
+          usually takes. This used to be the other way round, with the
+          accent button carrying a glow underneath two filled cards — three
+          competing invitations, and the loudest of them sat directly beneath
+          the week total it was outshouting. The palette's own rule is that
+          accent means the number you came for or the thing to tap next, and
+          it cannot mean both on one screen. */}
+      <button
+        type="button"
+        onClick={() => setSheetOpen(true)}
+        className="press mt-4 min-h-[52px] w-full rounded-2xl bg-accent text-[15.5px] font-semibold text-void"
+      >
+        Add a shift
+      </button>
+
+      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
         <button
           type="button"
           disabled={!last}
@@ -216,38 +212,61 @@ export function QuickAdd() {
             const { id: _id, user_id: _u, created_at: _c, ...rest } = last
             log({ ...rest, date: today })
           }}
-          className="press flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-2xl border border-edge bg-surface px-3.5 py-3 text-left disabled:opacity-40"
+          className="press flex min-h-[46px] items-center justify-center rounded-xl border border-edge px-3 text-[13.5px] font-semibold disabled:opacity-40"
         >
-          <span className="text-[13.5px] font-semibold">Repeat last shift</span>
-          <span className="font-mono text-[11.5px] text-muted">
-            {last && lastPriced
-              ? `${formatDay(last.date)} · ${formatPence(
-                  lastPriced.pricing.grossPence,
-                )}`
-              : 'nothing logged yet'}
-          </span>
+          {last && lastPriced
+            ? `Repeat ${formatDay(last.date).split(' ')[0] ?? 'last'}`
+            : 'Repeat last'}
         </button>
         <button
           type="button"
           onClick={clockedInAt === null ? clockIn : clockOut}
-          className="press flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-2xl border border-edge bg-surface px-3.5 py-3 text-left"
+          className="press flex min-h-[46px] items-center justify-center rounded-xl border border-edge px-3 text-[13.5px] font-semibold"
         >
-          <span className="text-[13.5px] font-semibold">
-            {clockedInAt === null ? 'Clock in now' : 'On the clock'}
-          </span>
-          <span className="text-[11.5px] text-muted">
-            {clockedInAt === null ? 'log it when you finish' : 'tap to finish'}
-          </span>
+          {clockedInAt === null ? 'Clock in' : 'Clock out'}
         </button>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setSheetOpen(true)}
-        className="press mt-2.5 min-h-[52px] w-full rounded-2xl bg-accent text-[15.5px] font-semibold text-void shadow-[0_10px_24px_rgba(94,155,255,0.22)]"
-      >
-        Add a shift
-      </button>
+      {/* The reason this screen exists at all. One week, one number, one
+          tap — a prompt that says "3 weeks need checking" is a chore, and a
+          chore gets swiped away. "Looked right" records the expected figure
+          so confirming a correct week costs nothing and still clears it. */}
+      {toCheck !== null && (
+        <div className="rise mt-4 rounded-2xl border border-warn/40 bg-warn/[0.06] px-4 py-3.5">
+          <p className="text-[14.5px] font-semibold">
+            {formatDay(toCheck.weekEnd)} should have paid{' '}
+            <span className="font-mono">{formatPence(toCheck.grossPence)}</span>
+          </p>
+          <p className="mt-1 text-[13px] text-muted">
+            {toCheck.agency.name} paid it on {formatDay(toCheck.paydayDate)}. Did
+            the right number land?
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2.5">
+            <Link
+              to="/payday"
+              className="press flex min-h-[42px] items-center justify-center rounded-xl border border-warn/60 text-[13.5px] font-semibold text-warn"
+            >
+              Check it
+            </Link>
+            <button
+              type="button"
+              disabled={confirmPayslip.isPending}
+              onClick={() =>
+                confirmPayslip.mutate({
+                  agency_id: toCheck.agency.id,
+                  period_start: toCheck.weekStart,
+                  period_end: toCheck.weekEnd,
+                  gross_pence: toCheck.grossPence,
+                  net_pence: null,
+                })
+              }
+              className="press flex min-h-[42px] items-center justify-center rounded-xl border border-edge text-[13.5px] font-semibold text-muted disabled:opacity-40"
+            >
+              Looked right
+            </button>
+          </div>
+        </div>
+      )}
 
       {noRates.length > 0 && !nudgeHidden && (
         <div className="mt-4 flex items-start gap-2 rounded-xl border border-accent/40 bg-accent/5 py-3 pl-4 pr-2">
@@ -277,56 +296,6 @@ export function QuickAdd() {
             ✕
           </button>
         </div>
-      )}
-
-      {latest.length > 0 && (
-        <>
-          <h2 className="mb-2 mt-6 text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
-            Latest
-          </h2>
-          <div className="card-raised overflow-hidden rounded-[18px] border border-edge bg-surface">
-            {latest.map((shift, i) => {
-              const entry = priced.get(shift.id)
-              if (!entry) return null
-              return (
-                <Link
-                  key={shift.id}
-                  to={`/shifts/${shift.id}`}
-                  className={`press block px-3.5 pb-3 pt-[13px] ${
-                    i > 0 ? 'border-t border-edge' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold">
-                        {formatDay(shift.date)}
-                      </p>
-                      <p className="truncate font-mono text-xs text-muted">
-                        {agencyName.get(shift.agency_id) ?? '—'} ·{' '}
-                        {shift.start_time.slice(0, 5)}–
-                        {shift.end_time.slice(0, 5)}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="font-mono text-sm font-semibold">
-                        {formatPence(entry.pricing.grossPence)}
-                      </p>
-                      <p className="font-mono text-xs text-muted">
-                        {formatMinutes(entry.pricing.paidMinutes)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-[9px]">
-                    <RateBands
-                      breakdown={entry.pricing.breakdown}
-                      paidMinutes={entry.pricing.paidMinutes}
-                    />
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </>
       )}
 
       {/* The form used to sit on the page, which made the home screen a tall

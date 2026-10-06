@@ -7,6 +7,7 @@ import {
 import { supabase } from './supabase'
 import type { Tables, TablesInsert, TablesUpdate } from './database.types'
 import { mutationKeys } from './offline'
+import { bandColours } from './rateBands'
 
 // Row volumes are tiny (one user's data), so each table is fetched whole
 // and filtered client-side; RLS scopes rows to the signed-in user.
@@ -188,4 +189,18 @@ export function useDeletePayslip() {
     const { error } = await supabase.from('payslips').delete().eq('id', id)
     if (error) throw error
   })
+}
+
+/**
+ * One colour per rate, for the striped bar under a shift and the legend above
+ * the list.
+ *
+ * Derived from the rules somebody set up, not from the shifts currently
+ * rendered: otherwise a Friday night turns from green to amber purely because
+ * you scrolled into a week that also has a bank holiday in it.
+ */
+export function useBandColours(): Map<string, string> {
+  const rules = useRateRules()
+  const labels = (rules.data ?? []).filter((r) => r.active).map((r) => r.label)
+  return bandColours(labels)
 }

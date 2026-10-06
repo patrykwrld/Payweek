@@ -17,6 +17,11 @@ import {
 import { useState } from 'react'
 import type { PricedShift } from './lib/pricing'
 import type { WeekPulse } from './lib/weekPulse'
+import { bandColours } from './lib/rateBands'
+
+// The harness has no rate rules behind it, so it names the two the fixture
+// shifts are priced with and builds the map exactly as the app does.
+const previewBands = bandColours(['Base rate', 'Night rate'])
 
 const sample = {
   shift: {
@@ -250,6 +255,7 @@ createRoot(document.getElementById('root')!).render(
               </div>
               <div className="mt-[9px]">
                 <RateBands
+                  colours={previewBands}
                   breakdown={r.bd}
                   paidMinutes={r.bd.reduce((t, b) => t + b.minutes, 0)}
                 />
@@ -257,7 +263,7 @@ createRoot(document.getElementById('root')!).render(
             </div>
           ))}
         </div>
-        <RateBandsLegend />
+        <RateBandsLegend colours={previewBands} />
       </div>
     </div>
   </MemoryRouter>,

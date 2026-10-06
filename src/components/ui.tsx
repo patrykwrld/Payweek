@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import type { BreakdownLine } from '../lib/rateEngine'
+import { legendEntries } from '../lib/rateBands'
 import { createPortal } from 'react-dom'
 
 // A focused field gets a ring as well as a border. On a phone held at arm's
@@ -336,10 +337,15 @@ export function Stepper({
 export function RateBands({
   breakdown,
   paidMinutes,
+  colours,
   height = 3,
 }: {
   breakdown: readonly BreakdownLine[]
   paidMinutes: number
+  /** From `bandColours`, built off the rates you set up rather than off what
+   * happens to be on screen — otherwise the same shift changes colour as you
+   * scroll into a week with a different mix of rates in it. */
+  colours: Map<string, string>
   height?: number
 }) {
   if (paidMinutes <= 0 || breakdown.length === 0) return null
@@ -348,9 +354,7 @@ export function RateBands({
       {breakdown.map((line, i) => (
         <span
           key={`${line.label}-${i}`}
-          className={`rounded-full ${
-            line.label === 'Base rate' ? 'bg-accent' : 'bg-positive'
-          }`}
+          className={`rounded-full ${colours.get(line.label) ?? 'bg-faint'}`}
           style={{
             width: `${((line.minutes / paidMinutes) * 100).toFixed(2)}%`,
             height,
@@ -361,18 +365,20 @@ export function RateBands({
   )
 }
 
-/** Said once at the bottom of a list, not repeated against every bar. */
-export function RateBandsLegend() {
+/** Said once, above the list. It spent a long time underneath it, which meant
+ * you only found out what the colours meant after scrolling past every shift
+ * they were explaining. */
+export function RateBandsLegend({ colours }: { colours: Map<string, string> }) {
+  const entries = legendEntries(colours)
+  if (entries.length < 2) return null
   return (
-    <div className="mt-1 flex items-center gap-3.5 text-[11px] text-faint">
-      <span className="flex items-center gap-1.5">
-        <span aria-hidden className="h-[3px] w-3.5 rounded-full bg-accent" />
-        base rate
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span aria-hidden className="h-[3px] w-3.5 rounded-full bg-positive" />
-        night &amp; weekend
-      </span>
+    <div className="mb-4 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[11px] text-faint">
+      {entries.map(({ label, className }) => (
+        <span key={label} className="flex items-center gap-1.5">
+          <span aria-hidden className={`h-[3px] w-3.5 rounded-full ${className}`} />
+          {label}
+        </span>
+      ))}
     </div>
   )
 }

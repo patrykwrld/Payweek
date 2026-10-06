@@ -63,3 +63,12 @@ export function GearIcon() {
     </Svg>
   )
 }
+
+/** The week, as the app's own mark draws it: bars of unequal height. */
+export function WeekIcon() {
+  return (
+    <Svg>
+      <path d="M5 19V13M10 19V9M15 19V15M20 19V5" />
+    </Svg>
+  )
+}

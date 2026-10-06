@@ -1,16 +1,20 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useIsOnline, useQueuedWriteCount } from '../lib/offline'
-import { GearIcon, ListIcon, PlusIcon, RatesIcon, WalletIcon } from './icons'
+import { GearIcon, ListIcon, WalletIcon, WeekIcon } from './icons'
 
-// Five tabs is the most that stays tappable on a phone. "Check a payslip"
-// lives on Payday instead — it's the thing you do once the money lands, and
-// Rates earns the slot: it was buried in Settings and people never found it.
+// Four, down from five. Two of the five slots were setup rather than daily
+// use, and "Add" was a tab for something the home screen already offers three
+// ways to do — so the bar was competing with the screen it sat under.
+//
+// What is left is the three things somebody does in a week and one place for
+// everything they configure once. Rates moved into Setup rather than away:
+// it is the first card on that screen, which is more prominent than a tab
+// label nobody could tell apart from Settings.
 const tabs = [
-  { to: '/', label: 'Add', Icon: PlusIcon },
+  { to: '/', label: 'Week', Icon: WeekIcon },
   { to: '/shifts', label: 'Shifts', Icon: ListIcon },
   { to: '/payday', label: 'Payday', Icon: WalletIcon },
-  { to: '/agencies', label: 'Rates', Icon: RatesIcon },
-  { to: '/settings', label: 'Settings', Icon: GearIcon },
+  { to: '/settings', label: 'Setup', Icon: GearIcon },
 ]
 
 function OfflineBar() {

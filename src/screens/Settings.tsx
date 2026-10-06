@@ -19,6 +19,7 @@ import { passwordProblem, usernameProblem } from '../lib/credentials'
 import { claimUsername, updatePassword } from '../auth/passwordAuth'
 import { useIsOnline, useQueuedWriteCount } from '../lib/offline'
 import { buildShiftsCsv } from '../lib/csv'
+import { formatPence } from '../lib/money'
 import { saveTextFile } from '../lib/download'
 import { DAY_NAMES } from '../lib/days'
 import type { Tables } from '../lib/database.types'
@@ -388,9 +389,65 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
     }
   }
 
+  const activeAgencies = (agencies.data ?? []).filter((a) => !a.archived)
+  const ruleCount = (agencyId: string) =>
+    (rules.data ?? []).filter((r) => r.agency_id === agencyId && r.active).length
+
   return (
     <>
-      <ScreenTitle>Settings</ScreenTitle>
+      <ScreenTitle>Setup</ScreenTitle>
+
+      {/* Rates lost its own tab and gained the top of this screen, which is
+          the more prominent of the two: a tab label sat next to "Settings"
+          and read as the same thing. This is also the only part of setup that
+          changes what the app calculates, so it goes before the preferences
+          rather than after them. */}
+      <section className="mb-8">
+        <div className="mb-2 flex items-baseline justify-between">
+          <h2 className="text-sm font-semibold text-muted">Who you work for</h2>
+          <Link to="/agencies/new" className="text-sm font-semibold text-accent">
+            Add
+          </Link>
+        </div>
+        <div className="space-y-3">
+          {activeAgencies.map((agency) => {
+            const extras = ruleCount(agency.id)
+            return (
+              <Link
+                key={agency.id}
+                to={`/agencies/${agency.id}`}
+                className="press card-raised flex items-center justify-between rounded-2xl border border-edge bg-surface px-4 py-4 transition-colors hover:border-accent"
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold">{agency.name}</p>
+                  <p className="text-sm text-muted">
+                    <span className="font-mono">
+                      {formatPence(agency.base_rate_pence)}
+                    </span>{' '}
+                    an hour ·{' '}
+                    {extras === 0 ? (
+                      <span className="text-warn">no night or weekend rates</span>
+                    ) : (
+                      `${extras} extra ${extras === 1 ? 'rate' : 'rates'}`
+                    )}
+                  </p>
+                </div>
+                <span aria-hidden className="text-muted">
+                  ›
+                </span>
+              </Link>
+            )
+          })}
+          {activeAgencies.length === 0 && (
+            <Link
+              to="/agencies/new"
+              className="press block rounded-2xl border border-dashed border-edge px-4 py-5 text-center text-sm text-muted"
+            >
+              Add who pays you, and what they pay
+            </Link>
+          )}
+        </div>
+      </section>
 
       <form onSubmit={save} className="space-y-4">
         <Field label="Your name">
