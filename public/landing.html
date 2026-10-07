@@ -305,6 +305,19 @@
       .note.bad { color: #ff7b7b; }
       .pot { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
+      /* Android visitors can have the app today; everybody else is waiting
+         on Google. Hidden until the script works out which, so a page with
+         no JavaScript shows the waitlist — the thing that works for
+         everyone — rather than an invitation most readers cannot accept. */
+      .droid { display: none; margin-top: 1.7rem; padding: 1.15rem 1.3rem;
+        border: 1px solid rgba(94, 155, 255, 0.26); border-radius: 18px;
+        background: rgba(94, 155, 255, 0.06); }
+      .droid.on { display: block; }
+      .droid h2 { margin: 0; font-size: 1.02rem; font-weight: 700; color: var(--ink);
+        letter-spacing: -0.01em; }
+      .droid p { margin: 0.5rem 0 0; font-size: 0.92rem; line-height: 1.55; color: var(--body); }
+      .droid .cta { margin-top: 1.05rem; padding: 0.62rem 1.3rem; font-size: 0.93rem; }
+
       /* ── the phone ──────────────────────────────────────────────── */
       .art { position: relative; display: flex; justify-content: center; margin-top: 3.5rem; }
       .art::after {
@@ -468,6 +481,18 @@
             <p class="note" id="note" role="status" aria-live="polite"></p>
             <p class="hint">One email the day it launches. Nothing else, ever.</p>
           </form>
+
+          <!-- Outside the form on purpose: the submit handler replaces the
+               form's innerHTML on success, and this would go with it. -->
+          <div class="droid" id="droid">
+            <h2>You&rsquo;re on Android &mdash; you don&rsquo;t have to wait.</h2>
+            <p>
+              Payweek is in closed testing on Google Play right now. Join the
+              test and it installs like any other app, and updates like one
+              too. Two steps, about a minute.
+            </p>
+            <a class="cta" href="/test">Join the test &rarr;</a>
+          </div>
         </div>
 
         <div class="art rise d5">
@@ -612,6 +637,17 @@
           say('That didn’t save. Try again, or email privacy@payweek.app.', 'bad')
         })
       })
+
+      // The badge says "coming to Google Play", which is true of the public
+      // release and misleading to somebody who can install it this minute.
+      if (/Android/i.test(navigator.userAgent)) {
+        var droid = document.getElementById('droid')
+        if (droid) droid.classList.add('on')
+        var pill = document.querySelector('.pill')
+        if (pill) {
+          pill.lastChild.textContent = 'In testing on Google Play'
+        }
+      }
     </script>
   </body>
 </html>
