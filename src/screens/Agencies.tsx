@@ -31,7 +31,7 @@ export function Agencies() {
         action={
           <Link
             to="/agencies/new"
-            className="text-sm text-accent underline underline-offset-4"
+            className="-my-2.5 py-2.5 text-sm text-accent underline underline-offset-4"
           >
             Add agency
           </Link>

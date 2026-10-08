@@ -268,7 +268,7 @@ export function PayslipCheck() {
                   <button
                     type="button"
                     onClick={() => remove.mutate(slip.id)}
-                    className="text-sm text-muted hover:text-negative"
+                    className="-my-2.5 py-2.5 text-sm text-muted hover:text-negative"
                   >
                     Remove
                   </button>

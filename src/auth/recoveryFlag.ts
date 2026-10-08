@@ -22,7 +22,7 @@ export const consumeResetRequest = reset.consume
 
 /**
  * Remembers that an account was just created here, so the confirmation link
- * can be met with a celebration rather than a silent drop into the Add screen.
+ * can be met with a celebration rather than a silent drop into the Week screen.
  *
  * Longer-lived than the reset note: people sign up, put the phone down, and
  * come back to the email later.

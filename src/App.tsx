@@ -45,7 +45,7 @@ export default function App() {
   if (!session) return <SignIn />
 
   // A reset link signs you in for real, so this has to come before the app.
-  // Otherwise someone arriving from the email lands on the Add screen with no
+  // Otherwise someone arriving from the email lands on the Week screen with no
   // sign a reset was in progress, and their old password still works.
   if (recovering) return <ResetPassword onDone={finishRecovery} />
 

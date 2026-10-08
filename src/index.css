@@ -25,7 +25,12 @@
 
   --color-ink: #eef3f8;
   --color-muted: #8f9bab;
-  --color-faint: #64717f;
+  /* Lifted from #64717f, which measured 3.2:1 on raised surfaces — under the
+   * 4.5:1 WCAG AA needs for body text, and this token is used at 9.5–12px
+   * where it is hardest to read. Same hue and saturation, lightness only, so
+   * it still reads as the quietest voice in the palette: 4.6:1 on raised,
+   * 5.5:1 on void, against muted's 5.7–6.8. */
+  --color-faint: #7d8a99;
 
   --font-display: 'Inter Variable', system-ui, sans-serif;
   --font-mono: 'Inter Variable', system-ui, sans-serif;

@@ -34,7 +34,7 @@ const SLIDES: Slide[] = [
   {
     title: 'Tell it what you’re paid',
     body: 'Add who you work for and your normal hourly rate. If nights or weekends pay more, tick the box and put the figure in.',
-    tip: 'You can change any of it later from the Rates tab. Nothing is set in stone.',
+    tip: 'You can change any of it later from Setup. Nothing is set in stone.',
     glow: '78% 26%',
   },
   {

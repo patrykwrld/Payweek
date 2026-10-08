@@ -116,7 +116,7 @@ export function Shifts() {
             <button
               type="button"
               onClick={() => (selecting ? exitSelection() : setSelecting(true))}
-              className="text-sm text-accent underline underline-offset-4"
+              className="-my-2.5 py-2.5 text-sm text-accent underline underline-offset-4"
             >
               {selecting ? 'Done' : 'Select'}
             </button>

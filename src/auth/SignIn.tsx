@@ -115,12 +115,15 @@ function PrimaryAction({
   )
 }
 
+// 20px tall was under the 24px minimum, on the two links a new account
+// depends on. The padding grows the hit box; the matching negative margin
+// keeps the row looking exactly as it did.
 function Quiet({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="text-sm text-accent underline underline-offset-4"
+      className="-my-2.5 py-2.5 text-sm text-accent underline underline-offset-4"
     >
       {children}
     </button>
@@ -273,7 +276,7 @@ export function SignIn() {
           // well come back in a different tab.
           setKeepSignedIn(e.target.checked)
         }}
-        className="mt-0.5 size-4 shrink-0 accent-(--color-accent)"
+        className="mt-0.5 size-5 shrink-0 accent-(--color-accent)"
       />
       <span className="min-w-0">
         Keep me signed in

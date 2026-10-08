@@ -333,7 +333,7 @@ function RuleFormInner({
               type="checkbox"
               checked={allDay}
               onChange={(e) => setAllDay(e.target.checked)}
-              className="size-4 accent-(--color-accent)"
+              className="size-5 accent-(--color-accent)"
             />
             All day — any hour counts
           </label>
@@ -414,7 +414,7 @@ function RuleFormInner({
                 type="checkbox"
                 checked={active}
                 onChange={(e) => setActive(e.target.checked)}
-                className="size-4 accent-(--color-accent)"
+                className="size-5 accent-(--color-accent)"
               />
               Use this rate (untick to pause it without deleting)
             </label>

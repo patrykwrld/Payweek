@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase'
  *
  * Opening the link puts a real session on the device, so this screen has to
  * come before the app itself — otherwise someone arriving from the email sees
- * the Add screen, has no idea a reset is half-finished, and their old password
+ * the Week screen, has no idea a reset is half-finished, and their old password
  * quietly still works.
  */
 export function ResetPassword({ onDone }: { onDone: () => void }) {

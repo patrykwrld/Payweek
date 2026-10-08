@@ -405,7 +405,10 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
       <section className="mb-8">
         <div className="mb-2 flex items-baseline justify-between">
           <h2 className="text-sm font-semibold text-muted">Who you work for</h2>
-          <Link to="/agencies/new" className="text-sm font-semibold text-accent">
+          <Link
+            to="/agencies/new"
+            className="-my-2.5 py-2.5 text-sm font-semibold text-accent"
+          >
             Add
           </Link>
         </div>
@@ -487,12 +490,12 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
           agency work — check your contract if you&rsquo;re not sure.
         </p>
 
-        <label className="flex items-center gap-3 text-sm">
+        <label className="flex items-center gap-3 py-1.5 text-sm">
           <input
             type="checkbox"
             checked={showAccrual}
             onChange={(e) => setShowAccrual(e.target.checked)}
-            className="size-4 accent-(--color-accent)"
+            className="size-5 accent-(--color-accent)"
           />
           Show holiday pay on the Payday screen
         </label>

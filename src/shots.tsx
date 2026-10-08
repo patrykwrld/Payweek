@@ -17,6 +17,7 @@ import { Agencies } from './screens/Agencies'
 import { Payday } from './screens/Payday'
 import { PayslipCheck } from './screens/PayslipCheck'
 import { QuickAdd } from './screens/QuickAdd'
+import { Settings } from './screens/Settings'
 import { Shifts } from './screens/Shifts'
 import type { Tables } from './lib/database.types'
 import { todayISO } from './lib/weeks'
@@ -189,6 +190,8 @@ const path =
     ? '/check'
     : screen === 'rates'
     ? '/agencies'
+    : screen === 'settings'
+    ? '/settings'
     : '/'
 
 createRoot(document.getElementById('root')!).render(
@@ -201,6 +204,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/payday" element={<Payday />} />
           <Route path="/check" element={<PayslipCheck />} />
           <Route path="/agencies" element={<Agencies />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
     </MemoryRouter>

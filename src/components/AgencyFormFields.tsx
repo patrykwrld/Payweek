@@ -65,7 +65,7 @@ function RateToggle({
           type="checkbox"
           checked={on}
           onChange={(e) => onChange(e.target.checked)}
-          className="mt-1 size-4 shrink-0 accent-(--color-accent)"
+          className="mt-1 size-5 shrink-0 accent-(--color-accent)"
         />
         <span className="min-w-0">
           <span className="block font-semibold">{title}</span>

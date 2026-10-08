@@ -99,7 +99,7 @@ export async function signUpWithPassword(input: {
   // Left before the link is opened, because the link comes back as an
   // ordinary SIGNED_IN and there is nothing else to recognise it by. It is
   // what turns landing in the app into a welcome rather than a silent drop
-  // onto the Add screen.
+  // onto the Week screen.
   markSignedUp()
 
   // No session means the project requires the address to be confirmed — which
