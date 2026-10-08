@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { Tables } from './database.types'
 import type { AgencyWeek } from './payday'
-import { isChecked, nextWeekToCheck, weeksAwaitingCheck } from './payslipCheck'
+import {
+  ASK_WITHIN_DAYS,
+  isChecked,
+  nextWeekToCheck,
+  weeksAwaitingCheck,
+} from './payslipCheck'
 
 const agency = (id: string): Tables<'agencies'> => ({
   id,
@@ -105,5 +110,45 @@ describe('nextWeekToCheck', () => {
         '2026-03-20',
       ),
     ).toBeNull()
+  })
+})
+
+// Agency work is seasonal. Somebody who stops for a university term comes
+// back months later, and the prompt must not still be asking about the last
+// week they worked before they left.
+describe('weeks too old to ask about', () => {
+  const paid = '2026-03-06'
+  const w = [week('a', '2026-02-23', paid)]
+
+  it('still asks the day the window closes', () => {
+    const lastDay = '2026-04-17' // 42 days after payday
+    expect(nextWeekToCheck(w, [], lastDay)).not.toBeNull()
+  })
+
+  it('stops the day after', () => {
+    expect(nextWeekToCheck(w, [], '2026-04-18')).toBeNull()
+  })
+
+  it('says nothing to somebody back after a term away', () => {
+    expect(nextWeekToCheck(w, [], '2026-09-28')).toBeNull()
+  })
+
+  // The capability is not withdrawn, only the interruption: Payday still
+  // lists the week, and a caller that wants the backlog can ask for it.
+  it('still returns an old week when asked for a wider window', () => {
+    expect(weeksAwaitingCheck(w, [], '2026-09-28', 3650)).toHaveLength(1)
+  })
+
+  it('prefers a recent week over an old one', () => {
+    const weeks = [
+      week('a', '2025-06-02', '2025-06-13'),
+      week('a', '2026-02-23', paid),
+    ]
+    expect(nextWeekToCheck(weeks, [], '2026-03-10')?.paydayDate).toBe(paid)
+  })
+
+  it('has a window measured in weeks, not days or years', () => {
+    expect(ASK_WITHIN_DAYS).toBeGreaterThanOrEqual(28)
+    expect(ASK_WITHIN_DAYS).toBeLessThanOrEqual(90)
   })
 })
