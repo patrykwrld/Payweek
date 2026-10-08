@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { passwordProblem } from '../lib/credentials'
+import { BreachedPassword } from '../components/BreachedPassword'
 import { updatePassword } from './passwordAuth'
 import { supabase } from '../lib/supabase'
 
@@ -57,6 +58,17 @@ export function ResetPassword({ onDone }: { onDone: () => void }) {
           />
           <span className="block text-xs text-muted">At least 8 characters.</span>
         </label>
+
+        {/* Before "and again", so nobody confirms a password that is about
+            to be refused. This is the screen somebody arrives at after their
+            phone has told them the old one leaked. */}
+        <BreachedPassword
+          password={password}
+          onPick={(phrase) => {
+            setPassword(phrase)
+            setAgain(phrase)
+          }}
+        />
 
         <label className="block space-y-2">
           <span className="text-sm text-muted">And again</span>

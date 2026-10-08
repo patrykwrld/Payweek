@@ -16,6 +16,7 @@ import {
 import { LoadFailed, ScreenSkeleton } from '../components/states'
 import { replayIntro } from '../lib/intro'
 import { passwordProblem, usernameProblem } from '../lib/credentials'
+import { BreachedPassword } from '../components/BreachedPassword'
 import { claimUsername, updatePassword } from '../auth/passwordAuth'
 import { useIsOnline, useQueuedWriteCount } from '../lib/offline'
 import { buildShiftsCsv } from '../lib/csv'
@@ -268,6 +269,15 @@ function UsernameAndPassword({
             autoComplete="new-password"
           />
         </Field>
+
+        <BreachedPassword
+          password={password}
+          onPick={(phrase) => {
+            setPassword(phrase)
+            setAgain(phrase)
+          }}
+        />
+
         <Field label="And again">
           <input
             type="password"

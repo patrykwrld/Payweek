@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { keepSignedIn, setKeepSignedIn } from '../lib/authStorage'
 import { passwordProblem, usernameProblem } from '../lib/credentials'
+import { BreachedPassword } from '../components/BreachedPassword'
 import {
   isUsernameFree,
   resendConfirmation,
@@ -505,6 +506,8 @@ export function SignIn() {
               required
             />
           </Labelled>
+
+          <BreachedPassword password={newPassword} onPick={setNewPassword} />
 
           {error && <p className="text-sm text-negative">{error}</p>}
 

@@ -93,13 +93,30 @@ describe('pwnedMessage', () => {
     expect(pwnedMessage({ breached: null, count: 0 })).toBeNull()
   })
 
-  it('rounds a big number, because the exact figure is noise', () => {
-    expect(pwnedMessage({ breached: true, count: 24230577 })).toMatch(
-      /24,231,000\+ times/,
+  it('says something when there is', () => {
+    expect(pwnedMessage({ breached: true, count: 4 })).toBeTruthy()
+  })
+
+  // The count used to lead this message. It reads as an accusation about a
+  // password somebody probably uses everywhere, and tells them nothing they
+  // can act on — so the wording is now about why it matters here instead,
+  // and the number stays out of it however large it is.
+  it('never quotes the breach count at the reader', () => {
+    for (const count of [1, 4, 931, 24230577]) {
+      const msg = pwnedMessage({ breached: true, count })!
+      expect(msg).not.toMatch(/\d/)
+    }
+  })
+
+  it('says the same thing whether it appeared four times or four million', () => {
+    expect(pwnedMessage({ breached: true, count: 4 })).toBe(
+      pwnedMessage({ breached: true, count: 4_000_000 }),
     )
   })
 
-  it('gives a small number exactly, because four is not forty thousand', () => {
-    expect(pwnedMessage({ breached: true, count: 4 })).toMatch(/4 times/)
+  it('explains why it matters for this app rather than scolding', () => {
+    const msg = pwnedMessage({ breached: true, count: 10 })!
+    expect(msg).toMatch(/pay/i)
+    expect(msg).not.toMatch(/please|must|you should/i)
   })
 })

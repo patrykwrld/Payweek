@@ -90,9 +90,12 @@ export async function checkPwned(password: string): Promise<PwnedResult> {
 /** The sentence to show, or null if there is no objection. */
 export function pwnedMessage(result: PwnedResult): string | null {
   if (result.breached !== true) return null
-  const times =
-    result.count >= 1000
-      ? `${Math.round(result.count / 1000).toLocaleString('en-GB')},000+ times`
-      : `${result.count.toLocaleString('en-GB')} times`
-  return `That password has appeared in known data breaches ${times}. It isn’t secret any more — please choose a different one.`
+  // The breach count used to lead this message. "Appeared 40,000+ times" is
+  // true, alarming, and no help at all to somebody standing in a break room
+  // trying to sign up — it reads as an accusation about a password they
+  // probably use everywhere. What matters is why it matters here.
+  return (
+    'This password has turned up in a data breach, so it isn’t a secret any ' +
+    'more. It may be fine on sites that don’t matter — this one has your pay in it.'
+  )
 }
