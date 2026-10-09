@@ -278,9 +278,16 @@ What's new
 • Payday now asks about the week that's just been paid, with the figure already worked out. Type in what you actually got and it tells you the difference.
 • The colours under each shift have a key now, so you can see which hours were paid at which rate.
 • Setting up for the first time is one screen instead of three.
+• The night the clocks go back is now nine hours, not eight — worth checking your payslip for that one.
+• Security and stability fixes.
 
 Found something wrong? Reply to the tester email — it all gets read.
 ```
+
+> **Do not put the security detail in the release notes.** They are public
+> the moment the release goes out, and the people who have not updated yet
+> are the ones a description would help. "Security and stability fixes" is
+> the line; the advisory number goes in the commit, where it already is.
 
 4. **Review release → Start rollout to Closed testing**
 
