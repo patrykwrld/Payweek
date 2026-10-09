@@ -462,3 +462,52 @@ describe('pricePayWeek', () => {
     expectInternallyConsistent(p)
   })
 })
+
+describe('the two nights the clocks move', () => {
+  const nightRates = {
+    baseRatePence: 1350,
+    rules: [
+      {
+        kind: 'time_band' as const,
+        label: 'Night rate',
+        daysOfWeek: null,
+        bandStartMin: 22 * 60,
+        bandEndMin: 6 * 60,
+        pay: { ratePence: 1620 },
+        priority: 20,
+      },
+    ],
+  }
+  const night = (date: string) => ({
+    date,
+    startTime: '22:00',
+    endTime: '06:00',
+    breakMinutes: 0,
+    breaks: [],
+    manualRatePence: null,
+  })
+
+  // The repeated hour is 01:00-02:00, which is inside the night band — so
+  // all nine hours pay the night rate. Getting the duration right but
+  // appending the extra hour past 06:00 would price it at base and lose
+  // £2.70, which is the same bug one layer down.
+  it('pays nine hours at the night rate across the October change', () => {
+    const p = priceShift(night('2026-10-24'), nightRates)
+    expect(p.paidMinutes).toBe(540)
+    expect(p.grossPence).toBe(14580)
+    expect(p.breakdown).toHaveLength(1)
+    expect(p.breakdown[0]!.label).toBe('Night rate')
+  })
+
+  it('pays seven across the March change', () => {
+    const p = priceShift(night('2026-03-28'), nightRates)
+    expect(p.paidMinutes).toBe(420)
+    expect(p.grossPence).toBe(11340)
+  })
+
+  it('is untouched on every other night', () => {
+    const p = priceShift(night('2026-07-04'), nightRates)
+    expect(p.paidMinutes).toBe(480)
+    expect(p.grossPence).toBe(12960)
+  })
+})

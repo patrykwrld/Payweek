@@ -1,3 +1,4 @@
+import { clockChangeDuring, clockChangeMinutes } from '../clockChange'
 import type {
   AgencyRates,
   BreakdownLine,
@@ -26,12 +27,30 @@ export function timeToMinutes(time: string): number {
   return hours * 60 + minutes
 }
 
-/** Clocked minutes; end <= start means the shift crosses midnight
- * (equal start/end = 24h). */
-export function shiftDurationMinutes(startTime: string, endTime: string): number {
+/**
+ * Clocked minutes; end <= start means the shift crosses midnight
+ * (equal start/end = 24h).
+ *
+ * Pass `date` to get the hours actually worked rather than the hours the
+ * clock showed. They differ on exactly two nights a year: 22:00–06:00 across
+ * the October change is nine hours, across the March one it is seven. Every
+ * other night the adjustment is zero and this returns precisely what it
+ * always did, which is what makes it safe to have in the pricing path.
+ *
+ * Without `date` it stays pure wall-clock, which is what callers comparing
+ * two shifts for a calendar collision want — an overlap is about the clock,
+ * not about elapsed time.
+ */
+export function shiftDurationMinutes(
+  startTime: string,
+  endTime: string,
+  date?: string,
+): number {
   const start = timeToMinutes(startTime)
   const end = timeToMinutes(endTime)
-  return end > start ? end - start : end + 1440 - start
+  const wall = end > start ? end - start : end + 1440 - start
+  if (date === undefined) return wall
+  return wall + clockChangeMinutes(date, start, wall)
 }
 
 /** 0=Sun..6=Sat for a YYYY-MM-DD date. */
@@ -69,15 +88,23 @@ function resolveMinutes(shift: ShiftInput, rates: AgencyRates): MinuteRate[] {
   const bands = rates.rules.filter(
     (r): r is TimeBandRule => r.kind === 'time_band',
   )
-  const duration = shiftDurationMinutes(shift.startTime, shift.endTime)
+  const duration = shiftDurationMinutes(shift.startTime, shift.endTime, shift.date)
   const startMin = timeToMinutes(shift.startTime)
   const startDow = dayOfWeek(shift.date)
 
+  // On the two nights a year the clocks move, the ninth hour of a 22:00
+  // start is not 06:00-07:00 — it is 01:00-02:00 happening twice, which is
+  // inside the night band. Walking elapsed minutes and letting the wall
+  // clock run on would price that hour at base and quietly lose £2.70 of a
+  // night rate, which is a subtler version of the bug this set out to fix.
+  const change = clockChangeDuring(shift.date, startMin, duration)
+
   const minutes: MinuteRate[] = []
   for (let i = 0; i < duration; i++) {
-    const absolute = startMin + i
+    const jumped = change !== null && i >= change.atMinute ? change.shiftMinutes : 0
+    const absolute = startMin + i + jumped
     const dow = (startDow + Math.floor(absolute / 1440)) % 7
-    const minOfDay = absolute % 1440
+    const minOfDay = ((absolute % 1440) + 1440) % 1440
 
     let label = 'Base rate'
     let ratePence = rates.baseRatePence
@@ -278,7 +305,7 @@ export function priceShift(
   rates: AgencyRates,
   options: PriceShiftOptions = {},
 ): ShiftPricing {
-  const workedMinutes = shiftDurationMinutes(shift.startTime, shift.endTime)
+  const workedMinutes = shiftDurationMinutes(shift.startTime, shift.endTime, shift.date)
   const override = shift.manualRatePence
 
   // A manual override replaces every minute's rate but still loses break

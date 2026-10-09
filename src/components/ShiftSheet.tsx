@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { RateBands, Sheet, SheetHeader } from './ui'
 import { formatMinutes, formatPence, formatRate } from '../lib/money'
-import { breaksFromJson } from '../lib/rateEngine'
+import { breaksFromJson, shiftDurationMinutes, timeToMinutes } from '../lib/rateEngine'
+import { clockChangeNote } from '../lib/clockChange'
 import type { PricedShift } from '../lib/pricing'
 import { formatDay } from '../lib/weeks'
 import { useBandColours } from '../lib/queries'
@@ -40,6 +41,14 @@ export function ShiftSheet({
   if (!entry) return null
   const { shift, pricing } = entry
   const breaks = breaksFromJson(shift.breaks)
+  const clockNote = clockChangeNote(
+    shift.date,
+    timeToMinutes(shift.start_time),
+    // Wall-clock, deliberately: pricing.workedMinutes is the real elapsed
+    // time, which already has the extra hour in it. Feeding that back in
+    // would be asking the question with the answer included.
+    shiftDurationMinutes(shift.start_time, shift.end_time),
+  )
 
   function close() {
     setConfirming(false)
@@ -71,6 +80,14 @@ export function ShiftSheet({
         {shift.break_minutes > 0 && <> · {shift.break_minutes}m break</>} ·{' '}
         {formatMinutes(pricing.paidMinutes)} paid
       </p>
+
+      {/* Nine hours against a 22:00-06:00 shift looks like a bug unless the
+          app says why. It is also the hour most likely to go unpaid. */}
+      {clockNote !== null && (
+        <p className="mt-2.5 rounded-xl border border-warn/40 bg-warn/[0.06] px-3.5 py-2.5 text-[13px] leading-relaxed text-ink">
+          {clockNote}
+        </p>
+      )}
 
       <div className="mt-3.5">
         <RateBands
