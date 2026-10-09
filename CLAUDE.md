@@ -55,7 +55,9 @@ screen, not an error anybody sees, so this is not optional after touching
   warning, no failed step.
 - **`npm run vercel-build` before `cap sync`.** It swaps the landing page over
   `index.html`, and Capacitor loads `index.html` from the bundle — that ships
-  the marketing site as the Android app. Always `npm run build` for Android.
+  the marketing site as the Android app, all the way to a signed bundle, with
+  every check passing. Always `npm run build` for Android, and run
+  `npm run verify:android` after `cap sync`; the release script does.
 
 ## Generated assets — never edit the output
 
@@ -67,6 +69,12 @@ screen, not an error anybody sees, so this is not optional after touching
 | `node scripts/make-stories.mjs` | `assets/social/` — the Instagram stories |
 | `node scripts/make-overlay.mjs` | `assets/qr/` — the printed scan overlays |
 | `node scripts/make-email.mjs` | `public/email/hero.png` + the email preview |
+
+The service worker's precache list in `dist/sw.js` is written by
+`scripts/postbuild-web.mjs`, because Vite hashes every asset filename. The
+placeholder it fills is `const PRECACHE = []` in `public/sw.js` — rename that
+and the build fails loudly rather than shipping an app that cannot open
+offline.
 
 All of them need `npx vite --port 5199` running first, and all of them take
 their app imagery from `src/shots.tsx` against the real components — so a

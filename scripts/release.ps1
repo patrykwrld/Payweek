@@ -174,11 +174,10 @@ Run 'npx' @('cap', 'sync', 'android') ''
 
 # `npm run vercel-build` swaps the landing page over index.html, and Capacitor
 # loads index.html from the bundle — that mistake ships the marketing site as
-# the app, and it looks like a successful build.
-$indexHtml = Join-Path $RepoPath 'android\app\src\main\assets\public\index.html'
-if (Select-String -Path $indexHtml -Pattern "know what you.re owed" -Quiet) {
-  Die 'The Android assets contain the landing page, not the app' 'You ran vercel-build. Re-run: npm run build; npx cap sync android'
-}
+# the app, and it looks like a successful build all the way to a signed
+# bundle. This happened during an audit, which is why it is a script now
+# rather than a warning in a document.
+Run 'npm' @('run', 'verify:android') 'You ran vercel-build. Re-run: npm run build; npx cap sync android'
 Ok 'Android assets contain the app, not the landing page'
 
 Step 'Signed bundle'

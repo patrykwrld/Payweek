@@ -1,0 +1,14 @@
+{
+  "name": "Payweek — Hours & Pay Tracker",
+  "short_name": "Payweek",
+  "description": "Works out what every shift should pay, and tells you when a payslip comes up short.",
+  "start_url": "/app",
+  "scope": "/app",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0f14",
+  "theme_color": "#0b0f14",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

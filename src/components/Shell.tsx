@@ -1,4 +1,6 @@
+import { Suspense } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { ScreenSkeleton } from './states'
 import { useIsOnline, useQueuedWriteCount } from '../lib/offline'
 import { GearIcon, ListIcon, WalletIcon, WeekIcon } from './icons'
 
@@ -111,7 +113,14 @@ export function Shell() {
           "
         >
           <OfflineBar />
-          <Outlet />
+          {/* Screens are fetched on first visit, so one has to cover the
+              gap. It sits inside the shell rather than around it: tapping a
+              tab should not make the tab bar disappear, and the skeleton is
+              what these screens already show while their data loads, so a
+              chunk arriving looks like data arriving. */}
+          <Suspense fallback={<ScreenSkeleton rows={3} />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

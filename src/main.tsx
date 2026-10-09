@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Capacitor } from '@capacitor/core'
 import { QueryClient } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
@@ -61,6 +62,30 @@ supabase.auth.onAuthStateChange((event, session) => {
   if (userId && noteSignedInUser(userId)) queryClient.clear()
 })
 
+/**
+ * Register the service worker — on the web only.
+ *
+ * Under Capacitor the shell already comes out of the APK, so there is
+ * nothing for a worker to make available offline and a cache in front of
+ * local files is only a way to serve a stale app after an update.
+ *
+ * After the render, and failing quietly: a browser that refuses to register
+ * one (private windows, old WebViews, no HTTPS) should still get the app,
+ * just without the offline part.
+ */
+function registerServiceWorker() {
+  if (Capacitor.isNativePlatform()) return
+  if (!('serviceWorker' in navigator)) return
+  window.addEventListener('load', () => {
+    // Scoped to /app, not /. The landing page at the root is marketing and
+    // has nothing to do offline; a worker over the whole origin would serve
+    // the app shell to somebody who opened payweek.app with no signal.
+    // Requests the app makes for /assets and /fonts are still intercepted —
+    // scope decides which pages a worker controls, not which URLs it sees.
+    void navigator.serviceWorker.register('/sw.js', { scope: '/app' }).catch(() => undefined)
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
@@ -85,3 +110,5 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </StrictMode>,
 )
+
+registerServiceWorker()

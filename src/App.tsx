@@ -1,23 +1,38 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useAuth } from './auth/AuthProvider'
 import { SignIn } from './auth/SignIn'
 import { ResetPassword } from './auth/ResetPassword'
-import { MoneyRain } from './components/MoneyRain'
-import { Intro } from './components/Intro'
 import { REPLAY_EVENT, hasSeenIntro } from './lib/intro'
 import { Shell } from './components/Shell'
-import { Agencies } from './screens/Agencies'
-import { AgencyDetail } from './screens/AgencyDetail'
-import { AgencyNew } from './screens/AgencyNew'
-import { Payday } from './screens/Payday'
-import { PayslipCheck } from './screens/PayslipCheck'
 import { QuickAdd } from './screens/QuickAdd'
-import { RuleForm } from './screens/RuleForm'
-import { ShiftDetail } from './screens/ShiftDetail'
-import { Settings } from './screens/Settings'
-import { Shifts } from './screens/Shifts'
+
+/**
+ * Everything except the screen you land on is fetched when you first go
+ * there.
+ *
+ * The whole app used to arrive in one 580KB file before anything rendered,
+ * which is a long time to look at nothing on a £90 Android in a warehouse
+ * with one bar of signal. Sign-in and the Week screen are what somebody sees
+ * first, so they stay in the main bundle; the rate forms, the agency screens
+ * and Setup are several hundred lines each that most sessions never open.
+ *
+ * Each one arrives as its own file the first time it is needed, then it is
+ * cached — by the browser, and by the service worker after that.
+ */
+const Agencies = lazy(() => import('./screens/Agencies').then((m) => ({ default: m.Agencies })))
+const AgencyDetail = lazy(() => import('./screens/AgencyDetail').then((m) => ({ default: m.AgencyDetail })))
+const AgencyNew = lazy(() => import('./screens/AgencyNew').then((m) => ({ default: m.AgencyNew })))
+const Payday = lazy(() => import('./screens/Payday').then((m) => ({ default: m.Payday })))
+const PayslipCheck = lazy(() => import('./screens/PayslipCheck').then((m) => ({ default: m.PayslipCheck })))
+const RuleForm = lazy(() => import('./screens/RuleForm').then((m) => ({ default: m.RuleForm })))
+const ShiftDetail = lazy(() => import('./screens/ShiftDetail').then((m) => ({ default: m.ShiftDetail })))
+const Settings = lazy(() => import('./screens/Settings').then((m) => ({ default: m.Settings })))
+const Shifts = lazy(() => import('./screens/Shifts').then((m) => ({ default: m.Shifts })))
+// Shown once each, and one of them is a full-screen animation.
+const Intro = lazy(() => import('./components/Intro').then((m) => ({ default: m.Intro })))
+const MoneyRain = lazy(() => import('./components/MoneyRain').then((m) => ({ default: m.MoneyRain })))
 
 export default function App() {
   const { session, loading, recovering, finishRecovery, celebrating, finishCelebration } =
@@ -54,19 +69,27 @@ export default function App() {
   // first thing they see rather than the fifth.
   if (celebrating) {
     return (
-      <MoneyRain
+      <Suspense fallback={null}>
+        <MoneyRain
         username={
           (session.user.user_metadata as { username?: string } | null)
             ?.username ?? null
         }
-        onDone={finishCelebration}
-      />
+          onDone={finishCelebration}
+        />
+      </Suspense>
     )
   }
 
   // After sign-in, not before: someone who hasn't decided to use Payweek yet
   // shouldn't be read four cards about it.
-  if (!introDone) return <Intro onDone={() => setIntroDone(true)} />
+  if (!introDone) {
+    return (
+      <Suspense fallback={null}>
+        <Intro onDone={() => setIntroDone(true)} />
+      </Suspense>
+    )
+  }
 
   return (
     // On the web the app lives under /app, because payweek.app itself is now

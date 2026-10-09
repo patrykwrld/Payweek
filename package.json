@@ -11,7 +11,8 @@
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -b",
     "vercel-build": "tsc -b && vite build && node scripts/postbuild-web.mjs",
-    "check:csp": "node scripts/check-csp.mjs"
+    "check:csp": "node scripts/check-csp.mjs",
+    "verify:android": "node scripts/verify-android-assets.mjs"
   },
   "dependencies": {
     "@capacitor/android": "6.2.2",
