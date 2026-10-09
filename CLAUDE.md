@@ -5,31 +5,41 @@ with Capacitor for Android, Supabase for data and auth, hosted on Vercel.
 
 ## Branches
 
+> **Read this before pushing.** The split below is set up in git but **not in
+> effect in Vercel**, whose production branch is still
+> `claude/payweek-app-zk4tcb`. Until that one setting changes, **every push to
+> the working branch deploys straight to payweek.app.** Verified against the
+> deployment API on 9 Oct: the live production build came from the working
+> branch, not from `main`.
+>
+> The one click that makes the rest of this true:
+> **vercel.com/pepe30kgs-projects/payweek/settings/environments → Production →
+> set the branch to `main`.** The GitHub default branch is a separate, cosmetic
+> setting at github.com/patrykwrld/Payweek/settings.
+
 | Branch | Role |
 | --- | --- |
-| `main` | **Production.** Vercel builds this; it is what payweek.app serves. |
-| `claude/payweek-app-zk4tcb` | **Working branch.** All development happens here. Pushes get a Vercel preview URL. |
+| `main` | **Intended production.** Kept in step with the working branch so the switch is a no-op when it happens. |
+| `claude/payweek-app-zk4tcb` | **Working branch** — and, for now, what payweek.app actually serves. |
 
 Work on the working branch, always. Promote deliberately:
 
 ```sh
 git checkout main
 git merge --ff-only claude/payweek-app-zk4tcb
-git push origin main          # this is the deploy
+git push origin main
 git checkout claude/payweek-app-zk4tcb
 ```
 
 `--ff-only` on purpose: if it refuses, main has something the working branch
 does not, and that is worth looking at rather than merging over.
 
-> Until a push to `main` happens, payweek.app keeps serving whatever was last
-> deployed. That is the entire point of the split — pushing work is no longer
-> the same action as publishing it.
-
-Preview deployments are behind Vercel authentication (Deployment Protection
-is set to `all_except_custom_domains`), so a preview URL opens for the account
-owner and asks anyone else to sign in. Fine for checking your own work; not a
-link to send a tester.
+Once Vercel points at `main`, that push becomes the deploy and pushing the
+working branch stops publishing anything — which is the entire point of the
+split. Preview deployments sit behind Vercel authentication (Deployment
+Protection is `all_except_custom_domains`), so a preview URL opens for the
+account owner and asks anyone else to sign in. Fine for checking your own
+work; not a link to send a tester.
 
 ## Before pushing anything
 
