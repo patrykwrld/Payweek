@@ -24,7 +24,10 @@ const shot = async (name, screen, fn) => {
 
 await shot('1-week-total.png', 'week')
 await shot('4-shifts-by-week.png', 'shifts')
-await shot('5-payday.png', 'payday')
+// 'tocheck' rather than 'payday': it leaves last week unconfirmed, so the
+// screen leads with the card asking whether the money landed. That is the
+// thing the app is for, and the settled timeline is still underneath it.
+await shot('5-payday.png', 'tocheck')
 await shot('2-how-it-was-worked-out.png', 'shifts', async p => {
   await p.getByRole('button', { name: /Fri/ }).first().click()
   await p.waitForTimeout(900)
