@@ -1,5 +1,10 @@
 ext {
-    minSdkVersion = 23
+    // 24, not 23, because Play's automatic protection — the anti-tamper
+    // wrapper applied server-side at release — refuses a bundle below 24 and
+    // blocks the upload. API 23 is Android 6.0, under half a percent of
+    // devices in the UK, and Capacitor 6 itself only needs 22. Nothing in the
+    // app uses an API between the two.
+    minSdkVersion = 24
     // Play's floor moves every August. From 31 Aug 2026 an app targeting below
     // API 36 cannot be updated at all — not rejected, simply frozen. Check the
     // current floor before each submission:
