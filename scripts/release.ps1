@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Everything between a fresh checkout and a signed bundle ready to upload.
 
@@ -31,10 +31,13 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# ASCII on purpose. Windows PowerShell 5.1 writes the console in the OEM
+# code page, so box-drawing characters arrive as mojibake and the output
+# looks broken before anything has gone wrong.
 function Step([string]$Name) {
   Write-Host ''
-  Write-Host "── $Name " -ForegroundColor Cyan -NoNewline
-  Write-Host ('─' * [Math]::Max(0, 60 - $Name.Length)) -ForegroundColor DarkGray
+  Write-Host "-- $Name " -ForegroundColor Cyan -NoNewline
+  Write-Host ('-' * [Math]::Max(0, 60 - $Name.Length)) -ForegroundColor DarkGray
 }
 
 function Ok([string]$Msg)   { Write-Host "  OK    $Msg" -ForegroundColor Green }
@@ -51,9 +54,16 @@ function Die([string]$Msg, [string]$Fix) {
 
 # Native commands set $LASTEXITCODE rather than throwing, so every external
 # call has to be checked by hand or the script sails past a failed build.
-function Run([string]$Exe, [string[]]$Args, [string]$Fix) {
-  Info "$Exe $($Args -join ' ')"
-  & $Exe @Args
+#
+# The parameter is NOT called $Args. $Args is a PowerShell automatic
+# variable — every function already has one, holding its unbound arguments —
+# and declaring a parameter over the top of it binds nothing. The symptom is
+# brutal precisely because it looks like it worked: `git fetch origin main`
+# runs as a bare `git`, prints its usage text, exits 1, and the script stops
+# on a step that was never actually attempted.
+function Run([string]$Exe, [string[]]$Arguments, [string]$Fix) {
+  Info "$Exe $($Arguments -join ' ')"
+  & $Exe @Arguments
   if ($LASTEXITCODE -ne 0) { Die "$Exe exited $LASTEXITCODE" $Fix }
 }
 
@@ -207,10 +217,12 @@ Ok "versionName $name, versionCode $code"
 
 Set-Location $RepoPath
 Write-Host ''
-Write-Host ('═' * 64) -ForegroundColor DarkGray
+Write-Host ('=' * 64) -ForegroundColor DarkGray
 Write-Host ' Built and signed. Four things left, all in a browser:' -ForegroundColor White
 Write-Host ''
-Write-Host "  1. Install it first:  adb install -r `"$apk`"" 
+$adb = Join-Path $sdk 'platform-tools\adb.exe'
+$adbCmd = if (Test-Path $adb) { "& `"$adb`"" } else { 'adb' }
+Write-Host "  1. Install it first:  $adbCmd install -r `"$apk`"" 
 Write-Host '     Check it gets past the sign-in screen. A blank app means .env.'
 Write-Host ''
 Write-Host '  2. Play Console - Closed testing - Create new release'
@@ -224,5 +236,5 @@ Write-Host '  4. Review release - Start rollout to Closed testing'
 Write-Host ''
 Write-Host '     Never confirm a release with no bundle attached - it takes the' -ForegroundColor Yellow
 Write-Host '     app away from the testers you already have.' -ForegroundColor Yellow
-Write-Host ('═' * 64) -ForegroundColor DarkGray
+Write-Host ('=' * 64) -ForegroundColor DarkGray
 Write-Host ''
