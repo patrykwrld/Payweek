@@ -19,13 +19,14 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Every upload to Play must carry a higher versionCode than the last.
-        // 1 is on the Internal and Closed tracks already. 2 was built but
-        // never uploaded. 3 reached Play's upload validator and was rejected
-        // there for minSdk 23 — and Play burns a versionCode on sight, so it
-        // cannot be reused even though no release ever shipped with it.
-        // Hence 4. Gaps are harmless; a rejected upload at 11pm is not.
-        versionCode 4
-        versionName "1.2.0"
+        // The history, because it reads like a mess otherwise: 1 and 2 went
+        // out, 2 is still what the Closed track serves. 3 was rejected by
+        // Play's validator for minSdk 23 and is burned — Play consumes a
+        // versionCode on sight, whether or not a release ever ships with it.
+        // 4 built and uploaded clean and sits in the library as a fallback.
+        // 5 is 4 plus the take-home estimate.
+        versionCode 5
+        versionName "1.3.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

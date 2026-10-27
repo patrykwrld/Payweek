@@ -261,27 +261,29 @@ While it is open, check the four things that changed:
 > screen lists the previous release's bundle under *Not included* and will let
 > you proceed with nothing attached, which takes the app away from the testers
 > you already have. Either upload the new `.aab`, or use **Add from library**
-> to carry version 2 forward — or discard the draft.
+> to carry a previous version forward — or discard the draft.
 
 Play Console → **Test and release → Testing → Closed testing** → your track →
 **Create new release**.
 
 1. Upload `android\app\build\outputs\bundle\release\app-release.aab`
-2. **Release name:** `1.2.0 (3)`
+2. **Release name:** `1.3.0 (5)`
 3. **Release notes**, into the `en-GB` box:
 
 ```
 What's new
 
+• Put your tax code in Setup and every pay week now shows what you'll actually be left with after tax and National Insurance. Tap it for the breakdown.
+• Student loan and workplace pension can go in too, so the figure matches your payslip rather than sitting above it.
 • Four tabs instead of five, and the home screen is down to one main button.
-• Every day of the week now shows what it earned, right on the bars — you can see which nights were worth doing without tapping anything.
-• Payday now asks about the week that's just been paid, with the figure already worked out. Type in what you actually got and it tells you the difference.
+• Every day of the week now shows what it earned, right on the bars.
+• Payday asks about the week that's just been paid, with the figure already worked out. Type in what you actually got and it tells you the difference.
 • The colours under each shift have a key now, so you can see which hours were paid at which rate.
 • Setting up for the first time is one screen instead of three.
 • The night the clocks go back is now nine hours, not eight — worth checking your payslip for that one.
 • Security and stability fixes.
 
-Found something wrong? Reply to the tester email — it all gets read.
+The after-tax figure is an estimate, not a payslip. Found something wrong? Reply to the tester email — it all gets read.
 ```
 
 > **Do not put the security detail in the release notes.** They are public
@@ -290,6 +292,11 @@ Found something wrong? Reply to the tester email — it all gets read.
 > the line; the advisory number goes in the commit, where it already is.
 
 4. **Review release → Start rollout to Closed testing**
+
+> The take-home figure needs the `tax_code` and `student_loan_pension`
+> migrations, which were applied to the live project on 27 Oct 2026. Nothing
+> to do before this release; noted because a fresh Supabase project would
+> need them first.
 
 ---
 
