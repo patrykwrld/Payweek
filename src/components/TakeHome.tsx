@@ -70,7 +70,14 @@ export function TakeHome({
           {t.bands.map((band, i) => (
             <Row
               key={`${band.label}-${i}`}
-              label={`${band.label} ${band.percent}%`}
+              // "Basic rate" on its own is a trap in this app, where every
+              // other "rate" is pounds an hour. When there is only one band
+              // there is nothing to distinguish, so say what it actually is.
+              label={
+                t.bands.length === 1
+                  ? `Income tax ${band.percent}%`
+                  : `${band.label} ${band.percent}%`
+              }
               value={`−${formatPence(band.taxPence)}`}
               dim
             />

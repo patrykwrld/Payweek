@@ -172,7 +172,15 @@ const bare = new URLSearchParams(location.search).get('s') === 'firstrun'
 client.setQueryData(['agencies'], bare ? [] : agencies)
 client.setQueryData(['rate_rules'], rules)
 client.setQueryData(['shifts'], bare ? [] : shifts)
-client.setQueryData(['profiles'], profile)
+// ?tax=S1257L etc. swaps the code the take-home estimate uses, so one run
+// can show what a Scottish code or a BR second-job code actually does to a
+// week's pay rather than only the default 1257L. ?tax=none hides it.
+const taxParam = new URLSearchParams(location.search).get('tax')
+client.setQueryData(['profiles'], {
+  ...profile,
+  tax_code: taxParam === 'none' ? null : (taxParam ?? profile.tax_code),
+  show_take_home: taxParam !== 'none',
+})
 // ?s=tocheck leaves last week unconfirmed, which is what the Needs
 // checking card and the home-screen prompt are for.
 const unchecked = ['tocheck', 'homecheck'].includes(

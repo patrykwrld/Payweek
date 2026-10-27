@@ -72,6 +72,7 @@ screen, not an error anybody sees, so this is not optional after touching
 | `node scripts/make-stories.mjs` | `assets/social/` — the Instagram stories |
 | `node scripts/make-overlay.mjs` | `assets/qr/` — the printed scan overlays |
 | `node scripts/make-email.mjs` | `public/email/hero.png` + the email preview |
+| `node scripts/make-takehome-shots.mjs <dir>` | review shots of the take-home estimate |
 
 The service worker's precache list in `dist/sw.js` is written by
 `scripts/postbuild-web.mjs`, because Vite hashes every asset filename. The
