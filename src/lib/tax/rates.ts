@@ -129,3 +129,88 @@ export const NI_UPPER_EARNINGS_LIMIT_PENCE: Record<PayCycle, number> = {
   fortnightly: 193_400,
   monthly: 418_900,
 }
+
+/* ── Student loans ───────────────────────────────────────────────────────
+ *
+ * Checked 27 Oct 2026 against GOV.UK "Repaying your student loan: how much
+ * you repay" and Commons Library briefing CBP-10654.
+ *
+ * Like NI, and unlike income tax, these are worked out on each pay period
+ * alone and never reconciled across the year — so the figure this app gives
+ * for a student loan is exact, not an estimate.
+ *
+ * The period thresholds below are GOV.UK's own published figures rather than
+ * the annual one divided down, because those are what payroll uses and what
+ * a payslip can be checked against. Fortnightly is twice weekly.
+ *
+ * Deductions are rounded DOWN to the whole pound. That is HMRC's rule, not a
+ * convenience.
+ */
+
+export type StudentLoanPlan = 'plan1' | 'plan2' | 'plan4' | 'plan5'
+
+export const STUDENT_LOAN_RATE_PERCENT = 9
+export const POSTGRAD_LOAN_RATE_PERCENT = 6
+
+export const STUDENT_LOAN_THRESHOLD_PENCE: Record<
+  StudentLoanPlan,
+  Record<PayCycle, number>
+> = {
+  plan1: { weekly: 51_700, fortnightly: 103_400, monthly: 224_100 },
+  plan2: { weekly: 56_500, fortnightly: 113_000, monthly: 244_800 },
+  plan4: { weekly: 64_900, fortnightly: 129_800, monthly: 281_600 },
+  plan5: { weekly: 48_000, fortnightly: 96_000, monthly: 208_300 },
+}
+
+/** The Postgraduate Loan sits on top of any other plan, at its own rate. */
+export const POSTGRAD_THRESHOLD_PENCE: Record<PayCycle, number> = {
+  weekly: 40_300,
+  fortnightly: 80_600,
+  monthly: 175_000,
+}
+
+export const STUDENT_LOAN_LABEL: Record<StudentLoanPlan, string> = {
+  plan1: 'Plan 1',
+  plan2: 'Plan 2',
+  plan4: 'Plan 4',
+  plan5: 'Plan 5',
+}
+
+/* ── Workplace pension ───────────────────────────────────────────────────
+ *
+ * Automatic enrolment qualifying earnings for 2026/27, confirmed unchanged
+ * at £6,240–£50,270 by the DWP's annual review. The statutory minimum
+ * employee contribution is 5% of the earnings between those two figures.
+ *
+ * How a contribution is treated decides what it does to the tax:
+ *
+ *   before_tax        net pay arrangement. Comes off pay before income tax
+ *                     is worked out, but NI is still charged on the lot.
+ *   after_tax         relief at source — NEST and most group personal
+ *                     pensions. Changes neither tax nor NI here; the
+ *                     provider reclaims the relief separately.
+ *   salary_sacrifice  gives up the pay itself, so it reduces both.
+ *
+ * Whichever it is, the same money leaves the packet — the difference is
+ * only in what tax and NI are charged on.
+ */
+
+export type PensionRelief = 'before_tax' | 'after_tax' | 'salary_sacrifice'
+
+/** 'qualifying' is the statutory default: only pay between the band limits. */
+export type PensionBasis = 'qualifying' | 'gross'
+
+export const PENSION_LOWER_PENCE: Record<PayCycle, number> = {
+  weekly: 12_000,
+  fortnightly: 24_000,
+  monthly: 52_000,
+}
+
+export const PENSION_UPPER_PENCE: Record<PayCycle, number> = {
+  weekly: 96_700,
+  fortnightly: 193_400,
+  monthly: 418_900,
+}
+
+/** What auto-enrolment puts an employee on unless their scheme says otherwise. */
+export const PENSION_DEFAULT_PERCENT = 5

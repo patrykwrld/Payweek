@@ -139,6 +139,11 @@ const profile: Tables<'profiles'> = {
   show_holiday_accrual: true,
   tax_code: '1257L',
   show_take_home: true,
+  student_loan_plan: null,
+  postgrad_loan: false,
+  pension_percent: 0,
+  pension_basis: 'qualifying',
+  pension_relief: 'before_tax',
   week_starts_on: 1,
   created_at: `${thisWeek}T09:00:00Z`,
 }
@@ -176,10 +181,16 @@ client.setQueryData(['shifts'], bare ? [] : shifts)
 // can show what a Scottish code or a BR second-job code actually does to a
 // week's pay rather than only the default 1257L. ?tax=none hides it.
 const taxParam = new URLSearchParams(location.search).get('tax')
+const loanParam = new URLSearchParams(location.search).get('loan')
+const pensionParam = new URLSearchParams(location.search).get('pension')
 client.setQueryData(['profiles'], {
   ...profile,
   tax_code: taxParam === 'none' ? null : (taxParam ?? profile.tax_code),
   show_take_home: taxParam !== 'none',
+  student_loan_plan: loanParam === 'pg' ? null : (loanParam ?? null),
+  postgrad_loan: loanParam === 'pg',
+  pension_percent: pensionParam ? Number(pensionParam) : 0,
+  pension_relief: new URLSearchParams(location.search).get('relief') ?? 'before_tax',
 })
 // ?s=tocheck leaves last week unconfirmed, which is what the Needs
 // checking card and the home-screen prompt are for.

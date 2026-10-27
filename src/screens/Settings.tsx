@@ -337,6 +337,12 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
   )
   const [taxCode, setTaxCode] = useState(profile?.tax_code ?? '')
   const [showTakeHome, setShowTakeHome] = useState(profile?.show_take_home ?? true)
+  const [loanPlan, setLoanPlan] = useState(profile?.student_loan_plan ?? '')
+  const [postgradLoan, setPostgradLoan] = useState(profile?.postgrad_loan ?? false)
+  const [pensionPct, setPensionPct] = useState(String(profile?.pension_percent ?? 0))
+  const [pensionRelief, setPensionRelief] = useState(
+    profile?.pension_relief ?? 'before_tax',
+  )
   const [savedTick, setSavedTick] = useState(false)
   const [validation, setValidation] = useState<string | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
@@ -360,6 +366,11 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
       setValidation(taxCodeProblem(typedCode))
       return
     }
+    const pension = Number(pensionPct)
+    if (!Number.isFinite(pension) || pension < 0 || pension > 100) {
+      setValidation('Pension % must be between 0 and 100.')
+      return
+    }
     const id = session?.user.id
     if (!id) return
     upsert.mutate(
@@ -371,6 +382,10 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
         show_holiday_accrual: showAccrual,
         tax_code: typedCode === '' ? null : typedCode,
         show_take_home: showTakeHome,
+        student_loan_plan: loanPlan === '' ? null : loanPlan,
+        postgrad_loan: postgradLoan,
+        pension_percent: pension,
+        pension_relief: pensionRelief,
       },
       { onSuccess: () => setSavedTick(true) },
     )
@@ -545,15 +560,75 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
         </p>
 
         {taxCode.trim() !== '' && (
-          <label className="flex items-center gap-3 py-1.5 text-sm">
-            <input
-              type="checkbox"
-              checked={showTakeHome}
-              onChange={(e) => setShowTakeHome(e.target.checked)}
-              className="size-5 accent-(--color-accent)"
-            />
-            Show the after-tax estimate
-          </label>
+          <>
+            {/* Tax and NI alone read HIGH for most of this app's audience.
+                Agency work skews young, so student loans are common, and
+                auto-enrolment puts people in a pension after twelve weeks on
+                an assignment. Somebody seeing a figure £30 over their payslip
+                decides the app is broken. Both default to nothing. */}
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Student loan">
+                <select
+                  value={loanPlan}
+                  onChange={(e) => setLoanPlan(e.target.value)}
+                  className={selectCls}
+                >
+                  <option value="">None</option>
+                  <option value="plan1">Plan 1</option>
+                  <option value="plan2">Plan 2</option>
+                  <option value="plan4">Plan 4 (Scotland)</option>
+                  <option value="plan5">Plan 5</option>
+                </select>
+              </Field>
+              <Field label="Pension %">
+                <input
+                  value={pensionPct}
+                  onChange={(e) => setPensionPct(e.target.value)}
+                  className={inputCls}
+                  inputMode="decimal"
+                />
+              </Field>
+            </div>
+            <p className="-mt-1 text-xs text-muted">
+              Your plan is on your student loan statement. 5% is the usual
+              pension figure once you&rsquo;ve been on an assignment twelve
+              weeks &mdash; 0 if you&rsquo;ve opted out.
+            </p>
+
+            <label className="flex items-center gap-3 py-1.5 text-sm">
+              <input
+                type="checkbox"
+                checked={postgradLoan}
+                onChange={(e) => setPostgradLoan(e.target.checked)}
+                className="size-5 accent-(--color-accent)"
+              />
+              I also have a Postgraduate Loan
+            </label>
+
+            {Number(pensionPct) > 0 && (
+              <Field label="How your pension is taken">
+                <select
+                  value={pensionRelief}
+                  onChange={(e) => setPensionRelief(e.target.value)}
+                  className={selectCls}
+                >
+                  <option value="before_tax">Before tax (net pay)</option>
+                  <option value="after_tax">After tax (relief at source)</option>
+                  <option value="salary_sacrifice">Salary sacrifice</option>
+                </select>
+              </Field>
+            )}
+
+            <label className="flex items-center gap-3 py-1.5 text-sm">
+              <input
+                type="checkbox"
+                checked={showTakeHome}
+                onChange={(e) => setShowTakeHome(e.target.checked)}
+                className="size-5 accent-(--color-accent)"
+              />
+              Show the after-tax estimate
+            </label>
+          </>
         )}
 
         {validation && <p className="text-sm text-negative">{validation}</p>}

@@ -14,15 +14,21 @@ mkdirSync(OUT, { recursive: true })
 
 const b = await chromium.launch()
 
-async function shot({ file, screen, tax, act, note }) {
+async function shot({ file, screen, tax, loan, pension, relief, act, note }) {
   const p = await b.newPage({
     viewport: { width: 432, height: 860 },
     deviceScaleFactor: 2,
   })
   const errs = []
   p.on('pageerror', (e) => errs.push(String(e)))
-  const q = tax ? `&tax=${encodeURIComponent(tax)}` : ''
-  await p.goto(`http://localhost:${process.env.SHOT_PORT ?? 5199}/shots.html?s=${screen}${q}`, { waitUntil: 'load' })
+  const q = new URLSearchParams({ s: screen })
+  if (tax) q.set('tax', tax)
+  if (loan) q.set('loan', loan)
+  if (pension) q.set('pension', String(pension))
+  if (relief) q.set('relief', relief)
+  await p.goto(`http://localhost:${process.env.SHOT_PORT ?? 5199}/shots.html?${q}`, {
+    waitUntil: 'load',
+  })
   await p.waitForTimeout(2200)
   if (act) await act(p)
   await p.screenshot({ path: `${OUT}/${file}.png`, fullPage: false })
@@ -33,7 +39,7 @@ async function shot({ file, screen, tax, act, note }) {
 
 // Opens the first take-home breakdown on the screen.
 const expand = async (p) => {
-  const t = p.getByRole('button', { name: /after tax/i }).first()
+  const t = p.getByRole('button', { name: /after (tax|deductions)/i }).first()
   await t.waitFor({ timeout: 4000 }).catch(() => {})
   await t.click().catch(() => {})
   await p.waitForTimeout(400)
@@ -70,6 +76,29 @@ await shot({
   screen: 'payday',
   tax: 'none',
   note: 'no code entered — gross only, unchanged',
+})
+await shot({
+  file: '7-student-loan',
+  screen: 'payday',
+  loan: 'plan5',
+  act: expand,
+  note: 'Plan 5 student loan — exact, like NI',
+})
+await shot({
+  file: '8-loan-and-pension',
+  screen: 'payday',
+  loan: 'plan5',
+  pension: 5,
+  act: expand,
+  note: 'the full packet: tax, NI, loan and pension',
+})
+await shot({
+  file: '9-salary-sacrifice',
+  screen: 'payday',
+  pension: 5,
+  relief: 'salary_sacrifice',
+  act: expand,
+  note: 'sacrifice — cuts the NI as well as the tax',
 })
 await shot({
   file: '6-settings-field',

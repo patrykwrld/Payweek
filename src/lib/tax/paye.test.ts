@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { estimateTakeHome, incomeTaxForPeriod, nationalInsuranceForPeriod } from './paye'
+import {
+  estimateTakeHome,
+  incomeTaxForPeriod,
+  nationalInsuranceForPeriod,
+  pensionForPeriod,
+  studentLoanForPeriod,
+} from './paye'
 import { parseTaxCode } from './taxCode'
 
 const code = (c: string) => parseTaxCode(c)!
@@ -162,6 +168,148 @@ describe('estimateTakeHome', () => {
         const t = estimateTakeHome(gross, code(c), 'weekly')
         expect(t.netPence, `${c} on ${gross}`).toBeLessThanOrEqual(gross)
         expect(t.netPence, `${c} on ${gross}`).toBeGreaterThanOrEqual(0)
+      }
+    }
+  })
+})
+
+describe('studentLoanForPeriod', () => {
+  // Exact, like NI — worked out on the period and never reconciled.
+  it('charges nothing below the threshold', () => {
+    expect(studentLoanForPeriod(50_000, 'weekly', 'plan2')).toBe(0)
+    expect(studentLoanForPeriod(56_500, 'weekly', 'plan2')).toBe(0)
+  })
+
+  it('charges 9% over the threshold, rounded down to the pound', () => {
+    // Plan 2 weekly threshold £565. (700 - 565) = £135 at 9% = £12.15,
+    // which HMRC rounds down to £12.
+    expect(studentLoanForPeriod(70_000, 'weekly', 'plan2')).toBe(1_200)
+    // Plan 1 starts lower, so the same week costs more.
+    expect(studentLoanForPeriod(70_000, 'weekly', 'plan1')).toBe(1_600)
+    // Plan 4 starts highest of all.
+    expect(studentLoanForPeriod(70_000, 'weekly', 'plan4')).toBe(400)
+  })
+
+  it('charges the Postgraduate Loan at 6% over its own threshold', () => {
+    // (700 - 403) = £297 at 6% = £17.82, down to £17.
+    expect(studentLoanForPeriod(70_000, 'weekly', null, true)).toBe(1_700)
+  })
+
+  it('stacks a Postgraduate Loan on top of another plan', () => {
+    expect(studentLoanForPeriod(70_000, 'weekly', 'plan2', true)).toBe(1_200 + 1_700)
+  })
+
+  it('uses the monthly threshold on a monthly cycle', () => {
+    // Plan 2 monthly threshold £2,448. (3000 - 2448) = £552 at 9% = £49.68.
+    expect(studentLoanForPeriod(300_000, 'monthly', 'plan2')).toBe(4_900)
+  })
+
+  it('charges nothing with no plan', () => {
+    expect(studentLoanForPeriod(300_000, 'weekly', null)).toBe(0)
+  })
+})
+
+describe('pensionForPeriod', () => {
+  const q = (percent: number) => ({ percent, basis: 'qualifying' as const, relief: 'before_tax' as const })
+
+  it('counts only the pay inside the qualifying band', () => {
+    // Weekly band £120 to £967. On £500 that is £380 at 5% = £19.
+    expect(pensionForPeriod(50_000, 'weekly', q(5))).toBe(1_900)
+  })
+
+  it('charges nothing below the lower limit', () => {
+    expect(pensionForPeriod(10_000, 'weekly', q(5))).toBe(0)
+  })
+
+  it('stops counting above the upper limit', () => {
+    // £2,000 week: only up to £967 counts, so (967 - 120) = £847 at 5%.
+    expect(pensionForPeriod(200_000, 'weekly', q(5))).toBe(4_235)
+  })
+
+  it('takes the whole wage when the scheme is on gross pay', () => {
+    expect(
+      pensionForPeriod(50_000, 'weekly', { percent: 5, basis: 'gross', relief: 'before_tax' }),
+    ).toBe(2_500)
+  })
+
+  it('charges nothing when there is no pension or the rate is zero', () => {
+    expect(pensionForPeriod(50_000, 'weekly', null)).toBe(0)
+    expect(pensionForPeriod(50_000, 'weekly', q(0))).toBe(0)
+  })
+})
+
+describe('estimateTakeHome with the other deductions', () => {
+  it('leaves the figures alone when nothing extra applies', () => {
+    const t = estimateTakeHome(50_000, code('1257L'), 'weekly', {})
+    expect(t.studentLoanPence).toBe(0)
+    expect(t.pensionPence).toBe(0)
+    expect(t.netPence).toBe(42_776)
+  })
+
+  it('takes a student loan off the net without touching tax or NI', () => {
+    const plain = estimateTakeHome(70_000, code('1257L'), 'weekly')
+    const loan = estimateTakeHome(70_000, code('1257L'), 'weekly', { studentLoanPlan: 'plan2' })
+    expect(loan.taxPence).toBe(plain.taxPence)
+    expect(loan.niPence).toBe(plain.niPence)
+    expect(loan.studentLoanPence).toBe(1_200)
+    expect(loan.netPence).toBe(plain.netPence - 1_200)
+  })
+
+  // The three pension treatments cost the same gross contribution but
+  // different amounts of take-home, and in a fixed order.
+  const pension = (relief: 'before_tax' | 'after_tax' | 'salary_sacrifice') =>
+    estimateTakeHome(50_000, code('1257L'), 'weekly', {
+      pension: { percent: 5, basis: 'qualifying', relief },
+    })
+
+  it('cuts taxable pay but not NI under a net pay arrangement', () => {
+    const t = pension('before_tax')
+    expect(t.pensionPence).toBe(1_900)
+    expect(t.taxPence).toBe(4_780)
+    // NI is still charged on the full £500.
+    expect(t.niPence).toBe(2_064)
+    expect(t.netPence).toBe(41_256)
+  })
+
+  it('changes neither tax nor NI under relief at source', () => {
+    const t = pension('after_tax')
+    expect(t.taxPence).toBe(5_160)
+    expect(t.niPence).toBe(2_064)
+    expect(t.netPence).toBe(40_876)
+  })
+
+  it('cuts both under salary sacrifice, which is why it is worth having', () => {
+    const t = pension('salary_sacrifice')
+    expect(t.taxPence).toBe(4_780)
+    expect(t.niPence).toBe(1_912)
+    expect(t.netPence).toBe(41_408)
+  })
+
+  it('ranks the three treatments the way payroll does', () => {
+    expect(pension('after_tax').netPence).toBeLessThan(pension('before_tax').netPence)
+    expect(pension('before_tax').netPence).toBeLessThan(pension('salary_sacrifice').netPence)
+  })
+
+  it('keeps salary sacrifice out of the student loan too', () => {
+    const sacrifice = estimateTakeHome(70_000, code('1257L'), 'weekly', {
+      studentLoanPlan: 'plan2',
+      pension: { percent: 5, basis: 'gross', relief: 'salary_sacrifice' },
+    })
+    // £700 less a £35 sacrifice is £665, which is £100 over the £565
+    // threshold: 9% = £9. Without the sacrifice it would be £12.
+    expect(sacrifice.studentLoanPence).toBe(900)
+  })
+
+  it('still never returns a net above the gross or below zero', () => {
+    for (const gross of [0, 1_000, 50_000, 120_000, 500_000]) {
+      for (const plan of [null, 'plan1', 'plan2', 'plan4', 'plan5'] as const) {
+        const t = estimateTakeHome(gross, code('1257L'), 'weekly', {
+          studentLoanPlan: plan,
+          postgradLoan: true,
+          pension: { percent: 8, basis: 'gross', relief: 'before_tax' },
+        })
+        expect(t.netPence, `${plan} on ${gross}`).toBeLessThanOrEqual(gross)
+        expect(t.netPence, `${plan} on ${gross}`).toBeGreaterThanOrEqual(0)
       }
     }
   })

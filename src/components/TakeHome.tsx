@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { formatPence } from '../lib/money'
-import { estimateTakeHome, type PayCycle, type ParsedTaxCode } from '../lib/tax'
+import {
+  estimateTakeHome,
+  STUDENT_LOAN_LABEL,
+  type Extras,
+  type PayCycle,
+  type ParsedTaxCode,
+  type StudentLoanPlan,
+} from '../lib/tax'
 
 /**
  * What a period is likely to be worth after tax and National Insurance.
@@ -27,19 +34,21 @@ export function TakeHome({
   grossPence,
   code,
   cycle,
+  extras,
 }: {
   grossPence: number
   code: ParsedTaxCode
   cycle: PayCycle
+  extras?: Extras
 }) {
   const [open, setOpen] = useState(false)
   if (grossPence <= 0) return null
 
-  const t = estimateTakeHome(grossPence, code, cycle)
+  const t = estimateTakeHome(grossPence, code, cycle, extras ?? {})
 
   // Nothing deducted is worth saying plainly rather than showing a
-  // breakdown of two zeroes.
-  if (t.taxPence === 0 && t.niPence === 0) {
+  // breakdown of zeroes.
+  if (t.taxPence === 0 && t.niPence === 0 && t.studentLoanPence === 0 && t.pensionPence === 0) {
     return (
       <p className="mt-1 font-mono text-[12.5px] text-faint">
         under the tax and NI thresholds — all yours
@@ -56,8 +65,10 @@ export function TakeHome({
         className="press -my-1 flex min-h-[24px] items-baseline gap-1.5 py-1 text-left font-mono text-[12.5px] text-muted"
       >
         <span>
-          ≈ <span className="font-[650] text-ink">{formatPence(t.netPence)}</span> after
-          tax &amp; NI
+          ≈ <span className="font-[650] text-ink">{formatPence(t.netPence)}</span> after{' '}
+          {/* Naming the two everybody knows is clearer than "deductions"
+              — but only while they are the only two. */}
+          {t.studentLoanPence > 0 || t.pensionPence > 0 ? 'deductions' : 'tax & NI'}
         </span>
         <span aria-hidden className="text-faint">
           {open ? '▴' : '▾'}
@@ -86,20 +97,44 @@ export function TakeHome({
             <Row label="Income tax" value={`−${formatPence(t.taxPence)}`} />
           )}
           <Row label="National Insurance" value={`−${formatPence(t.niPence)}`} />
+          {t.studentLoanPence > 0 && (
+            <Row
+              label={studentLoanLabel(extras)}
+              value={`−${formatPence(t.studentLoanPence)}`}
+            />
+          )}
+          {t.pensionPence > 0 && (
+            <Row label={pensionLabel(extras)} value={`−${formatPence(t.pensionPence)}`} />
+          )}
           <div className="!mt-2 flex items-baseline justify-between border-t border-edge pt-2">
             <dt className="font-sans font-semibold">Take-home</dt>
             <dd className="font-[650] text-ink">{formatPence(t.netPence)}</dd>
           </div>
           <p className="!mt-2 font-sans text-[11px] leading-snug text-faint">
-            NI is exact. The tax is an estimate on your code{' '}
-            <span className="font-mono">{t.region === 'scotland' ? 'at Scottish rates' : ''}</span>{' '}
-            — it can&rsquo;t know about other jobs or what you&rsquo;ve already
-            paid this year. Always check your payslip.
+            NI{t.studentLoanPence > 0 ? ' and the loan are' : ' is'} exact. The
+            tax is an estimate on your code
+            {t.region === 'scotland' ? ' at Scottish rates' : ''} — it
+            can&rsquo;t know about other jobs or what you&rsquo;ve already paid
+            this year. Always check your payslip.
           </p>
         </dl>
       )}
     </div>
   )
+}
+
+function studentLoanLabel(extras: Extras | undefined): string {
+  const plan = extras?.studentLoanPlan as StudentLoanPlan | null | undefined
+  if (plan && extras?.postgradLoan) return `Student loan (${STUDENT_LOAN_LABEL[plan]} + PG)`
+  if (plan) return `Student loan (${STUDENT_LOAN_LABEL[plan]})`
+  return 'Postgraduate loan'
+}
+
+function pensionLabel(extras: Extras | undefined): string {
+  const p = extras?.pension
+  if (!p) return 'Pension'
+  if (p.relief === 'salary_sacrifice') return `Pension ${p.percent}% (sacrifice)`
+  return `Pension ${p.percent}%`
 }
 
 function Row({ label, value, dim }: { label: string; value: string; dim?: boolean }) {

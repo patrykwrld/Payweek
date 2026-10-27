@@ -102,6 +102,11 @@ export type Database = {
           holiday_accrual_pct: number
           tax_code: string | null
           show_take_home: boolean
+          student_loan_plan: string | null
+          postgrad_loan: boolean
+          pension_percent: number
+          pension_basis: string
+          pension_relief: string
           id: string
           show_holiday_accrual: boolean
           username: string | null
@@ -114,6 +119,11 @@ export type Database = {
           holiday_accrual_pct?: number
           tax_code?: string | null
           show_take_home?: boolean
+          student_loan_plan?: string | null
+          postgrad_loan?: boolean
+          pension_percent?: number
+          pension_basis?: string
+          pension_relief?: string
           id: string
           show_holiday_accrual?: boolean
           username?: string | null
@@ -126,6 +136,11 @@ export type Database = {
           holiday_accrual_pct?: number
           tax_code?: string | null
           show_take_home?: boolean
+          student_loan_plan?: string | null
+          postgrad_loan?: boolean
+          pension_percent?: number
+          pension_basis?: string
+          pension_relief?: string
           id?: string
           show_holiday_accrual?: boolean
           username?: string | null

@@ -17,7 +17,13 @@ import { nextWeekToCheck } from '../lib/payslipCheck'
 import { parsePoundsToPence } from '../lib/money'
 import { useInsertPayslip, usePayslips, useProfile } from '../lib/queries'
 import { TakeHome } from '../components/TakeHome'
-import { parseTaxCode } from '../lib/tax'
+import {
+  parseTaxCode,
+  type Extras,
+  type PensionBasis,
+  type PensionRelief,
+  type StudentLoanPlan,
+} from '../lib/tax'
 import { formatDay, todayISO } from '../lib/weeks'
 
 /**
@@ -213,6 +219,21 @@ export function Payday() {
     (profile.data?.show_take_home ?? true) && profile.data?.tax_code
       ? parseTaxCode(profile.data.tax_code)
       : null
+  // Everything else that comes out of the packet. All of it defaults to
+  // nothing, so a profile that has never answered these questions gets a
+  // figure that assumes no answer rather than a wrong one.
+  const extras: Extras = {
+    studentLoanPlan: (profile.data?.student_loan_plan as StudentLoanPlan | null) ?? null,
+    postgradLoan: profile.data?.postgrad_loan ?? false,
+    pension:
+      (profile.data?.pension_percent ?? 0) > 0
+        ? {
+            percent: profile.data!.pension_percent,
+            basis: (profile.data!.pension_basis as PensionBasis) ?? 'qualifying',
+            relief: (profile.data!.pension_relief as PensionRelief) ?? 'before_tax',
+          }
+        : null,
+  }
   const weeks = buildAgencyWeeks(shifts, agencies, rules)
   const today = todayISO()
   const toCheck = nextWeekToCheck(weeks, payslips.data, today)
@@ -309,6 +330,7 @@ export function Payday() {
                             grossPence={week.grossPence}
                             code={taxCode}
                             cycle="weekly"
+                            extras={extras}
                           />
                         )}
                         <p className="mt-1 font-mono text-[12.5px] text-muted">
