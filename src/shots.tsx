@@ -137,6 +137,8 @@ const profile: Tables<'profiles'> = {
   currency: 'GBP',
   holiday_accrual_pct: 12.07,
   show_holiday_accrual: true,
+  tax_code: '1257L',
+  show_take_home: true,
   week_starts_on: 1,
   created_at: `${thisWeek}T09:00:00Z`,
 }

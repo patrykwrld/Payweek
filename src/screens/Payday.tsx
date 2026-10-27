@@ -16,6 +16,8 @@ import {
 import { nextWeekToCheck } from '../lib/payslipCheck'
 import { parsePoundsToPence } from '../lib/money'
 import { useInsertPayslip, usePayslips, useProfile } from '../lib/queries'
+import { TakeHome } from '../components/TakeHome'
+import { parseTaxCode } from '../lib/tax'
 import { formatDay, todayISO } from '../lib/weeks'
 
 /**
@@ -205,6 +207,12 @@ export function Payday() {
   const { agencies, shifts, rules } = data
   const showAccrual = profile.data?.show_holiday_accrual ?? true
   const accrualPct = profile.data?.holiday_accrual_pct ?? 12.07
+  // Null until somebody puts their code in Setup, and null is a perfectly
+  // good answer — it means they see gross figures and nothing else.
+  const taxCode =
+    (profile.data?.show_take_home ?? true) && profile.data?.tax_code
+      ? parseTaxCode(profile.data.tax_code)
+      : null
   const weeks = buildAgencyWeeks(shifts, agencies, rules)
   const today = todayISO()
   const toCheck = nextWeekToCheck(weeks, payslips.data, today)
@@ -291,6 +299,18 @@ export function Payday() {
                             {formatPence(week.grossPence)}
                           </p>
                         </div>
+                        {taxCode && (
+                          // Every card on this screen is one pay WEEK —
+                          // buildAgencyWeeks groups weekly whatever an
+                          // agency's pay_cycle says — so the estimate is
+                          // worked on weekly thresholds to match the figure
+                          // sitting above it.
+                          <TakeHome
+                            grossPence={week.grossPence}
+                            code={taxCode}
+                            cycle="weekly"
+                          />
+                        )}
                         <p className="mt-1 font-mono text-[12.5px] text-muted">
                           {formatMinutes(week.paidMinutes)} across{' '}
                           {week.entries.length}{' '}

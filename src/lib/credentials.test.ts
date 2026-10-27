@@ -56,21 +56,33 @@ describe('passwordProblem', () => {
   it('accepts anything long enough', () => {
     expect(passwordProblem('correct horse')).toBeNull()
     expect(passwordProblem('8charact')).toBeNull()
+    expect(passwordProblem('hunter')).toBeNull()
   })
 
   it('refuses a short one', () => {
-    expect(passwordProblem('short')).toMatch(/at least 8/)
-    expect(passwordProblem('')).toMatch(/at least 8/)
+    expect(passwordProblem('short')).toMatch(/at least 6/)
+    expect(passwordProblem('')).toMatch(/at least 6/)
   })
 
-  it('refuses the two everyone tries first', () => {
-    expect(passwordProblem('password123')).toMatch(/guessed first/)
+  it('refuses the handful that get tried first', () => {
+    expect(passwordProblem('password')).toMatch(/guessed first/)
+    expect(passwordProblem('123456')).toMatch(/guessed first/)
+    expect(passwordProblem('qwerty')).toMatch(/guessed first/)
+    expect(passwordProblem('liverpool')).toMatch(/guessed first/)
+  })
+
+  it('folds case, because Qwerty is not a different password', () => {
     expect(passwordProblem('Password1')).toMatch(/guessed first/)
-    expect(passwordProblem('12345678')).toMatch(/guessed first/)
+    expect(passwordProblem('QWERTY')).toMatch(/guessed first/)
   })
 
-  it('does not refuse a good password that merely contains the word', () => {
+  // The point of the change: the list is strings an attacker types first,
+  // not a strength policy. Anything off it is the person's own business.
+  it('allows a password that merely resembles one on the list', () => {
     expect(passwordProblem('my dogs password')).toBeNull()
+    expect(passwordProblem('qwerty is rubbish')).toBeNull()
+    expect(passwordProblem('liverpool4ever')).toBeNull()
+    expect(passwordProblem('Dave1987')).toBeNull()
   })
 })
 

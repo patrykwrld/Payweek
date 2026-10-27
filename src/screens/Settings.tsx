@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { Browser } from '@capacitor/browser'
+import { DEFAULT_TAX_CODE, normaliseTaxCode, taxCodeProblem } from '../lib/tax'
 import { useAuth } from '../auth/AuthProvider'
 import {
   ErrorText,
@@ -334,6 +335,8 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
   const [showAccrual, setShowAccrual] = useState(
     profile?.show_holiday_accrual ?? true,
   )
+  const [taxCode, setTaxCode] = useState(profile?.tax_code ?? '')
+  const [showTakeHome, setShowTakeHome] = useState(profile?.show_take_home ?? true)
   const [savedTick, setSavedTick] = useState(false)
   const [validation, setValidation] = useState<string | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
@@ -350,6 +353,13 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
       setValidation('Holiday % must be between 0 and 100.')
       return
     }
+    // Blank is a legitimate answer — it means "don't show me a take-home
+    // figure" — so only a code that was typed and cannot be read is a problem.
+    const typedCode = normaliseTaxCode(taxCode)
+    if (typedCode !== '' && taxCodeProblem(typedCode) !== null) {
+      setValidation(taxCodeProblem(typedCode))
+      return
+    }
     const id = session?.user.id
     if (!id) return
     upsert.mutate(
@@ -359,6 +369,8 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
         week_starts_on: Number(weekStartsOn),
         holiday_accrual_pct: pct,
         show_holiday_accrual: showAccrual,
+        tax_code: typedCode === '' ? null : typedCode,
+        show_take_home: showTakeHome,
       },
       { onSuccess: () => setSavedTick(true) },
     )
@@ -509,6 +521,40 @@ function SettingsInner({ profile }: { profile: Tables<'profiles'> | null }) {
           />
           Show holiday pay on the Payday screen
         </label>
+
+        {/* Tax code. The most-asked-for thing in the closed test was a figure
+            for what actually lands in the bank, and the code is the one input
+            the app cannot work out for itself. Optional on purpose: leaving it
+            blank is how you say "just show me the gross". */}
+        <Field label="Tax code (optional)">
+          <input
+            value={taxCode}
+            onChange={(e) => setTaxCode(e.target.value.toUpperCase())}
+            className={inputCls}
+            placeholder={DEFAULT_TAX_CODE}
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+            inputMode="text"
+          />
+        </Field>
+        <p className="-mt-1 text-xs text-muted">
+          It&rsquo;s on your payslip, usually near your NI number. With it,
+          Payweek estimates what you&rsquo;ll be left with after tax and
+          National Insurance. Leave it blank to see gross pay only.
+        </p>
+
+        {taxCode.trim() !== '' && (
+          <label className="flex items-center gap-3 py-1.5 text-sm">
+            <input
+              type="checkbox"
+              checked={showTakeHome}
+              onChange={(e) => setShowTakeHome(e.target.checked)}
+              className="size-5 accent-(--color-accent)"
+            />
+            Show the after-tax estimate
+          </label>
+        )}
 
         {validation && <p className="text-sm text-negative">{validation}</p>}
         <ErrorText error={upsert.error} />

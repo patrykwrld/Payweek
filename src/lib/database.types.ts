@@ -100,6 +100,8 @@ export type Database = {
           currency: string
           display_name: string | null
           holiday_accrual_pct: number
+          tax_code: string | null
+          show_take_home: boolean
           id: string
           show_holiday_accrual: boolean
           username: string | null
@@ -110,6 +112,8 @@ export type Database = {
           currency?: string
           display_name?: string | null
           holiday_accrual_pct?: number
+          tax_code?: string | null
+          show_take_home?: boolean
           id: string
           show_holiday_accrual?: boolean
           username?: string | null
@@ -120,6 +124,8 @@ export type Database = {
           currency?: string
           display_name?: string | null
           holiday_accrual_pct?: number
+          tax_code?: string | null
+          show_take_home?: boolean
           id?: string
           show_holiday_accrual?: boolean
           username?: string | null

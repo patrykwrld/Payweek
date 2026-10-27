@@ -93,5 +93,12 @@ one fails loudly on a wrong size or a blank render.
   **This repository is public.**
 - Email, paste or commit the upload keystore. Losing it means `app.payweek`
   can never be updated again; leaking it means somebody else can update it.
-- Claim Payweek calculates tax, or that it is legal or financial advice. It
-  estimates gross pay, and the site footer says so.
+- Claim Payweek *is* legal or financial advice, or that its take-home figure
+  is a payslip. Since Oct 2026 it does estimate tax and NI from a tax code
+  (`src/lib/tax/`), so the old "does not calculate tax" line is gone — but the
+  distinction it protected still holds and every surface has to keep it:
+  **NI is exact** (Class 1 is per-period and never reconciled), **income tax is
+  an estimate** on the Week 1 basis, because the app cannot see other jobs or
+  the year to date. Rates live in `src/lib/tax/rates.ts` with their sources and
+  the date they were checked; they move every April, and that file is the only
+  place they appear.
