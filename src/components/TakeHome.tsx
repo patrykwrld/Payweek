@@ -7,29 +7,68 @@ import {
   type PayCycle,
   type ParsedTaxCode,
   type StudentLoanPlan,
+  type TakeHome as Estimate,
 } from '../lib/tax'
 
 /**
- * What a period is likely to be worth after tax and National Insurance.
+ * Where a pay week actually goes.
  *
- * The single most-requested thing from the closed test — people want the
- * number that lands in the bank, not the number the shifts were worth. It
- * is deliberately quieter than the gross figure above it and says
- * "estimate" in as many words, because one of these two numbers is a fact
- * and the other is not:
+ * The first version of this was a table in a box: correct, dense, and it
+ * read as a footnote to the gross figure when it is the number people
+ * asked for. It also shoved the card's own content — hours, payday, the
+ * status chip — most of a screen further down the moment it opened.
  *
- *   NI is exact. It is worked out on each pay period alone and never
- *   reconciled, so this is the figure on the payslip.
+ * So it now borrows the language already on the Shifts screen: a striped
+ * bar with a named legend, the same idea as the one showing which hours
+ * were paid at which rate. The split is legible without tapping anything,
+ * and tapping only adds the names and the amounts.
  *
- *   Income tax is an estimate on the Week 1 basis — this period's pay
- *   against this period's slice of the allowance, carrying nothing in
- *   from the rest of the year. Right on the nose for anyone whose code
- *   ends W1, M1 or X; close in a steady week and out in an odd one for
- *   everybody else.
- *
- * Tapping it opens the breakdown, because "£427.76" invites exactly one
- * question and the answer should not be a support email.
+ * What the figures are worth, which the caveat has to keep saying:
+ *   NI and student loan are EXACT — both are worked out on the pay period
+ *   alone and never reconciled across the year.
+ *   Income tax is an ESTIMATE on the Week 1 basis, because the app cannot
+ *   see other jobs or the year to date.
  */
+
+interface Slice {
+  label: string
+  pence: number
+  /** A whole literal Tailwind class, so the compiler's scan finds it. */
+  className: string
+  /** Shown under the legend entry when it is worth saying something. */
+  note?: string
+}
+
+function slices(t: Estimate, extras: Extras | undefined): Slice[] {
+  const out: Slice[] = [
+    { label: 'Take-home', pence: t.netPence, className: 'bg-accent' },
+  ]
+  if (t.pensionPence > 0) {
+    out.push({
+      label: pensionLabel(extras),
+      pence: t.pensionPence,
+      // Green, and said out loud in the note: a pension contribution is
+      // the one line here that is still the person's own money.
+      className: 'bg-positive',
+      note: 'still yours — just later',
+    })
+  }
+  if (t.taxPence > 0) {
+    out.push({ label: 'Income tax', pence: t.taxPence, className: 'bg-warn' })
+  }
+  if (t.niPence > 0) {
+    out.push({ label: 'National Insurance', pence: t.niPence, className: 'bg-muted' })
+  }
+  if (t.studentLoanPence > 0) {
+    out.push({
+      label: studentLoanLabel(extras),
+      pence: t.studentLoanPence,
+      className: 'bg-negative',
+    })
+  }
+  return out
+}
+
 export function TakeHome({
   grossPence,
   code,
@@ -45,82 +84,89 @@ export function TakeHome({
   if (grossPence <= 0) return null
 
   const t = estimateTakeHome(grossPence, code, cycle, extras ?? {})
+  const taken = t.taxPence + t.niPence + t.studentLoanPence + t.pensionPence
 
-  // Nothing deducted is worth saying plainly rather than showing a
-  // breakdown of zeroes.
-  if (t.taxPence === 0 && t.niPence === 0 && t.studentLoanPence === 0 && t.pensionPence === 0) {
+  // Nothing taken is worth one plain line rather than a bar that is all one
+  // colour and a legend with a single entry in it.
+  if (taken === 0) {
     return (
-      <p className="mt-1 font-mono text-[12.5px] text-faint">
+      <p className="mt-1.5 font-mono text-[12.5px] text-faint">
         under the tax and NI thresholds — all yours
       </p>
     )
   }
 
+  const parts = slices(t, extras)
+
   return (
-    <div className="mt-1">
+    <div className="mt-2">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="press -my-1 flex min-h-[24px] items-baseline gap-1.5 py-1 text-left font-mono text-[12.5px] text-muted"
+        className="press flex w-full items-baseline gap-2 py-1 text-left"
       >
-        <span>
-          ≈ <span className="font-[650] text-ink">{formatPence(t.netPence)}</span> after{' '}
-          {/* Naming the two everybody knows is clearer than "deductions"
-              — but only while they are the only two. */}
-          {t.studentLoanPence > 0 || t.pensionPence > 0 ? 'deductions' : 'tax & NI'}
+        <span className="font-mono text-[17px] font-[650] tracking-[-0.02em] text-ink">
+          {formatPence(t.netPence)}
         </span>
-        <span aria-hidden className="text-faint">
-          {open ? '▴' : '▾'}
+        <span className="text-[12.5px] text-muted">take-home</span>
+        <span className="ml-auto text-[11.5px] font-medium text-accent">
+          {open ? 'Hide' : 'Breakdown'}
         </span>
       </button>
 
+      {/* The bar carries nothing the legend does not, so it is decoration to
+          a screen reader. Each slice keeps a sliver of width so a £2 student
+          loan does not vanish entirely. */}
+      <div
+        aria-hidden
+        className="mt-1 flex h-[7px] gap-[2px] overflow-hidden rounded-full"
+      >
+        {parts.map((p) => (
+          <span
+            key={p.label}
+            className={`${p.className} min-w-[3px] rounded-full`}
+            style={{ flexGrow: p.pence, flexBasis: 0 }}
+          />
+        ))}
+      </div>
+
       {open && (
-        <dl className="mt-1.5 space-y-1 rounded-xl border border-edge bg-void/40 px-3 py-2.5 font-mono text-[12px]">
-          <Row label="Gross" value={formatPence(t.grossPence)} />
-          {t.bands.map((band, i) => (
-            <Row
-              key={`${band.label}-${i}`}
-              // "Basic rate" on its own is a trap in this app, where every
-              // other "rate" is pounds an hour. When there is only one band
-              // there is nothing to distinguish, so say what it actually is.
-              label={
-                t.bands.length === 1
-                  ? `Income tax ${band.percent}%`
-                  : `${band.label} ${band.percent}%`
-              }
-              value={`−${formatPence(band.taxPence)}`}
-              dim
-            />
+        <dl className="mt-2.5 space-y-1.5">
+          {parts.map((p) => (
+            <div key={p.label} className="flex items-baseline gap-2.5">
+              <span
+                aria-hidden
+                className={`${p.className} mt-[1px] size-2 shrink-0 rounded-[3px]`}
+              />
+              <dt className="text-[12.5px] text-muted">
+                {p.label}
+                {p.note && <span className="text-faint"> · {p.note}</span>}
+              </dt>
+              <dd className="ml-auto font-mono text-[12.5px] text-ink">
+                {formatPence(p.pence)}
+              </dd>
+            </div>
           ))}
-          {t.taxPence > 0 && t.bands.length > 1 && (
-            <Row label="Income tax" value={`−${formatPence(t.taxPence)}`} />
-          )}
-          <Row label="National Insurance" value={`−${formatPence(t.niPence)}`} />
-          {t.studentLoanPence > 0 && (
-            <Row
-              label={studentLoanLabel(extras)}
-              value={`−${formatPence(t.studentLoanPence)}`}
-            />
-          )}
-          {t.pensionPence > 0 && (
-            <Row label={pensionLabel(extras)} value={`−${formatPence(t.pensionPence)}`} />
-          )}
-          <div className="!mt-2 flex items-baseline justify-between border-t border-edge pt-2">
-            <dt className="font-sans font-semibold">Take-home</dt>
-            <dd className="font-[650] text-ink">{formatPence(t.netPence)}</dd>
-          </div>
-          <p className="!mt-2 font-sans text-[11px] leading-snug text-faint">
-            NI{t.studentLoanPence > 0 ? ' and the loan are' : ' is'} exact. The
-            tax is an estimate on your code
-            {t.region === 'scotland' ? ' at Scottish rates' : ''} — it
-            can&rsquo;t know about other jobs or what you&rsquo;ve already paid
-            this year. Always check your payslip.
+
+          <p className="!mt-2.5 border-t border-edge pt-2 text-[11px] leading-snug text-faint">
+            {exactness(t)} The tax is an estimate on your code
+            {t.region === 'scotland' ? ' at Scottish rates' : ''} — it can&rsquo;t know
+            about other jobs or what you&rsquo;ve paid earlier this year. Check it
+            against your payslip.
           </p>
         </dl>
       )}
     </div>
   )
+}
+
+/** Which of these figures are facts rather than estimates. */
+function exactness(t: Estimate): string {
+  if (t.niPence > 0 && t.studentLoanPence > 0) return 'NI and the loan are exact.'
+  if (t.studentLoanPence > 0) return 'The loan is exact.'
+  if (t.niPence > 0) return 'NI is exact.'
+  return ''
 }
 
 function studentLoanLabel(extras: Extras | undefined): string {
@@ -135,13 +181,4 @@ function pensionLabel(extras: Extras | undefined): string {
   if (!p) return 'Pension'
   if (p.relief === 'salary_sacrifice') return `Pension ${p.percent}% (sacrifice)`
   return `Pension ${p.percent}%`
-}
-
-function Row({ label, value, dim }: { label: string; value: string; dim?: boolean }) {
-  return (
-    <div className="flex items-baseline justify-between gap-3">
-      <dt className={dim ? 'text-faint' : 'text-muted'}>{label}</dt>
-      <dd className={dim ? 'text-faint' : 'text-muted'}>{value}</dd>
-    </div>
-  )
 }

@@ -39,7 +39,7 @@ async function shot({ file, screen, tax, loan, pension, relief, act, note }) {
 
 // Opens the first take-home breakdown on the screen.
 const expand = async (p) => {
-  const t = p.getByRole('button', { name: /after (tax|deductions)/i }).first()
+  const t = p.getByRole('button', { name: /breakdown/i }).first()
   await t.waitFor({ timeout: 4000 }).catch(() => {})
   await t.click().catch(() => {})
   await p.waitForTimeout(400)
