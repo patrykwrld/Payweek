@@ -105,9 +105,11 @@ await shot({
   screen: 'settings',
   note: 'where the code goes in Setup',
   act: async (p) => {
-    const f = p.getByText(/tax code/i).first()
+    // Scroll to the LAST of the new controls, not the first, or the ones
+    // added below it sit under the tab bar and the shot shows half a screen.
+    const f = p.getByText(/show the after-tax estimate/i).first()
     await f.scrollIntoViewIfNeeded().catch(() => {})
-    await p.waitForTimeout(400)
+    await p.waitForTimeout(500)
   },
 })
 
