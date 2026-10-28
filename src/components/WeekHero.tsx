@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { formatMinutes, formatPence } from '../lib/money'
 import { useCountUp } from '../lib/useCountUp'
+import { ShareWeek } from './ShareWeek'
 import type { WeekPulse } from '../lib/weekPulse'
 
 /**
@@ -43,15 +44,20 @@ export function WeekHero({ pulse }: { pulse: WeekPulse }) {
         }}
       />
 
-      <div className="relative flex items-baseline justify-between gap-3">
+      <div className="relative flex items-center justify-between gap-3">
         <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
           This pay week
         </p>
-        {pulse.shiftCount > 0 && (
-          <p className="font-mono text-[11px] text-faint">
-            {pulse.shiftCount} {pulse.shiftCount === 1 ? 'shift' : 'shifts'}
-          </p>
-        )}
+        {/* Share sits in the corner of the thing it copies. There is nothing
+            to copy before the first shift, so it arrives with the data. */}
+        <div className="flex items-center gap-2.5">
+          {pulse.shiftCount > 0 && (
+            <p className="font-mono text-[11px] text-faint">
+              {pulse.shiftCount} {pulse.shiftCount === 1 ? 'shift' : 'shifts'}
+            </p>
+          )}
+          {pulse.grossPence > 0 && <ShareWeek pulse={pulse} />}
+        </div>
       </div>
 
       <p className="figure-week relative mt-1.5">{formatPence(shown)}</p>
