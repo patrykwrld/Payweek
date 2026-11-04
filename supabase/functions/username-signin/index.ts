@@ -60,7 +60,10 @@ Deno.serve(async (req: Request) => {
   let password = ''
   try {
     const body = (await req.json()) as { username?: unknown; password?: unknown }
-    username = typeof body.username === 'string' ? body.username.trim() : ''
+    // NFC before trim, and before the lookup: an accented name can be typed
+    // two ways, and the stored form is the normalised one.
+    username =
+      typeof body.username === 'string' ? body.username.normalize('NFC').trim() : ''
     password = typeof body.password === 'string' ? body.password : ''
   } catch {
     return json(req, { error: WRONG }, 400)
@@ -69,8 +72,11 @@ Deno.serve(async (req: Request) => {
     return json(req, { error: WRONG }, 400)
   }
   // Nothing outside the allowed shape can be a real username, so it is not
-  // worth a database round trip.
-  if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
+  // worth a database round trip. Letters from any alphabet, because the old
+  // ASCII-only rule locked out every Paweł and Mihăiță who uses this app —
+  // kept identical to USERNAME_PATTERN in src/lib/credentials.ts and to the
+  // profiles_username_format constraint.
+  if (!/^[\p{L}\p{N}][\p{L}\p{M}\p{N}_.-]{1,18}[\p{L}\p{N}]$/u.test(username)) {
     return json(req, { error: WRONG }, 400)
   }
 
