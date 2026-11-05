@@ -1,7 +1,7 @@
 import { addDays, differenceInCalendarDays, format, parseISO } from 'date-fns'
 import type { Tables } from './database.types'
 import { paydayDateFor } from './payday'
-import { priceShifts } from './pricing'
+import { priceShifts, type PricedShift } from './pricing'
 import { payWeekEnd, payWeekStart } from './weeks'
 
 /**
@@ -37,23 +37,33 @@ export interface DayEarnings {
   isFuture: boolean
 }
 
-/** Total the priced shifts falling in [weekStart, weekStart+6] for an agency. */
-function totalFor(
+/** The priced shifts in one agency's pay week starting `weekStart`. */
+function entriesFor(
   priced: ReturnType<typeof priceShifts>,
   agencyId: string,
   weekStart: string,
-): { grossPence: number; paidMinutes: number; shiftCount: number } {
-  let grossPence = 0
-  let paidMinutes = 0
-  let shiftCount = 0
+): PricedShift[] {
+  const out: PricedShift[] = []
   for (const entry of priced.values()) {
     if (entry.shift.agency_id !== agencyId) continue
     if (entry.weekStart !== weekStart) continue
+    out.push(entry)
+  }
+  return out
+}
+
+function sum(entries: readonly PricedShift[]): {
+  grossPence: number
+  paidMinutes: number
+  shiftCount: number
+} {
+  let grossPence = 0
+  let paidMinutes = 0
+  for (const entry of entries) {
     grossPence += entry.pricing.grossPence
     paidMinutes += entry.pricing.paidMinutes
-    shiftCount += 1
   }
-  return { grossPence, paidMinutes, shiftCount }
+  return { grossPence, paidMinutes, shiftCount: entries.length }
 }
 
 export function weekPulse(
@@ -63,7 +73,6 @@ export function weekPulse(
   today: string,
 ): WeekPulse {
   const priced = priceShifts(shifts, agencies, rules)
-  const active = agencies.filter((a) => !a.archived)
 
   let grossPence = 0
   let paidMinutes = 0
@@ -71,28 +80,44 @@ export function weekPulse(
   let previous = 0
   let sawPrevious = false
 
+  // Every entry behind the total, kept so the bars are built from the same
+  // set. They used to be worked out separately — the total from each
+  // agency's pay week, the bars by calendar date across every agency with no
+  // archived filter at all — and the two disagreed in front of a tester:
+  // £0.00 and "0h logged" above bars reading £107, £132 and £1054. Deriving
+  // one from the other is what stops that recurring.
+  const contributing: PricedShift[] = []
+
   // The week's shape comes from whichever agency is carrying it, so the
-  // progress rail and payday match the money on screen.
+  // progress rail and payday match the money on screen. Only an agency with
+  // shifts can carry it: an empty one used to win simply by being first,
+  // which set the window and the countdown from an agency never worked.
   let leadWeekStart: string | null = null
   let leadGross = -1
   let payday: string | null = null
 
-  for (const agency of active) {
+  // Archived agencies count. Archiving takes an agency out of the list you
+  // can add a shift to — it does not unhappen the work already logged
+  // against it, and the Payday screen has always kept showing those weeks.
+  // Leaving them out here is what made a real £1,293 week read as £0.00.
+  for (const agency of agencies) {
     const thisWeek = payWeekStart(today, agency.pay_week_start_day)
     const lastWeek = format(addDays(parseISO(thisWeek), -7), 'yyyy-MM-dd')
 
-    const now = totalFor(priced, agency.id, thisWeek)
+    const entries = entriesFor(priced, agency.id, thisWeek)
+    contributing.push(...entries)
+    const now = sum(entries)
     grossPence += now.grossPence
     paidMinutes += now.paidMinutes
     shiftCount += now.shiftCount
 
-    const before = totalFor(priced, agency.id, lastWeek)
+    const before = sum(entriesFor(priced, agency.id, lastWeek))
     if (before.shiftCount > 0) {
       previous += before.grossPence
       sawPrevious = true
     }
 
-    if (now.grossPence > leadGross) {
+    if (now.shiftCount > 0 && now.grossPence > leadGross) {
       leadGross = now.grossPence
       leadWeekStart = thisWeek
     }
@@ -101,17 +126,22 @@ export function weekPulse(
     if (due >= today && (payday === null || due < payday)) payday = due
   }
 
-  const weekStart = leadWeekStart ?? payWeekStart(today, 1)
+  // With nothing logged there is no agency carrying the week, so fall back
+  // to the first agency's own start day rather than assuming Monday — "day 4
+  // of 7" should still be right for somebody whose week starts on Sunday.
+  const weekStart =
+    leadWeekStart ?? payWeekStart(today, agencies[0]?.pay_week_start_day ?? 1)
 
   // Bucketed here rather than in the component for the same reason as the
   // comparison above: it is week-boundary arithmetic, and an off-by-one would
-  // put somebody's Sunday night under the wrong bar. Deliberately by calendar
-  // date across every agency, so a day with two agencies' shifts reads as one
-  // day's earnings — which is what the person looking at it means by it.
+  // put somebody's Sunday night under the wrong bar. By calendar date, so a
+  // day with two agencies' shifts reads as one day's earnings — which is what
+  // the person looking at it means by it — but only over the entries that
+  // make up the total, so the bars and the figure above them cannot drift.
   const perDay: DayEarnings[] = Array.from({ length: 7 }, (_, i) => {
     const date = format(addDays(parseISO(weekStart), i), 'yyyy-MM-dd')
     let pence = 0
-    for (const entry of priced.values()) {
+    for (const entry of contributing) {
       if (entry.shift.date === date) pence += entry.pricing.grossPence
     }
     return { date, pence, isToday: date === today, isFuture: date > today }

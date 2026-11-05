@@ -117,15 +117,80 @@ describe('weekPulse', () => {
     expect(pulse.paydayDate).toBe('2026-08-04')
   })
 
-  it('ignores archived agencies', () => {
+  // This used to assert the opposite, and that assertion was the bug. A
+  // tester archived the agency he actually works for, kept logging shifts
+  // against it, and the home screen told him he had earned £0.00 — while
+  // the bars underneath showed £107, £132 and £1054. Archiving takes an
+  // agency out of the list you can add a shift to; it does not unhappen
+  // work already logged, and Payday never pretended it did.
+  it('counts an archived agency, because the work still happened', () => {
     const pulse = weekPulse(
       [shift('t', WEDNESDAY)],
       [agency({ archived: true })],
       [],
       WEDNESDAY,
     )
-    expect(pulse.grossPence).toBe(0)
-    expect(pulse.shiftCount).toBe(0)
+    expect(pulse.grossPence).toBe(8000)
+    expect(pulse.shiftCount).toBe(1)
+  })
+
+  it('reads the same whichever way an agency is filed', () => {
+    const of = (archived: boolean) =>
+      weekPulse([shift('t', WEDNESDAY)], [agency({ archived })], [], WEDNESDAY)
+    expect(of(true).grossPence).toBe(of(false).grossPence)
+    expect(of(true).perDay.map((d) => d.pence)).toEqual(
+      of(false).perDay.map((d) => d.pence),
+    )
+  })
+
+  // The shape that produced the screenshot: an empty agency still on the
+  // books, and the real one archived. The empty one must not take over the
+  // week — it was setting the window and the payday countdown from an
+  // agency that had never been worked.
+  it('does not let an empty agency carry the week', () => {
+    const pulse = weekPulse(
+      [shift('t', WEDNESDAY, { agency_id: 'worked' })],
+      [
+        agency({ id: 'empty', name: 'New place' }),
+        agency({ id: 'worked', name: 'Simple', archived: true }),
+      ],
+      [],
+      WEDNESDAY,
+    )
+    expect(pulse.grossPence).toBe(8000)
+    expect(pulse.shiftCount).toBe(1)
+    expect(pulse.perDay.reduce((t, d) => t + d.pence, 0)).toBe(8000)
+  })
+
+  // The invariant the screenshot broke. If these two ever disagree again,
+  // somebody is looking at a screen that contradicts itself.
+  it('always has bars that add up to the figure above them', () => {
+    const cases: Parameters<typeof weekPulse>[] = [
+      [[shift('a', MONDAY), shift('b', WEDNESDAY)], [agency()], [], WEDNESDAY],
+      [[shift('a', WEDNESDAY)], [agency({ archived: true })], [], WEDNESDAY],
+      [
+        [shift('a', WEDNESDAY), shift('b', WEDNESDAY, { agency_id: 'a2' })],
+        [agency(), agency({ id: 'a2', name: 'Other' })],
+        [],
+        WEDNESDAY,
+      ],
+      [
+        [shift('a', WEDNESDAY), shift('old', '2026-07-22')],
+        [agency()],
+        [],
+        WEDNESDAY,
+      ],
+      [[], [agency()], [], WEDNESDAY],
+    ]
+    for (const [shifts, agencies, rules, today] of cases) {
+      const pulse = weekPulse(shifts, agencies, rules, today)
+      expect(pulse.perDay.reduce((t, d) => t + d.pence, 0)).toBe(pulse.grossPence)
+    }
+  })
+
+  it('keeps a Sunday week counting from Sunday even with nothing logged', () => {
+    const pulse = weekPulse([], [agency({ pay_week_start_day: 0 })], [], WEDNESDAY)
+    expect(pulse.dayOfWeek).toBe(4)
   })
 
   it('reports an empty week without inventing a comparison', () => {

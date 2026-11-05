@@ -174,7 +174,21 @@ const client = new QueryClient({
   },
 })
 const bare = new URLSearchParams(location.search).get('s') === 'firstrun'
-client.setQueryData(['agencies'], bare ? [] : agencies)
+// ?archived=all reproduces the state a tester got into: the agency carrying
+// every shift archived, with an empty one still on the books. The home screen
+// read £0.00 above bars showing £1,293.
+const archiveAll = new URLSearchParams(location.search).get('archived') === 'all'
+client.setQueryData(
+  ['agencies'],
+  bare
+    ? []
+    : archiveAll
+    ? [
+        ...agencies.map((a) => ({ ...a, archived: true })),
+        { ...agencies[0]!, id: 'empty-agency', name: 'New place', archived: false },
+      ]
+    : agencies,
+)
 client.setQueryData(['rate_rules'], rules)
 client.setQueryData(['shifts'], bare ? [] : shifts)
 // ?tax=S1257L etc. swaps the code the take-home estimate uses, so one run

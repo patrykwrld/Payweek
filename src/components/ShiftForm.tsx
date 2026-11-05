@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { loggableAgencies } from '../lib/agencyChoices'
 import type { Json, Tables, TablesInsert } from '../lib/database.types'
 import {
   clampPoundsInput,
@@ -89,7 +90,10 @@ export function ShiftForm({
   error,
   onSubmit,
 }: Props) {
-  const active = agencies.filter((a) => !a.archived)
+  // Falls back to the archived ones when nothing is active, or somebody who
+  // archived their only agency gets a picker with nothing in it and no way
+  // to log the shift they are standing there trying to log.
+  const active = loggableAgencies(agencies)
   const [agencyId, setAgencyId] = useState(initial?.agency_id ?? active[0]?.id ?? '')
   const [date, setDate] = useState(initial?.date ?? todayISO())
   const [startTime, setStartTime] = useState((initial?.start_time ?? '09:00').slice(0, 5))

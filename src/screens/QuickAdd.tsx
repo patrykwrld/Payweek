@@ -6,6 +6,7 @@ import { FirstRun } from './FirstRun'
 import { WeekHero } from '../components/WeekHero'
 import { Sheet, SheetHeader } from '../components/ui'
 import { LoadFailed, ScreenSkeleton } from '../components/states'
+import { isFirstRun, loggableAgencies } from '../lib/agencyChoices'
 import { useIsOnline } from '../lib/offline'
 import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence } from '../lib/money'
@@ -19,6 +20,14 @@ import type { Tables } from '../lib/database.types'
 
 const NUDGE_DISMISSED = 'payweek-rates-nudge-dismissed'
 const CLOCK_KEY = 'payweek-clocked-in-at'
+
+/**
+ * The longest a clock-out will log on its own. Sixteen hours is already a
+ * punishing shift; past that it is far likelier that somebody forgot to
+ * clock out than that they worked it, and a shift cannot exceed 24 hours in
+ * the first place — see clockOut.
+ */
+const CLOCK_MAX_MINUTES = 16 * 60
 
 /** Minutes elapsed since an ISO instant, floored at zero. */
 function minutesSince(startedAt: string): number {
@@ -74,8 +83,11 @@ export function QuickAdd() {
   }
 
   const { agencies, shifts, rules } = data
-  const active = agencies.filter((a) => !a.archived)
-  if (active.length === 0) return <FirstRun />
+  // Only a genuinely empty account gets the setup screen. It used to appear
+  // whenever nothing was ACTIVE, so archiving your last agency hid months of
+  // shifts behind "let's get you set up".
+  if (isFirstRun(agencies)) return <FirstRun />
+  const active = loggableAgencies(agencies)
 
   const noRates = active.filter(
     (a) => !rules.some((r) => r.agency_id === a.id && r.active),
@@ -127,7 +139,18 @@ export function QuickAdd() {
     if (clockedInAt === null || !last) return
     // Rounded to five minutes, because nobody's shift genuinely ended at
     // 17:43 and a tidy figure is easier to check against a payslip.
-    const minutes = Math.max(5, Math.round(minutesSince(clockedInAt) / 5) * 5)
+    const raw = Math.max(5, Math.round(minutesSince(clockedInAt) / 5) * 5)
+
+    // A shift is stored as a date plus two times, so anything past 24 hours
+    // cannot be represented: only HH:mm of the end is kept, and the engine
+    // reads an end at or before the start as crossing midnight. A clock-in
+    // left running overnight and a day — 25 hours — came back out as 17:00
+    // to 18:00, which is ONE hour, silently, and against the person who
+    // worked it. Capped well short of that, and said out loud, because a
+    // wrong number nobody mentions is the thing this app exists to catch.
+    const minutes = Math.min(raw, CLOCK_MAX_MINUTES)
+    const capped = minutes < raw
+
     const start = new Date(clockedInAt)
     const end = new Date(start.getTime() + minutes * 60_000)
     localStorage.removeItem(CLOCK_KEY)
@@ -142,6 +165,13 @@ export function QuickAdd() {
       manual_rate_pence: null,
       notes: null,
     })
+    if (capped) {
+      setJustLogged(
+        `Clocked in ${Math.round(raw / 60)}h ago — logged ${
+          CLOCK_MAX_MINUTES / 60
+        }h. Edit it if that's not right.`,
+      )
+    }
   }
 
   const clockMinutes = clockedInAt === null ? 0 : minutesSince(clockedInAt)
