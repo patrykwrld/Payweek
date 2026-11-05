@@ -281,6 +281,11 @@ What's new
 • The colours under each shift have a key now, so you can see which hours were paid at which rate.
 • Setting up for the first time is one screen instead of three.
 • The night the clocks go back is now nine hours, not eight — worth checking your payslip for that one.
+• Fixed: if you'd archived an agency, your week total showed £0.00 even though the bars underneath showed the money. Archived agencies count again — archiving only takes them out of the list you add shifts to.
+• Fixed: archiving your last agency made the app look like a fresh install, with every shift gone. Your shifts were always still there; now they show.
+• Fixed: forgetting to clock out overnight could log the shift as one hour instead of the hours you worked.
+• You can now sign up with your actual name — accents and other alphabets work. Paweł, Mihăiță and Šarūnas were all being turned away.
+• Tap the share icon on your week to send it as a picture.
 • Security and stability fixes.
 
 The after-tax figure is an estimate, not a payslip. Found something wrong? Reply to the tester email — it all gets read.
