@@ -8,7 +8,11 @@
 // It drives the real screens through src/shots.tsx, so every figure on screen
 // is the rate engine's own arithmetic rather than a mock-up, and re-running it
 // after a UI change produces a film that matches the app.
-import { chromium } from 'playwright'
+// Playwright is not a dependency of this project; take it from wherever it
+// lives, like the other graphics scripts do.
+const { chromium } = await import('playwright').catch(() =>
+  import('/opt/node22/lib/node_modules/playwright/index.mjs'),
+)
 import { rmSync, mkdirSync } from 'node:fs'
 
 rmSync('vid', { recursive: true, force: true })
@@ -16,10 +20,13 @@ mkdirSync('vid', { recursive: true })
 
 // Forces the compositor to render at 2.6x, so the recording is a true
 // 1080x1920 rather than a 415px page upscaled afterwards.
-const b = await chromium.launch({ args: ['--force-device-scale-factor=2.6'] })
+const b = await chromium.launch({ args: ['--force-device-scale-factor=2.6', '--lang=en-GB'], env: { ...process.env, LANG: 'en_GB.UTF-8', LANGUAGE: 'en_GB' } })
 const ctx = await b.newContext({
   viewport: { width: 415, height: 738 },
   deviceScaleFactor: 1,
+  // British dates and a 24-hour clock: the audience is in the UK, and a
+  // shift form reading "10:00 PM" on "03/08" looks like somebody else's app.
+  locale: 'en-GB',
   recordVideo: { dir: 'vid', size: { width: 1080, height: 1920 } },
 })
 const p = await ctx.newPage()
@@ -121,12 +128,14 @@ await card(
      It knows<br>your real rate.</div>`,
   2400,
 )
-await tab('Rates')
+// Rates lost its own tab in the four-tab layout and now leads the Setup
+// screen, which is where this beat has to go to film it.
+await tab('Setup')
 await say('Set each agency up once — base, nights, weekends.', 3200)
 await clear()
 
 // ── 4. adding a shift ───────────────────────────────────────────────────
-await tab('Add')
+await tab('Week')
 await say('Logging a shift takes a few taps.', 2400)
 await p.getByRole('button', { name: 'Add a shift' }).click()
 await p.waitForTimeout(1100)
@@ -134,9 +143,9 @@ await p.waitForTimeout(1100)
 // its overlap warning — correct behaviour, but it reads as an error in an
 // advert. A Sunday night also puts the live total on the night rate, which is
 // the more interesting number to show.
-await p.getByLabel('Which day').fill('2026-03-08')
-await p.getByLabel('Started').fill('22:00')
-await p.getByLabel('Finished').fill('06:00')
+await p.getByLabel('Day it started').fill('2026-03-08')
+await p.getByLabel('Started', { exact: true }).fill('22:00')
+await p.getByLabel('Finished', { exact: true }).fill('06:00')
 await p.waitForTimeout(1200)
 // The live total sits below the fold in the sheet, so bring it into frame —
 // it is the whole reason this beat is in the film.

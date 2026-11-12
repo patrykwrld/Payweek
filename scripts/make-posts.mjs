@@ -23,11 +23,11 @@ await p.waitForTimeout(1200)
 const names = {
   p1: '1-would-you-have-noticed', p2: '2-night-shift', p3: '3-tester-ask',
   p4: '4-holiday-pay', p5: '5-the-week', p6: '6-what-it-doesnt-do',
-  p7: '7-not-rare',
+  p7: '7-not-rare', p8: '8-take-home', p9: '9-tester-ask-pl',
 }
 // Facebook wants 1080x1350, Instagram squares 1080x1080. Anything else
 // gets cropped by the platform, usually through the headline.
-const SIZES = { p3: [1080, 1080], p6: [1080, 1080] }
+const SIZES = { p3: [1080, 1080], p6: [1080, 1080], p9: [1080, 1080] }
 let ok = true
 for (const [id, name] of Object.entries(names)) {
   const path = `assets/posts/post-${name}.png`
