@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import { onBack } from '../lib/backButton'
 import type { BreakdownLine } from '../lib/rateEngine'
 import { legendEntries } from '../lib/rateBands'
 import { createPortal } from 'react-dom'
@@ -171,9 +172,13 @@ export function Sheet({
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
+    // Android's back button closes the sheet rather than navigating the
+    // page underneath it away.
+    const offBack = onBack(onClose)
     return () => {
       document.body.style.overflow = previous
       window.removeEventListener('keydown', onKey)
+      offBack()
     }
   }, [open, onClose])
 

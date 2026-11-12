@@ -47,15 +47,18 @@ BUILT FOR THE CAR PARK
 • Works with no signal — shifts save on your phone and sync when you reconnect
 • Big, legible numbers you can read one-handed
 • Holiday accrual shown as its own line, so you know what is building up
+• See your take-home after tax, NI, student loan and pension (optional)
+• Share your week as a picture
 • Export everything to a spreadsheet whenever you want
 
 NO NONSENSE
 No ads. No tracking. Your data is yours — export it or delete it whenever you
 like.
 
-Payweek estimates gross pay from the hours and rates you enter. It does not
-calculate tax or National Insurance, and it is not a substitute for your
-payslip or advice from your agency.
+Payweek estimates pay from the hours and rates you enter. Add your tax code
+and it also estimates what is left after tax and National Insurance — an
+estimate, not a payslip. It is not a substitute for your payslip or advice
+from your agency, and it is not financial advice.
 ```
 
 ## Graphics checklist

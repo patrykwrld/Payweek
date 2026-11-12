@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { App as CapacitorApp } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 import { QueryClient } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
@@ -14,6 +15,7 @@ import {
   noteSignedInUser,
   purgeCacheIfAccountChanged,
 } from './lib/deviceCache'
+import { handleBack } from './lib/backButton'
 import { registerMutationDefaults } from './lib/offline'
 import { supabase } from './lib/supabase'
 import './index.css'
@@ -23,6 +25,19 @@ import './index.css'
 purgeCacheIfAccountChanged()
 
 registerAuthDeepLinks()
+
+// Android's back button. Registering a listener switches off Capacitor's own
+// handling, which stepped the WebView back and otherwise did nothing — a dead
+// key on the first screen. See lib/backButton.ts for the order.
+if (Capacitor.isNativePlatform()) {
+  void CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+    handleBack({
+      canGoBack,
+      goBack: () => window.history.back(),
+      leave: () => void CapacitorApp.minimizeApp(),
+    })
+  })
+}
 
 const DAY_MS = 1000 * 60 * 60 * 24
 

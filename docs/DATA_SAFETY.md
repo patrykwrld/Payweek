@@ -40,7 +40,7 @@ it does — Payweek syncs to Supabase.
 
 ## Data types
 
-Declare exactly these four. For every one: **Collected = Yes**,
+Declare exactly these five. For every one: **Collected = Yes**,
 **Shared = No**, **Processed ephemerally = No**, **Required (not optional)**,
 purpose **App functionality** only.
 
@@ -81,15 +81,29 @@ purpose **App functionality** only.
 - Purpose: **App functionality**
 - Required: Yes
 
+### 5. Financial info → Other financial info  ⬅ ADD THIS (Nov 2026)
+- Play defines this type as "any other financial information such as user
+  salary or debts". Since the take-home estimate shipped, Payweek stores a
+  **tax code**, a **student loan plan** and a **pension contribution %** when
+  the user chooses to enter them (`profiles.tax_code`, `student_loan_plan`,
+  `pension_percent` — migrations `…000006` and `…000007`). A student loan is a
+  debt and a tax code is a statement about earnings, so this is no longer a
+  judgement call the way typed-in pay rates were.
+- Collected: Yes · Shared: No
+- Purpose: **App functionality**
+- Required: **No — optional** (the app works without any of it)
+- Declaring a type you arguably did not need to costs nothing. A form that
+  under-declares against what the app visibly asks for is a policy violation
+  and a reason for the production application to be refused.
+
 ## Explicitly NOT collected
 
 Answer **No** to all of these — nothing in the app touches them:
 
 - Location (approximate or precise)
-- Financial info — *payment info, purchase history, credit score*. Payweek
-  stores pay **rates and expected gross amounts the user types in**, which
-  Play classifies as user-generated content, not financial info. It never sees
-  a card, bank account or transaction.
+- Financial info — *payment info, purchase history, credit score*. Answer No
+  to those three. Payweek never sees a card, bank account or transaction.
+  ("Other financial info" is now declared — see type 5 above.)
 - Health and fitness · Messages · Photos and videos · Audio files · Files and
   docs · Calendar · Contacts
 - App info and performance — no crash logs, no diagnostics, no analytics SDK
