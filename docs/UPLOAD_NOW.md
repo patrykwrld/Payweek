@@ -285,6 +285,8 @@ What's new
 • Fixed: archiving your last agency made the app look like a fresh install, with every shift gone. Your shifts were always still there; now they show.
 • Fixed: forgetting to clock out overnight could log the shift as one hour instead of the hours you worked.
 • You can now sign up with your actual name — accents and other alphabets work. Paweł, Mihăiță and Šarūnas were all being turned away.
+• Fixed for night workers: logging a night shift the morning after used to file it under the day you FINISHED, a day late — wrong pay week, wrong weekend rate. The form now says which two days the shift covers and offers the right one, and Repeat gets it right by itself.
+• Take-home is now on the Week screen too, not just Payday.
 • Tap the share icon on your week to send it as a picture.
 • Security and stability fixes.
 

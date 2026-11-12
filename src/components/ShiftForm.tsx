@@ -18,7 +18,8 @@ import {
 } from '../lib/rateEngine'
 import { randomId } from '../lib/ids'
 import { findOverlap } from '../lib/overlap'
-import { formatDay, todayISO } from '../lib/weeks'
+import { looksLikeYesterday, previousDay, shiftSpanLabel } from '../lib/shiftDay'
+import { formatDay, nowTime, todayISO } from '../lib/weeks'
 import {
   Card,
   ErrorText,
@@ -205,7 +206,10 @@ export function ShiftForm({
         </select>
       </Field>
 
-      <Field label="Which day">
+      {/* "Which day" was ambiguous for exactly the people this app is for:
+          a night worker reads it as the day they finished. It is the day the
+          shift STARTED, and the span line below spells out both ends. */}
+      <Field label="Day it started">
         <input
           type="date"
           value={date}
@@ -238,14 +242,37 @@ export function ShiftForm({
       <p className="-mt-1 text-xs text-muted">
         {workedMinutes > 0 ? (
           <>
+            {/* Both ends, named. "Runs past midnight" alone never told
+                anybody WHICH two days they had just filed the shift under,
+                which is how a Sunday night ends up logged as a Monday. */}
+            <span className="font-mono">{shiftSpanLabel(date, startTime, endTime)}</span>
+            {' · '}
             <span className="font-mono">{formatMinutes(workedMinutes)}</span> on
             the clock
-            {endTime <= startTime && ' · runs past midnight'}
           </>
         ) : (
           'Set the times'
         )}
       </p>
+
+      {/* Offered, not applied. Logging a shift before working it is a real
+          thing people do, so this stays a one-tap suggestion rather than
+          quietly moving a date somebody chose on purpose. */}
+      {looksLikeYesterday(date, startTime, endTime, todayISO(), nowTime()) && (
+        <button
+          type="button"
+          onClick={() => setDate(previousDay(date))}
+          className="press -mt-1 w-full rounded-xl border border-warn/40 bg-warn/[0.07] px-3.5 py-2.5 text-left text-[13px]"
+        >
+          <span className="font-semibold text-warn">
+            Did this start yesterday?
+          </span>{' '}
+          <span className="text-muted">
+            As set, it hasn’t happened yet. Tap to move it to{' '}
+            {formatDay(previousDay(date))}.
+          </span>
+        </button>
+      )}
 
       {clash && (
         <p className="rounded-lg border border-warn/40 bg-warn/5 px-4 py-3 text-sm">

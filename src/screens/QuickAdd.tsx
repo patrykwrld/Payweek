@@ -11,11 +11,13 @@ import { useIsOnline } from '../lib/offline'
 import { useAppData } from '../lib/useAppData'
 import { formatMinutes, formatPence } from '../lib/money'
 import { priceShifts } from '../lib/pricing'
-import { useInsertPayslip, useInsertShift, usePayslips } from '../lib/queries'
+import { useInsertPayslip, useInsertShift, usePayslips, useProfile } from '../lib/queries'
 import { buildAgencyWeeks } from '../lib/payday'
 import { nextWeekToCheck } from '../lib/payslipCheck'
 import { weekPulse } from '../lib/weekPulse'
-import { formatDay, todayISO } from '../lib/weeks'
+import { looksLikeYesterday, previousDay } from '../lib/shiftDay'
+import { takeHomeSetup } from '../lib/tax'
+import { formatDay, nowTime, todayISO } from '../lib/weeks'
 import type { Tables } from '../lib/database.types'
 
 const NUDGE_DISMISSED = 'payweek-rates-nudge-dismissed'
@@ -39,6 +41,7 @@ export function QuickAdd() {
   const online = useIsOnline()
   const insert = useInsertShift()
   const payslips = usePayslips()
+  const profile = useProfile()
   const confirmPayslip = useInsertPayslip()
 
   const [nudgeHidden, setNudgeHidden] = useState(
@@ -216,7 +219,11 @@ export function QuickAdd() {
         </div>
       )}
 
-      <WeekHero pulse={pulse} />
+      <WeekHero
+        pulse={pulse}
+        takeHome={takeHomeSetup(profile.data)}
+        offerTakeHome={profile.data != null && !profile.data.tax_code}
+      />
 
       {/* One thing to tap, then two shortcuts for the shapes a week
           usually takes. This used to be the other way round, with the
@@ -240,7 +247,21 @@ export function QuickAdd() {
           onClick={() => {
             if (!last) return
             const { id: _id, user_id: _u, created_at: _c, ...rest } = last
-            log({ ...rest, date: today })
+            // Repeat stamps a date with no form in between, so it needs the
+            // same care the form takes: a night shift repeated the morning
+            // after belongs to the day it started, not the day it ended.
+            // Filing it under today puts it a day late — the wrong pay week,
+            // and Sunday-night hours priced as Monday's.
+            const start = rest.start_time.slice(0, 5)
+            const end = rest.end_time.slice(0, 5)
+            const lastNight = looksLikeYesterday(today, start, end, today, nowTime())
+            const date = lastNight ? previousDay(today) : today
+            log({ ...rest, date })
+            if (lastNight) {
+              // Said out loud, because a date chosen for somebody is only
+              // acceptable if they can see which one it was.
+              setJustLogged(`Logged for ${formatDay(date)} night — the day it started`)
+            }
           }}
           className="press flex min-h-[46px] items-center justify-center rounded-xl border border-edge px-3 text-[13.5px] font-semibold disabled:opacity-40"
         >

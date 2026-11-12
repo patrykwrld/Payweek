@@ -17,13 +17,7 @@ import { nextWeekToCheck } from '../lib/payslipCheck'
 import { parsePoundsToPence } from '../lib/money'
 import { useInsertPayslip, usePayslips, useProfile } from '../lib/queries'
 import { TakeHome } from '../components/TakeHome'
-import {
-  parseTaxCode,
-  type Extras,
-  type PensionBasis,
-  type PensionRelief,
-  type StudentLoanPlan,
-} from '../lib/tax'
+import { takeHomeSetup } from '../lib/tax'
 import { formatDay, todayISO } from '../lib/weeks'
 
 /**
@@ -215,25 +209,7 @@ export function Payday() {
   const accrualPct = profile.data?.holiday_accrual_pct ?? 12.07
   // Null until somebody puts their code in Setup, and null is a perfectly
   // good answer — it means they see gross figures and nothing else.
-  const taxCode =
-    (profile.data?.show_take_home ?? true) && profile.data?.tax_code
-      ? parseTaxCode(profile.data.tax_code)
-      : null
-  // Everything else that comes out of the packet. All of it defaults to
-  // nothing, so a profile that has never answered these questions gets a
-  // figure that assumes no answer rather than a wrong one.
-  const extras: Extras = {
-    studentLoanPlan: (profile.data?.student_loan_plan as StudentLoanPlan | null) ?? null,
-    postgradLoan: profile.data?.postgrad_loan ?? false,
-    pension:
-      (profile.data?.pension_percent ?? 0) > 0
-        ? {
-            percent: profile.data!.pension_percent,
-            basis: (profile.data!.pension_basis as PensionBasis) ?? 'qualifying',
-            relief: (profile.data!.pension_relief as PensionRelief) ?? 'before_tax',
-          }
-        : null,
-  }
+  const takeHome = takeHomeSetup(profile.data)
   const weeks = buildAgencyWeeks(shifts, agencies, rules)
   const today = todayISO()
   const toCheck = nextWeekToCheck(weeks, payslips.data, today)
@@ -320,7 +296,7 @@ export function Payday() {
                             {formatPence(week.grossPence)}
                           </p>
                         </div>
-                        {taxCode && (
+                        {takeHome && (
                           // Every card on this screen is one pay WEEK —
                           // buildAgencyWeeks groups weekly whatever an
                           // agency's pay_cycle says — so the estimate is
@@ -328,9 +304,9 @@ export function Payday() {
                           // sitting above it.
                           <TakeHome
                             grossPence={week.grossPence}
-                            code={taxCode}
+                            code={takeHome.code}
                             cycle="weekly"
-                            extras={extras}
+                            extras={takeHome.extras}
                           />
                         )}
                         <p className="mt-1 font-mono text-[12.5px] text-muted">

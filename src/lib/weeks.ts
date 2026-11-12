@@ -26,3 +26,8 @@ export function formatWeekRange(weekStart: string): string {
 export function todayISO(): string {
   return format(new Date(), 'yyyy-MM-dd')
 }
+
+/** Local HH:mm right now, in the same shape a shift stores its times. */
+export function nowTime(): string {
+  return format(new Date(), 'HH:mm')
+}

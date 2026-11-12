@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { formatMinutes, formatPence } from '../lib/money'
 import { useCountUp } from '../lib/useCountUp'
+import { Link } from 'react-router-dom'
+import type { TakeHomeSetup } from '../lib/tax'
 import { ShareWeek } from './ShareWeek'
+import { TakeHome } from './TakeHome'
 import type { WeekPulse } from '../lib/weekPulse'
 
 /**
@@ -18,7 +21,17 @@ import type { WeekPulse } from '../lib/weekPulse'
  * day actually earned, which turns the same strip into the shape of the week:
  * where the money came from, and which night was worth doing.
  */
-export function WeekHero({ pulse }: { pulse: WeekPulse }) {
+export function WeekHero({
+  pulse,
+  takeHome = null,
+  offerTakeHome = false,
+}: {
+  pulse: WeekPulse
+  /** Saved tax settings, when there are any. */
+  takeHome?: TakeHomeSetup | null
+  /** No tax code yet — say the estimate exists rather than hiding it. */
+  offerTakeHome?: boolean
+}) {
   const shown = useCountUp(pulse.grossPence, 620)
   const { previousGrossPence: previous, perDay } = pulse
   const delta = previous === null ? null : pulse.grossPence - previous
@@ -165,6 +178,39 @@ export function WeekHero({ pulse }: { pulse: WeekPulse }) {
             : `pays in ${pulse.daysToPayday} days`}
         </span>
       </div>
+
+      {/* What the week is worth after tax. It lived only on Payday at first,
+          behind a tax code entered in Setup, and the person who asked for the
+          feature could not find it — which is the same as not having built
+          it. So it is here too, under the figure it explains, and when there
+          is no tax code yet the card says the estimate exists instead of
+          saying nothing. Below the footer rather than under the headline so
+          its split bar is not stacked against the bars for the days.
+
+          The week's pay across every agency against one tax code: right for
+          one employer, a guide for two, and the breakdown says estimate. */}
+      {takeHome && pulse.grossPence > 0 && (
+        <div className="relative mt-3 border-t border-edge pt-1.5">
+          <TakeHome
+            grossPence={pulse.grossPence}
+            code={takeHome.code}
+            cycle="weekly"
+            extras={takeHome.extras}
+          />
+        </div>
+      )}
+      {!takeHome && offerTakeHome && pulse.grossPence > 0 && (
+        <Link
+          to="/settings"
+          className="press relative mt-3 flex min-h-[24px] items-center justify-between gap-2 border-t border-edge pt-3 text-[12.5px] text-muted"
+        >
+          <span>
+            See it after tax, NI and pension —{' '}
+            <span className="font-semibold text-accent">add your tax code</span>
+          </span>
+          <span aria-hidden className="text-faint">›</span>
+        </Link>
+      )}
     </section>
   )
 }
