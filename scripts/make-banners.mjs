@@ -3,8 +3,9 @@
 //   npx vite --port 5199
 //   node scripts/make-banners.mjs
 //
-// One banner per platform that has one. TikTok, Instagram, Threads and
-// WhatsApp channels have no banner at all — they only take the avatar.
+// One banner per platform that has one. TikTok, Threads and WhatsApp
+// channels have no banner at all — they only take the avatar. Instagram has
+// none either, but its highlights take a cover, so those are here too.
 //
 // Each platform crops its banner differently on a phone and lays the profile
 // picture over a corner, so banners.html keeps everything worth reading inside
@@ -23,11 +24,16 @@ const BANNERS = {
   'x-header-1500x500': ['x', 1500, 500, 5],
   'facebook-cover-1640x720': ['fb', 1640, 720, 10],
   'youtube-banner-2560x1440': ['yt', 2560, 1440, 6],
+  'linkedin-cover-2256x382': ['li', 2256, 382, 8],
+  'reddit-banner-1920x384': ['rd', 1920, 384, 5],
+  'instagram-highlight-app': ['hl-app', 1080, 1920, 8],
+  'instagram-highlight-pay-tips': ['hl-pay', 1080, 1920, 8],
+  'instagram-highlight-join': ['hl-join', 1080, 1920, 8],
   'avatar-1024': ['avatar', 1024, 1024, 5],
 }
 
 const b = await chromium.launch()
-const p = await b.newPage({ viewport: { width: 2700, height: 1600 }, deviceScaleFactor: 1 })
+const p = await b.newPage({ viewport: { width: 2700, height: 2100 }, deviceScaleFactor: 1 })
 const errs = []
 p.on('pageerror', e => errs.push(String(e)))
 p.on('requestfailed', r => errs.push('failed: ' + r.url().split('/').pop()))
@@ -52,7 +58,7 @@ for (const [name, [id, w, h, limitMb]] of Object.entries(BANNERS)) {
     const safe = root.querySelector('.safe')
     if (!safe) return []
     const s = safe.getBoundingClientRect()
-    const pic = root.querySelector('.guide.pic')
+    const pic = root.classList.contains('hl') ? null : root.querySelector('.guide.pic')
     let circle = null
     if (pic) {
       // .guide is display:none outside ?guides, so read its box from style.
@@ -61,7 +67,7 @@ for (const [name, [id, w, h, limitMb]] of Object.entries(BANNERS)) {
       circle = { cx: r.left + px('left') + px('width') / 2, cy: r.top + px('top') + px('height') / 2, rad: px('width') / 2 }
     }
     const out = []
-    for (const el of safe.querySelectorAll('.brand, h1, .sub, .url, .card')) {
+    for (const el of safe.querySelectorAll('.brand, h1, .sub, .url, .card, .mark')) {
       const range = document.createRange()
       range.selectNodeContents(el)
       const rects = el.classList.contains('card') ? [el.getBoundingClientRect()] : [...range.getClientRects()]

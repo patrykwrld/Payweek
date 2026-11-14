@@ -69,7 +69,7 @@ screen, not an error anybody sees, so this is not optional after touching
 | `node scripts/make-site-shots.mjs` | `public/shots/` — the app screenshots on payweek.app |
 | `node scripts/make-play-screenshots.mjs` | `assets/play/screenshots/` — the Play listing |
 | `node scripts/make-posts.mjs` | `assets/posts/` — the social graphics |
-| `node scripts/make-banners.mjs` | `assets/banners/` — the profile banners (X, Facebook, YouTube) and the avatar |
+| `node scripts/make-banners.mjs` | `assets/banners/` — the profile banners, Instagram highlight covers and the avatar |
 | `node scripts/make-stories.mjs` | `assets/social/` — the Instagram stories |
 | `node scripts/make-overlay.mjs` | `assets/qr/` — the printed scan overlays |
 | `node scripts/make-email.mjs` | `public/email/hero.png` + the email preview |

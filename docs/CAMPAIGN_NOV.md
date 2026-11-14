@@ -38,10 +38,14 @@ One handle everywhere: **@payweek.app** (X does not allow dots: **@payweekapp**)
 | `assets/banners/x-header-1500x500.png` | X → Edit profile → header |
 | `assets/banners/facebook-cover-1640x720.png` | Facebook Page → Edit cover photo |
 | `assets/banners/youtube-banner-2560x1440.png` | YouTube Studio → Customisation → Banner image |
+| `assets/banners/linkedin-cover-2256x382.png` | LinkedIn Page → Edit page → Cover image (only if a Page is made) |
+| `assets/banners/reddit-banner-1920x384.png` | Reddit → Profile settings → Banner (your own account, not a brand one) |
+| `assets/banners/instagram-highlight-*.png` | Instagram → hold a highlight → Edit highlight → Edit cover |
 | `assets/banners/avatar-1024.png` | The profile picture on every platform |
 
-TikTok, Instagram, Threads and WhatsApp channels have no banner; they take
-the avatar only. Regenerate with `node scripts/make-banners.mjs`, which
+TikTok, Threads and WhatsApp channels have no banner; they take the avatar
+only. Instagram has none either, but its highlights take a cover: `app` for
+the walkthrough stories, `join` for the tester ask, `pay-tips` for the rest. Regenerate with `node scripts/make-banners.mjs`, which
 refuses to write a banner whose text would be cropped on a phone or sit
 under the profile picture.
 

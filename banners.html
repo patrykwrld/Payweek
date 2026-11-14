@@ -99,6 +99,43 @@
       #yt .card { width: 16.5em; padding: 1.2em 1.4em 1.1em }
       #yt .week { height: 4.6em }
 
+
+      /* ── Strips. LinkedIn and Reddit headers are too shallow for the week
+            card, so the bars sit to the right as decoration: outside .safe,
+            and fine to lose on a phone. ── */
+      .deco { position: absolute; display: flex; align-items: flex-end; gap: .5em }
+      .deco i { flex: 1; display: block; border-radius: .4em; background: rgba(94,155,255,.5) }
+      .deco i.hi { background: #5e9bff; box-shadow: 0 0 1.6em rgba(94,155,255,.5) }
+      .deco i.nil { background: rgba(255,255,255,.12); height: .25em !important }
+      .strip .safe { justify-content: flex-start }
+      .strip .copy { gap: .55em }
+      .strip h1 { font-size: 2.5em; white-space: nowrap }
+      .strip .brand { font-size: 1.35em }
+      .strip .glow-a { width: 44%; height: 260%; top: -150%; right: -6% }
+      .strip .glow-b { width: 34%; height: 220%; bottom: -170%; left: -8% }
+
+      /* LinkedIn Page cover · 2256×382 (1128×191 at 2×). The page logo sits
+         over the bottom-left, so the copy starts a quarter of the way in. */
+      #li { width: 2256px; height: 382px; font-size: 27px }
+      #li .safe { left: 560px; top: 34px; width: 1340px; height: 314px }
+      #li .deco { right: 64px; bottom: 70px; width: 250px; height: 240px }
+
+      /* Reddit profile banner · 1920×384. A phone shows little more than
+         the middle, so everything sits in the centre 1080px. */
+      #rd { width: 1920px; height: 384px; font-size: 22px }
+      #rd .safe { left: 420px; top: 30px; width: 1080px; height: 324px }
+      #rd .deco { right: 90px; bottom: 70px; width: 260px; height: 230px }
+
+      /* ── Instagram highlight covers · 1080×1920. Instagram shows only a
+            small circle from the middle, so each is one mark, dead centre.
+            The highlight's name goes underneath as text, not on the cover. ── */
+      .hl { width: 1080px; height: 1920px }
+      .hl .glow-a { width: 110%; height: 60%; top: 8%; right: -5%; opacity: .55 }
+      .hl .safe { left: 290px; top: 710px; width: 500px; height: 500px; justify-content: center }
+      .hl .mark { font-size: 300px; font-weight: 800; letter-spacing: -.04em; line-height: 1; color: #f3f7fb }
+      .hl .mark em { font-style: normal; color: #5e9bff }
+      .hl svg { width: 360px; height: 360px; display: block }
+
       /* ── Avatar · 1024×1024, full bleed. Every platform cuts it to a circle,
             and the Play icon's transparent rounded corners come out white on
             some of them. ── */
@@ -179,6 +216,52 @@
         </div>
       </div>
       <div class="guide box" style="left:507px;top:508px;width:1546px;height:424px"></div>
+    </div>
+
+    <!-- LinkedIn -->
+    <div class="bn strip" id="li">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="safe">
+        <div class="copy">
+          <div class="brand"><svg viewBox="96 100 352 312"><g stroke-linecap="round" stroke-width="46" fill="none"><path d="M136 372 V 318" stroke="#2f4a75"/><path d="M204 372 V 280" stroke="#375a8f"/><path d="M272 372 V 236" stroke="#4169a8"/><path d="M340 372 V 190" stroke="#4d7fd0"/><path d="M408 372 V 140" stroke="#5e9bff"/></g></svg><div>Payweek<span>.</span></div></div>
+          <h1>Know what your week should pay<em>.</em></h1>
+          <p class="sub" style="max-width:none">Free for UK agency workers. Nights, weekends, breaks and holiday pay. <span class="url">payweek.app</span></p>
+        </div>
+      </div>
+      <div class="deco"><i style="height:69.7%"></i><i style="height:78.4%"></i><i class="nil"></i><i style="height:71.2%"></i><i style="height:71.4%"></i><i class="hi" style="height:100%"></i><i class="nil"></i></div>
+      <div class="guide box" style="left:560px;top:34px;width:1340px;height:314px"></div>
+      <div class="guide pic" style="left:48px;top:150px;width:300px;height:300px;border-radius:12px"></div>
+    </div>
+
+    <!-- Reddit -->
+    <div class="bn strip" id="rd">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="safe">
+        <div class="copy">
+          <div class="brand"><svg viewBox="96 100 352 312"><g stroke-linecap="round" stroke-width="46" fill="none"><path d="M136 372 V 318" stroke="#2f4a75"/><path d="M204 372 V 280" stroke="#375a8f"/><path d="M272 372 V 236" stroke="#4169a8"/><path d="M340 372 V 190" stroke="#4d7fd0"/><path d="M408 372 V 140" stroke="#5e9bff"/></g></svg><div>Payweek<span>.</span></div></div>
+          <h1>Know what your week should pay<em>.</em></h1>
+          <p class="sub" style="max-width:none">Free for UK agency workers. Nights, weekends, breaks and holiday pay. <span class="url">payweek.app</span></p>
+        </div>
+      </div>
+      <div class="deco"><i style="height:69.7%"></i><i style="height:78.4%"></i><i class="nil"></i><i style="height:71.2%"></i><i style="height:71.4%"></i><i class="hi" style="height:100%"></i><i class="nil"></i></div>
+      <div class="guide box" style="left:420px;top:30px;width:1080px;height:324px"></div>
+    </div>
+
+    <!-- Instagram highlight covers -->
+    <div class="bn hl" id="hl-app">
+      <div class="glow-a"></div><div class="grid"></div>
+      <div class="safe"><div class="mark card-free"><svg viewBox="96 80 352 352"><g stroke-linecap="round" stroke-width="46" fill="none"><path d="M136 372 V 318" stroke="#2f4a75"/><path d="M204 372 V 280" stroke="#375a8f"/><path d="M272 372 V 236" stroke="#4169a8"/><path d="M340 372 V 190" stroke="#4d7fd0"/><path d="M408 372 V 140" stroke="#5e9bff"/></g></svg></div></div>
+      <div class="guide pic" style="left:290px;top:710px;width:500px;height:500px;background:none"></div>
+    </div>
+    <div class="bn hl" id="hl-pay">
+      <div class="glow-a"></div><div class="grid"></div>
+      <div class="safe"><div class="mark card-free">£</div></div>
+      <div class="guide pic" style="left:290px;top:710px;width:500px;height:500px;background:none"></div>
+    </div>
+    <div class="bn hl" id="hl-join">
+      <div class="glow-a"></div><div class="grid"></div>
+      <div class="safe"><div class="mark card-free">12<em>.</em></div></div>
+      <div class="guide pic" style="left:290px;top:710px;width:500px;height:500px;background:none"></div>
     </div>
 
     <!-- Avatar -->
