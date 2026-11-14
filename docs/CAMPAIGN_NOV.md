@@ -29,6 +29,22 @@ node scripts/make-posts.mjs && node scripts/make-stories.mjs
 node scripts/film-shorts.mjs
 ```
 
+## Profile banners
+
+One handle everywhere: **@payweek.app** (X does not allow dots: **@payweekapp**).
+
+| File | Where |
+| --- | --- |
+| `assets/banners/x-header-1500x500.png` | X → Edit profile → header |
+| `assets/banners/facebook-cover-1640x720.png` | Facebook Page → Edit cover photo |
+| `assets/banners/youtube-banner-2560x1440.png` | YouTube Studio → Customisation → Banner image |
+| `assets/banners/avatar-1024.png` | The profile picture on every platform |
+
+TikTok, Instagram, Threads and WhatsApp channels have no banner; they take
+the avatar only. Regenerate with `node scripts/make-banners.mjs`, which
+refuses to write a banner whose text would be cropped on a phone or sit
+under the profile picture.
+
 ## Seven days
 
 Post once a day, around 19:00–21:00 when shifts end. Reply to every comment

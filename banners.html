@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Payweek profile banners</title>
+    <style>
+      /* Profile banners and the avatar, in the same Ledger Light language as
+         posts.html. Rendered by scripts/make-banners.mjs.
+
+         Every platform crops its banner differently on a phone and puts the
+         profile picture over one corner of it, so each banner has a .safe box:
+         the part that survives on every screen. Everything worth reading sits
+         inside it; the ground and the glows run to the edges. Open this page
+         with ?guides to see the boxes and the avatar zones. */
+      @font-face {
+        font-family: 'Inter var'; font-style: normal; font-weight: 100 900;
+        src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+      }
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        background: #1a1a1a; padding: 44px; display: flex; flex-direction: column; gap: 44px;
+        align-items: flex-start;
+        font-family: 'Inter var', Inter, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        font-variant-numeric: tabular-nums;
+      }
+      .bn { background: #0b0f14; color: #f3f7fb; position: relative; overflow: hidden; flex: none }
+
+      .glow-a, .glow-b { position: absolute; border-radius: 50%; pointer-events: none }
+      .glow-a {
+        width: 62%; height: 150%; top: -75%; right: -12%;
+        background: radial-gradient(closest-side, rgba(94,155,255,.8), rgba(94,155,255,.2) 55%, transparent 76%);
+        filter: blur(70px);
+      }
+      .glow-b {
+        width: 46%; height: 120%; bottom: -80%; left: -10%;
+        background: radial-gradient(closest-side, rgba(255,214,158,.7), rgba(255,198,146,.2) 52%, transparent 76%);
+        filter: blur(80px); mix-blend-mode: screen;
+      }
+      .grid {
+        position: absolute; inset: 0; pointer-events: none;
+        background-image:
+          repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px var(--cell, 72px)),
+          repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px var(--cell, 72px));
+        -webkit-mask-image: radial-gradient(90% 120% at 62% 40%, #000 6%, transparent 78%);
+      }
+
+      /* The part every screen shows. Sizes inside are in em, so one layout
+         serves a 500px-tall header and a 1440px-tall one. */
+      .safe { position: absolute; display: flex; align-items: center; justify-content: space-between; gap: 3em }
+      .copy { display: flex; flex-direction: column; gap: 1.05em; min-width: 0 }
+      .brand { display: flex; align-items: center; gap: .5em; font-size: 1.7em; font-weight: 800; letter-spacing: -.03em }
+      .brand svg { width: 1.25em; height: 1.25em; display: block }
+      .brand span { color: #5e9bff }
+      h1 { font-size: 3.1em; line-height: 1.03; letter-spacing: -.036em; font-weight: 800 }
+      h1 em { font-style: normal; color: #5e9bff }
+      .sub { font-size: 1.12em; line-height: 1.45; color: #a3b0c2; font-weight: 500; max-width: 27em }
+      .url { font-size: 1.2em; font-weight: 700; color: #5e9bff }
+
+      /* the week card — the app's own shape, its own numbers (shots fixture,
+         Mon 2 – Sun 8 March: £622.08 over 42h 45m, the same week as post 5) */
+      .card {
+        flex: none; width: 17.5em; padding: 1.5em 1.6em 1.3em;
+        background: rgba(11,15,20,.62); border: 1px solid rgba(255,255,255,.13); border-radius: 1.3em;
+      }
+      .card .k { font-size: .72em; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: #5e9bff }
+      .card .amt { font-size: 2.9em; font-weight: 800; letter-spacing: -.045em; line-height: 1.05; margin-top: .12em }
+      .week { display: flex; align-items: flex-end; gap: .5em; height: 5.6em; margin-top: 1em }
+      .week i { flex: 1; display: block; border-radius: .4em; background: rgba(94,155,255,.5) }
+      .week i.hi { background: #5e9bff; box-shadow: 0 0 1.6em rgba(94,155,255,.5) }
+      .week i.nil { background: rgba(255,255,255,.12); height: .25em !important }
+      .days { display: flex; gap: .5em; margin-top: .5em }
+      .days b { flex: 1; text-align: center; font-size: .7em; font-weight: 700; color: #6f7d90; letter-spacing: .04em }
+      .days b.hi { color: #5e9bff }
+
+      /* ── X header · 1500×500. The profile picture covers the bottom-left
+            corner, so the copy hangs from the top instead of centring. ── */
+      #x { width: 1500px; height: 500px; font-size: 20px }
+      #x .safe { inset: 44px 70px 44px 70px; align-items: flex-start }
+      #x .card { align-self: center }
+      #x .copy { gap: .8em }
+      #x h1 { font-size: 2.9em }
+
+      /* ── Facebook Page cover · 1640×720. Desktop trims the top and bottom,
+            a phone trims the sides: the middle 1280×624 is what both show. ── */
+      #fb { width: 1640px; height: 720px; font-size: 21px }
+      #fb .safe { inset: 48px 180px 48px 180px }
+      #fb .copy { padding-bottom: 4.5em }
+
+      /* ── YouTube banner · 2560×1440. Phones and desktops only ever show the
+            middle 1546×423; a TV shows the lot. ── */
+      #yt { width: 2560px; height: 1440px; font-size: 22px; --cell: 96px }
+      #yt .safe { left: 507px; top: 508px; width: 1546px; height: 424px; padding: 0 26px }
+      #yt .glow-a { width: 50%; height: 80%; top: -20%; right: 4% }
+      #yt .glow-b { width: 40%; height: 60%; bottom: -14%; left: 6% }
+      #yt .grid { -webkit-mask-image: radial-gradient(60% 50% at 56% 48%, #000 6%, transparent 80%) }
+      #yt .copy { gap: 1em }
+      #yt h1 { font-size: 2.9em }
+      #yt .card { width: 16.5em; padding: 1.2em 1.4em 1.1em }
+      #yt .week { height: 4.6em }
+
+      /* ── Avatar · 1024×1024, full bleed. Every platform cuts it to a circle,
+            and the Play icon's transparent rounded corners come out white on
+            some of them. ── */
+      #avatar { width: 1024px; height: 1024px; background: #0d1117 }
+      #avatar svg { position: absolute; inset: 0; width: 100%; height: 100% }
+
+      /* ?guides — what each platform hides. Never part of an exported file. */
+      .guide { display: none; position: absolute; pointer-events: none }
+      body.guides .guide { display: block }
+      .guide.box { border: 2px dashed #ff5f5f }
+      .guide.pic { border-radius: 50%; background: rgba(255,95,95,.35); border: 2px solid #ff5f5f }
+    </style>
+  </head>
+  <body>
+    <!-- X -->
+    <div class="bn" id="x">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="safe">
+        <div class="copy">
+          <div class="brand">
+            <svg viewBox="96 100 352 312"><g stroke-linecap="round" stroke-width="46" fill="none"><path d="M136 372 V 318" stroke="#2f4a75"/><path d="M204 372 V 280" stroke="#375a8f"/><path d="M272 372 V 236" stroke="#4169a8"/><path d="M340 372 V 190" stroke="#4d7fd0"/><path d="M408 372 V 140" stroke="#5e9bff"/></g></svg>
+            <div>Payweek<span>.</span></div>
+          </div>
+          <h1>Know what your week<br>should pay<em>.</em></h1>
+          <p class="sub">Free for UK agency workers. Nights, weekends, breaks and holiday pay, priced before payday. <span class="url">payweek.app</span></p>
+        </div>
+        <div class="card">
+          <div class="k">This week · 42h 45m</div>
+          <div class="amt">£622.08</div>
+          <div class="week"><i style="height:69.7%"></i><i style="height:78.4%"></i><i class="nil"></i><i style="height:71.2%"></i><i style="height:71.4%"></i><i class="hi" style="height:100%"></i><i class="nil"></i></div>
+          <div class="days"><b>M</b><b>T</b><b>W</b><b>T</b><b>F</b><b class="hi">S</b><b>S</b></div>
+        </div>
+      </div>
+      <div class="guide pic" style="left:40px;top:333px;width:334px;height:334px"></div>
+    </div>
+
+    <!-- Facebook -->
+    <div class="bn" id="fb">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="safe">
+        <div class="copy">
+          <div class="brand">
+            <svg viewBox="96 100 352 312"><g stroke-linecap="round" stroke-width="46" fill="none"><path d="M136 372 V 318" stroke="#2f4a75"/><path d="M204 372 V 280" stroke="#375a8f"/><path d="M272 372 V 236" stroke="#4169a8"/><path d="M340 372 V 190" stroke="#4d7fd0"/><path d="M408 372 V 140" stroke="#5e9bff"/></g></svg>
+            <div>Payweek<span>.</span></div>
+          </div>
+          <h1>Know what your week<br>should pay<em>.</em></h1>
+          <p class="sub">Free for UK agency workers. Nights, weekends, breaks and holiday pay, priced before payday.</p>
+          <div class="url">payweek.app</div>
+        </div>
+        <div class="card">
+          <div class="k">This week · 42h 45m</div>
+          <div class="amt">£622.08</div>
+          <div class="week"><i style="height:69.7%"></i><i style="height:78.4%"></i><i class="nil"></i><i style="height:71.2%"></i><i style="height:71.4%"></i><i class="hi" style="height:100%"></i><i class="nil"></i></div>
+          <div class="days"><b>M</b><b>T</b><b>W</b><b>T</b><b>F</b><b class="hi">S</b><b>S</b></div>
+        </div>
+      </div>
+      <div class="guide box" style="left:180px;top:48px;width:1280px;height:624px"></div>
+      <div class="guide pic" style="left:196px;top:520px;width:280px;height:280px"></div>
+    </div>
+
+    <!-- YouTube -->
+    <div class="bn" id="yt">
+      <div class="glow-a"></div><div class="glow-b"></div><div class="grid"></div>
+      <div class="safe">
+        <div class="copy">
+          <div class="brand">
+            <svg viewBox="96 100 352 312"><g stroke-linecap="round" stroke-width="46" fill="none"><path d="M136 372 V 318" stroke="#2f4a75"/><path d="M204 372 V 280" stroke="#375a8f"/><path d="M272 372 V 236" stroke="#4169a8"/><path d="M340 372 V 190" stroke="#4d7fd0"/><path d="M408 372 V 140" stroke="#5e9bff"/></g></svg>
+            <div>Payweek<span>.</span></div>
+          </div>
+          <h1>Know what your week<br>should pay<em>.</em></h1>
+          <p class="sub">Free for UK agency workers. Nights, weekends, breaks and holiday pay, priced before payday. <span class="url">payweek.app</span></p>
+        </div>
+        <div class="card">
+          <div class="k">This week · 42h 45m</div>
+          <div class="amt">£622.08</div>
+          <div class="week"><i style="height:69.7%"></i><i style="height:78.4%"></i><i class="nil"></i><i style="height:71.2%"></i><i style="height:71.4%"></i><i class="hi" style="height:100%"></i><i class="nil"></i></div>
+          <div class="days"><b>M</b><b>T</b><b>W</b><b>T</b><b>F</b><b class="hi">S</b><b>S</b></div>
+        </div>
+      </div>
+      <div class="guide box" style="left:507px;top:508px;width:1546px;height:424px"></div>
+    </div>
+
+    <!-- Avatar -->
+    <div class="bn" id="avatar">
+      <svg viewBox="0 0 512 512"><g stroke-linecap="round" stroke-width="46" fill="none"><path d="M136 372 V 318" stroke="#233757"/><path d="M204 372 V 280" stroke="#2d4873"/><path d="M272 372 V 236" stroke="#395c96"/><path d="M340 372 V 190" stroke="#4774be"/><path d="M408 372 V 140" stroke="#5e9bff"/></g></svg>
+    </div>
+
+    <script>
+      if (new URLSearchParams(location.search).has('guides')) document.body.classList.add('guides')
+    </script>
+  </body>
+</html>
